@@ -4,17 +4,11 @@
 +$  versioned-state
     $%  state-zero
     ==
-::
-::  +$  active-game-state
-::      $:  game=poker-game
-::          current-deck=poker-deck
-::          paused=?
-::          dealt=?
-::      ==
 +$  state-zero
     $:  %0
-        current-game=poker-game
-        :: add more here later if needed
+        current-game=poker-game-state
+        challenges-sent=(map @ud poker-challenge)
+        challenges-received=(map @ud poker-challenge)
     ==
 ::
 +$  card  card:agent:gall
@@ -54,24 +48,12 @@
       ::
         %print-subs
       ~&  >>  &2.bowl  `this
-      ::   [%receive-challenge poker-game]
-      :: ~&  >  "got challenged to poker game by {<src.bowl>}, game: {<+.q.vase>}"  `this
-      ::   %challenge-accepted
-      :: ~&  >>  "challenge to {<src.bowl>} accepted!"  `this
-      ::
-      ::    %poke-self
-      ::  ?>  (team:title our.bowl src.bowl)
-      ::  :_  this
-      ::  ~[[%pass /poke-wire %agent [our.bowl %poketime] %poke %noun !>([%receive-poke 2])]]
-      ::
-      ::  [%receive-poke @]
-      ::  ~&  >  "got poked from {<src.bowl>} with val: {<+.q.vase>}"  `this
     ==
     ::
-      %poker-client-game-action
-      ~&  >>>  !<(client-game-action:poker vase)
+      %poker-client-action
+      ~&  >>>  !<(client-action:poker vase)
       =^  cards  state
-      (handle-client-game-action:hc !<(client-game-action:poker vase))
+      (handle-client-action:hc !<(client-action:poker vase))
       [cards this]
   ==
 ::
@@ -96,33 +78,45 @@
         =/  deck=%poker-deck  !<(%poker-deck q.cage.sign)
         ~&  >>  "deck from {<src.bowl>} is {<deck>}"
         `this
-        ==
-        ::
-    ::[%poke-wire ~]
-    ::  ?~  +.sign
-    ::    ~&  >>  "successful {<-.sign>}"  `this
-    ::  (on-agent:def wire sign)
+      ==
   ==
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
 --
 ::  start helper core
-::  :poker-client &poker-client-game-action [%issue-challenge ~zod [game-id=100 players=~ host=~zod winner=~zod type=%cash]]
 |_  bowl=bowl:gall
-++  handle-client-game-action
-  |=  =client-game-action:poker
+++  handle-client-action
+  |=  =client-action:poker
   ^-  (quip card _state)
-  ?-    -.client-game-action
+  ?-    -.client-action
+          :: :poker-client &poker-client-action [%issue-challenge ~bus [game-id=100 challenger=~zod players=~[~zod ~bus] host=~zod type=%cash]]
           %issue-challenge
+        =.  challenges-sent.state  
+          (~(put by challenges-sent.state) [game-id.challenge.client-action challenge.client-action])
         :_  state
-        ~[[%pass /poke-wire %agent [to.client-game-action %poker-client] %poke %poker-client-game-action !>([%receive-challenge game=game.client-game-action])]]
+        ~[[%pass /poke-wire %agent [to.client-action %poker-client] %poke %poker-client-action !>([%receive-challenge challenge=challenge.client-action])]]
+          ::
+          ::
+          :: :poker-client &poker-client-action [%accept-challenge 100]
           %accept-challenge
+        =/  challenge  
+          (~(get by challenges-received.state) challenge-id.client-action)
+        ?~  challenge
+          ~&  >>>  "error: no challenge with that id exists"
+          :_  state
+          ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
         :_  state
-        ~[[%pass /poke-wire %agent [from.client-game-action %poker-client] %poke %poker-client-game-action !>([%challenge-accepted by=our.bowl])]]
+        ~[[%pass /poke-wire %agent [challenger.u.challenge %poker-client] %poke %poker-client-action !>([%challenge-accepted by=our.bowl challenge-id=challenge-id.client-action])]]
+          ::
+          ::
           %receive-challenge
+        =.  challenges-received.state  
+          (~(put by challenges-received.state) [game-id.challenge.client-action challenge.client-action])
         :_  state
-        ~&  >  "got challenged to poker game by {<src.bowl>}, game: {<game.client-game-action>}"
+        ~&  >  "got challenged to poker game by {<src.bowl>}, challenge id: {<game-id.challenge.client-action>}"
         ~
+          ::
+          ::
           %challenge-accepted
         :_  state
         ~&  >  "challenge accepted!"

@@ -5,16 +5,14 @@
     $%  state-zero
     ==
 ::
-+$  active-game-state
-    $:  game=poker-game
++$  server-game-state
+    $:  game=poker-game-state
         current-deck=poker-deck
         paused=?
-        dealt=?
     ==
 +$  state-zero
     $:  %0
-        current-game=active-game-state 
-        :: add more here later if needed
+        active-games=(map @ud server-game-state) 
     ==
 ::
 +$  card  card:agent:gall
@@ -54,20 +52,12 @@
       ::
         %print-subs
       ~&  >>  &2.bowl  `this
-      ::
-      ::    %poke-self
-      ::  ?>  (team:title our.bowl src.bowl)
-      ::  :_  this
-      ::  ~[[%pass /poke-wire %agent [our.bowl %poketime] %poke %noun !>([%receive-poke 2])]]
-      ::
-      ::  [%receive-poke @]
-      ::  ~&  >  "got poked from {<src.bowl>} with val: {<+.q.vase>}"  `this
     ==
     ::
-      %server-game-action
-      ~&  >>>  !<(server-game-action:poker vase)
+      %server-action
+      ~&  >>>  !<(server-action:poker vase)
       =^  cards  state
-      (handle-server-game-action:hc !<(server-game-action:poker vase))
+      (handle-server-action:hc !<(server-action:poker vase))
       [cards this]
   ==
 ::
@@ -93,52 +83,19 @@
         ~&  >>  "deck from {<src.bowl>} is {<deck>}"
         `this
         ==
-        ::
-    ::[%poke-wire ~]
-    ::  ?~  +.sign
-    ::    ~&  >>  "successful {<-.sign>}"  `this
-    ::  (on-agent:def wire sign)
   ==
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
 --
 ::  start helper core
 |_  bowl=bowl:gall
-++  handle-server-game-action
-  |=  =server-game-action:poker
+++  handle-server-action
+  |=  =server-action:poker
   ^-  (quip card _state)
-  ?-    -.server-game-action
+  ?-    -.server-action
           %register-game
         :_  state
         ~&  >>  "yeah... loch..."
         ~
-    ::    %increase-counter
-    ::  =.  counter.state  (add step.action counter.state)
-    ::  :_  state
-    ::  ~[[%give %fact ~[/counter] [%atom !>(counter.state)]]]
-    ::  ::
-    ::    %poke-remote
-    ::  :_  state
-    ::  ~[[%pass /poke-wire %agent [target.action %poketime] %poke %noun !>([%receive-poke 99])]]
-    ::  ::
-    ::    %poke-self
-    ::  :_  state
-    ::  ~[[%pass /poke-wire %agent [target.action %poketime] %poke %noun !>(%poke-self)]]
-    ::  ::
-    ::    %subscribe
-    ::  :_  state
-    ::  ~[[%pass /counter/(scot %p host.action) %agent [host.action %poketime] %watch /counter]]
-    ::  ::
-    ::    %leave
-    ::  :_  state
-    ::  ~[[%pass /counter/(scot %p host.action) %agent [host.action %poketime] %leave ~]]
-    ::  ::
-    ::    %kick
-    ::  :_  state
-    ::  ~[[%give %kick paths.action `subscriber.action]]
-    ::  ::
-    ::    %bad-path
-    ::  :_  state
-    ::  ~[[%pass /bad-path/(scot %p host.action) %agent [host.action %poketime] %watch /bad-path]]
   ==
 --

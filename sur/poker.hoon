@@ -13,26 +13,35 @@
 :: poker game types
 ::
 +$  poker-game-type  ?(%cash %tournament) :: will need to be fleshed out
-:: +$  poker-game-winner?
-::   $~  ~
-::   @p
-+$  poker-game
-  $:
+::
++$  poker-game-state
+  $:  
     game-id=@ud
     players=(list ship)
-    game-host=ship :: address of poker-server used for game
-    winner=ship
+    host=ship
+    type=poker-game-type
+    chips=(list [ship @ud])
+    current-hand=poker-deck
+    current-board=poker-deck
+  ==  
+::
++$  poker-challenge
+  $:
+    game-id=@ud
+    challenger=ship :: person who issued challenge
+    players=(list ship)
+    host=ship :: address of poker-server used for game
     type=poker-game-type
   ==
 ::
 :: client actions
 ::
-+$  client-game-action
++$  client-action
   $%
-    [%issue-challenge to=ship game=poker-game]
-    [%accept-challenge from=ship]
-    [%receive-challenge game=poker-game]
-    [%challenge-accepted by=ship]
+    [%issue-challenge to=ship challenge=poker-challenge]
+    [%accept-challenge challenge-id=@ud]
+    [%receive-challenge challenge=poker-challenge]
+    [%challenge-accepted by=ship challenge-id=@ud]
     :: [%register-game host=ship game=poker-game]
     ::  [%concede game-id=@ud]
   ==
@@ -45,9 +54,9 @@
   ==  
 ::
 ::  server actions
-+$  server-game-action
++$  server-action
   $%
-    [%register-game game=poker-game]
+    [%register-game game=poker-game-state]
   ==
 ::
 --
