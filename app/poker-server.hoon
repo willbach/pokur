@@ -54,7 +54,7 @@
       ~&  >>  &2.bowl  `this
     ==
     ::
-      %server-action
+      %poker-server-action
       ~&  >>>  !<(server-action:poker vase)
       =^  cards  state
       (handle-server-action:hc !<(server-action:poker vase))
@@ -95,7 +95,16 @@
   ?-    -.server-action
           %register-game
         :_  state
-        ~&  >>  "yeah... loch..."
+        ~&  >>  "Game initiated with server {<our.bowl>}."
+        =/  new-game
+          [
+            game=game.server-action
+            current-deck=(shuffle-deck generate-deck eny.bowl)
+            paused=%.n
+          ]
+        =.  active-games.state
+          (~(put by active-games.state) [game-id.game.server-action new-game])
+        ~&  >  "umm game is {<active-games.state>}"
         ~
   ==
 --
