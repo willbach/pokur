@@ -42,8 +42,7 @@
     [%accept-challenge challenge-id=@ud]
     [%receive-challenge challenge=poker-challenge]
     [%challenge-accepted by=ship challenge-id=@ud]
-    :: [%register-game host=ship game=poker-game]
-    ::  [%concede game-id=@ud]
+    [%subscribe host=ship]
   ==
 +$  poker-action
   $%
@@ -56,7 +55,7 @@
 ::  server actions
 +$  server-action
   $%
-    [%register-game game=poker-game-state]
+    [%register-game challenge=poker-challenge]
   ==
 ::
 --

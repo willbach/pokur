@@ -5,14 +5,14 @@
     $%  state-zero
     ==
 ::
-+$  server-game-state
++$  server-game-data
     $:  game=poker-game-state
         current-deck=poker-deck
         paused=?
     ==
 +$  state-zero
     $:  %0
-        active-games=(map @ud server-game-state) 
+        active-games=(map @ud server-game-data) 
     ==
 ::
 +$  card  card:agent:gall
@@ -64,6 +64,7 @@
 ++  on-watch
   |=  =path
   ^-  (quip card _this)
+  ~&  >  "sub::: {<path>}"
   ?+     path  (on-watch:def path)
       [%game ~]
         ~&  >>  "got subscription from {<src.bowl>}"  `this
@@ -96,15 +97,25 @@
           %register-game
         :_  state
         ~&  >>  "Game initiated with server {<our.bowl>}."
+        =/  new-game-state
+          [
+            game-id=game-id.challenge.server-action
+            players=players.challenge.server-action
+            host=host.challenge.server-action
+            type=type.challenge.server-action
+            chips=(turn players.challenge.server-action |=(a=ship [a 1.000]))
+            current-hand=~
+            current-board=~
+          ]
         =/  new-game
           [
-            game=game.server-action
+            game=new-game-state
             current-deck=(shuffle-deck generate-deck eny.bowl)
             paused=%.n
           ]
         =.  active-games.state
-          (~(put by active-games.state) [game-id.game.server-action new-game])
+          (~(put by active-games.state) [game-id.challenge.server-action new-game])
         ~&  >  "umm game is {<active-games.state>}"
-        ~
+        ~       
   ==
 --

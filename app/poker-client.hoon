@@ -7,8 +7,8 @@
 +$  state-zero
     $:  %0
         current-game=poker-game-state
-        challenges-sent=(map @ud poker-challenge)
-        challenges-received=(map @ud poker-challenge)
+        challenges-sent=(map @ud poker-challenge) :: change this to ship
+        challenges-received=(map @ud poker-challenge) :: change to ship
     ==
 ::
 +$  card  card:agent:gall
@@ -103,23 +103,12 @@
     (~(get by challenges-sent.state) challenge-id.client-action)
   ?~  challenge
     :_  state
-    ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
+      ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
   =.  challenges-sent.state
     (~(del by challenges-sent.state) game-id.u.challenge)
-  ::  initialize the game for ourselves
-  ::  and also contact server w.r.t. game
-  =.  current-game.state
-    [
-      game-id=game-id.u.challenge
-      players=players.u.challenge
-      host=host.u.challenge
-      type=type.u.challenge
-      chips=(turn players.u.challenge |=(a=ship [a 1.000]))
-      current-hand=~
-      current-board=~
-    ]
+  ::  contact server w.r.t. game 
   :_  state
-    ~[[%pass /poke-wire %agent [host.current-game.state %poker-server] %poke %poker-server-action !>([%register-game current-game.state])]]
+    ~[[%pass /poke-wire %agent [host.u.challenge %poker-server] %poke %poker-server-action !>([%register-game challenge=challenge])]]
     ::
     :: :poker-client &poker-client-action [%accept-challenge 100]
     %accept-challenge
@@ -127,7 +116,7 @@
     (~(get by challenges-received.state) challenge-id.client-action)
   ?~  challenge
     :_  state
-    ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
+      ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
   =.  challenges-received.state
     (~(del by challenges-received.state) game-id.u.challenge)
   ::  initialize the game for ourselves
@@ -150,38 +139,11 @@
     (~(put by challenges-received.state) [game-id.challenge.client-action challenge.client-action])
   :_  state
   ~&  >  "got challenged to poker game by {<src.bowl>}, challenge id: {<game-id.challenge.client-action>}"
-  ~
-
-
-
-
-    ::    %increase-counter
-    ::  =.  counter.state  (add step.action counter.state)
-    ::  :_  state
-    ::  ~[[%give %fact ~[/counter] [%atom !>(counter.state)]]]
-    ::  ::
-    ::    %poke-remote
-    ::  :_  state
-    ::  ~[[%pass /poke-wire %agent [target.action %poketime] %poke %noun !>([%receive-poke 99])]]
-    ::  ::
-    ::    %poke-self
-    ::  :_  state
-    ::  ~[[%pass /poke-wire %agent [target.action %poketime] %poke %noun !>(%poke-self)]]
-    ::  ::
-    ::    %subscribe
-    ::  :_  state
-    ::  ~[[%pass /counter/(scot %p host.action) %agent [host.action %poketime] %watch /counter]]
-    ::  ::
-    ::    %leave
-    ::  :_  state
-    ::  ~[[%pass /counter/(scot %p host.action) %agent [host.action %poketime] %leave ~]]
-    ::  ::
-    ::    %kick
-    ::  :_  state
-    ::  ~[[%give %kick paths.action `subscriber.action]]
-    ::  ::
-    ::    %bad-path
-    ::  :_  state
-    ::  ~[[%pass /bad-path/(scot %p host.action) %agent [host.action %poketime] %watch /bad-path]]
+    ~
+    ::
+    ::
+    %subscribe
+  :_  state
+    ~[[%pass /game/(scot %ud game-id.current-game.state) %agent [host.client-action %poker-server] %watch /game/(scot %p game-id.current-game.state)]]
   ==
 --
