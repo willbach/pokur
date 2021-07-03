@@ -37,6 +37,7 @@
   ~&  >  '%poker-client recompiled successfully'
   `this(state !<(versioned-state old-state))
 ++  on-poke
+  ::  ?>  (team:title [our src]:bowl)
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+    mark  (on-poke:def mark vase)
@@ -91,10 +92,14 @@
   ?-  -.client-action
     :: :poker-client &poker-client-action [%issue-challenge ~bus [game-id=100 challenger=~zod players=~[~zod ~bus] host=~zod type=%cash]]
     %issue-challenge
+  ?>  (team:title [our src]:bowl)
   =.  challenges-sent.state  
     (~(put by challenges-sent.state) [game-id.challenge.client-action challenge.client-action])
   :_  state
-  ~[[%pass /poke-wire %agent [to.client-action %poker-client] %poke %poker-client-action !>([%receive-challenge challenge=challenge.client-action])]]
+    :~  :*  %pass  /poke-wire  %agent  [to.client-action %poker-client] 
+            %poke  %poker-client-action  !>([%receive-challenge challenge=challenge.client-action])
+          ==
+      ==  
     ::
     ::
     %challenge-accepted
@@ -106,9 +111,16 @@
       ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
   =.  challenges-sent.state
     (~(del by challenges-sent.state) game-id.u.challenge)
-  ::  contact server w.r.t. game 
   :_  state
-    ~[[%pass /poke-wire %agent [host.u.challenge %poker-server] %poke %poker-server-action !>([%register-game challenge=challenge])]]
+    :~  :*  :: register game with server
+            %pass  /poke-wire  %agent  [host.u.challenge %poker-server]
+            %poke  %poker-server-action  !>([%register-game challenge=u.challenge])
+          ==
+        :*  :: subscribe to path which game will be served from
+            %pass  /poke-wire  %agent  [our.bowl %poker-client]
+            %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+          ==
+      ==
     ::
     :: :poker-client &poker-client-action [%accept-challenge 100]
     %accept-challenge
@@ -119,19 +131,16 @@
       ~[[%give %poke-ack `~[leaf+"error: no challenge with that id exists"]]]
   =.  challenges-received.state
     (~(del by challenges-received.state) game-id.u.challenge)
-  ::  initialize the game for ourselves
-  =.  current-game.state
-    [
-      game-id=game-id.u.challenge
-      players=players.u.challenge
-      host=host.u.challenge
-      type=type.u.challenge
-      chips=(turn players.u.challenge |=(a=ship [a 1.000]))
-      current-hand=~
-      current-board=~
-    ]
   :_  state
-    ~[[%pass /poke-wire %agent [challenger.u.challenge %poker-client] %poke %poker-client-action !>([%challenge-accepted by=our.bowl challenge-id=challenge-id.client-action])]]
+    :~  :*  :: notify challenger that we've accepted
+            %pass  /poke-wire  %agent  [challenger.u.challenge %poker-client]
+            %poke  %poker-client-action  !>([%challenge-accepted by=our.bowl challenge-id=challenge-id.client-action])
+          ==
+        :*  :: subscribe to path which game will be served from
+            %pass  /poke-wire  %agent  [our.bowl %poker-client]
+            %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+          ==
+      ==
     ::
     ::
     %receive-challenge
@@ -144,6 +153,10 @@
     ::
     %subscribe
   :_  state
-    ~[[%pass /game/(scot %ud game-id.current-game.state) %agent [host.client-action %poker-server] %watch /game/(scot %p game-id.current-game.state)]]
+    :~  :*  %pass  /game/(scot %p host.client-action)
+            %agent  [host.client-action %poker-server]
+            %watch  /game/(scot %ud game-id.client-action)/(scot %p our.bowl)
+          ==
+      ==
   ==
 --

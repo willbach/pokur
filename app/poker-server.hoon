@@ -65,9 +65,40 @@
   |=  =path
   ^-  (quip card _this)
   ~&  >  "sub::: {<path>}"
-  ?+     path  (on-watch:def path)
-      [%game ~]
-        ~&  >>  "got subscription from {<src.bowl>}"  `this
+  ?+  path  (on-watch:def path)
+    [%game @ta @ta ~]
+  :: make sure the subscriber is in game and on their path, reject if not
+  =/  game-id  `(unit @ud)`(slaw %ud i.t.path)
+  ?~  game-id
+    :_  this
+      =/  err
+        "invalid game id {<game-id>}"
+      :~  [%give %watch-ack `~[leaf+err]]
+    == 
+  =/  game  (~(get by active-games.state) u.game-id)
+  ?~  game
+    ~&  >>  "current state: {<active-games.state>}"
+    :_  this
+      =/  err
+        "invalid game id {<u.game-id>}"
+      :~  [%give %watch-ack `~[leaf+err]]
+    ==
+  =/  player  `(unit @p)`(slaw %p i.t.t.path)
+  ?~  player
+    :_  this
+      =/  err
+        "invalid player"
+      :~  [%give %watch-ack `~[leaf+err]]
+    == 
+  ?~  (find [u.player]~ players.game.u.game)
+    ~&  >>  "players list: {<u.player>}"
+    :_  this
+      =/  err
+        "player not in this game"
+      :~  [%give %watch-ack `~[leaf+err]]
+    ==
+  ?>  =(src.bowl u.player)
+  ~&  >>  "got subscription on {<game-id>}/{<u.player>} from {<src.bowl>}"  `this
   ==
 ++  on-leave
   |=  =path
@@ -95,7 +126,6 @@
   ^-  (quip card _state)
   ?-    -.server-action
           %register-game
-        :_  state
         ~&  >>  "Game initiated with server {<our.bowl>}."
         =/  new-game-state
           [
@@ -116,6 +146,7 @@
         =.  active-games.state
           (~(put by active-games.state) [game-id.challenge.server-action new-game])
         ~&  >  "umm game is {<active-games.state>}"
-        ~       
+        :_  state
+          ~[[%give %poke-ack `~[leaf+"uhhjej"]]]       
   ==
 --
