@@ -64,4 +64,27 @@
   ^-  [hand=poker-deck rest=poker-deck]
   :-  (scag n d)
   (slag n d)
+::
+::  state changes made by server
+::
+++  deal-hands
+  |=  [data=server-game-data]
+  ^-  server-game-data
+  =/  player-count  (lent players.game.data)
+  |-
+  ?:  =(player-count 0)
+    data
+  =/  new  (draw 2 deck.data)
+  =/  player  (snag (dec player-count) players.game.data)
+  %=  $
+    hands.data    [player hand:new]^hands.data
+    deck.data     rest:new
+    player-count  (dec player-count)
+  ==
+++  send-hands
+  |=  [hand=[ship poker-deck] data=server-game-data]
+  :: wtf is the type this spits out
+  =.  my-hand.game.data
+    (tail hand)
+  [%give %fact ~[/game/(scot %ud game-id.game.data)/(scot %p (head hand))] [%poker-game-state !>(game.data)]]
 --

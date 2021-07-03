@@ -4,12 +4,6 @@
 +$  versioned-state
     $%  state-zero
     ==
-::
-+$  server-game-data
-    $:  game=poker-game-state
-        current-deck=poker-deck
-        paused=?
-    ==
 +$  state-zero
     $:  %0
         active-games=(map @ud server-game-data) 
@@ -140,13 +134,39 @@
         =/  new-game
           [
             game=new-game-state
-            current-deck=(shuffle-deck generate-deck eny.bowl)
-            paused=%.n
+            hands=~
+            deck=(shuffle-deck generate-deck eny.bowl)
+            paused=%.y
           ]
+        ::  deal a hand
+        =/  new-game
+          (deal-hands new-game)
         =.  active-games.state
           (~(put by active-games.state) [game-id.challenge.server-action new-game])
-        ~&  >  "umm game is {<active-games.state>}"
         :_  state
-          ~[[%give %poke-ack `~[leaf+"uhhjej"]]]       
+          :~  
+            :*  :: subscribe to path which game will be served from
+              %pass  /poke-wire  %agent  [our.bowl %poker-server]
+              %poke  %poker-server-action  !>([%send-deal game-id=game-id.challenge.server-action])
+            ==
+          ==
+          :: ~[[%give %fact ~[/game/(scot %ud game-id.game.new-game)/(scot %p ~bus)] [%poker-game-state !>(game.new-game)]]]
+          :: ~&  >>>  "{<(turn hands.new-game |=(hand=[ship poker-deck] (send-hands hand new-game)))>}" 
+          :: (turn hands.new-game |=(hand=[ship poker-deck] (send-hands hand new-game)))
+          ::
+          ::
+          %send-deal
+        :_  state
+          =/  data
+            (~(got by active-games.state) game-id.server-action)
+          ~&  >>>  "{<(turn hands.data |=(hand=[ship poker-deck] (send-hands hand data)))>}" 
+          ~&  >>  "{<~[[%give %fact ~[/game/(scot %ud game-id.game.data)/(scot %p our.bowl)] [%poker-game-state !>(game.data)]]]>}"
+          ~[[%give %fact ~[/game/(scot %ud game-id.game.data)/(scot %p our.bowl)] [%poker-game-state !>(game.data)]]]
+          ::(turn hands.data |=(hand=[ship poker-deck] (send-hands hand data)))
+          ::  :poker-server &poker-server-action [%kick ~ ~zod]
+          ::
+          %kick
+        :_  state
+          ~[[%give %kick paths.server-action `subscriber.server-action]]  
   ==
 --

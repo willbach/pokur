@@ -14,6 +14,13 @@
 ::
 +$  poker-game-type  ?(%cash %tournament) :: will need to be fleshed out
 ::
++$  server-game-data
+  $:  game=poker-game-state
+      hands=(list [ship poker-deck])
+      deck=poker-deck
+      paused=?
+  ==
+::
 +$  poker-game-state
   $:  
     game-id=@ud
@@ -21,8 +28,8 @@
     host=ship
     type=poker-game-type
     chips=(list [ship @ud])
-    current-hand=poker-deck
-    current-board=poker-deck
+    my-hand=poker-deck
+    board=poker-deck
   ==  
 ::
 +$  poker-challenge
@@ -39,9 +46,9 @@
 +$  client-action
   $%
     [%issue-challenge to=ship challenge=poker-challenge]
-    [%accept-challenge challenge-id=@ud]
+    [%accept-challenge from=ship]
     [%receive-challenge challenge=poker-challenge]
-    [%challenge-accepted by=ship challenge-id=@ud]
+    [%challenge-accepted by=ship]
     [%subscribe game-id=@ud host=ship]
   ==
 +$  poker-action
@@ -56,6 +63,8 @@
 +$  server-action
   $%
     [%register-game challenge=poker-challenge]
+    [%kick paths=(list path) subscriber=ship]
+    [%send-deal game-id=@ud]
   ==
 ::
 --
