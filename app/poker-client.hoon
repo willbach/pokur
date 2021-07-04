@@ -63,16 +63,17 @@
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
-  ~&  >>  "smth on {<wire>}"
+  ::  ~&  >>  "smth on {<wire>}: {<-.sign>}" :: {<q.cage.sign>}"
   ?+    wire  (on-agent:def wire sign)
-      [%game @ta @ta ~]
+      [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
         %fact
       =/  val=poker-game-state  !<(poker-game-state q.cage.sign)
-      ~&  >>  "your game state is {<val>}"
+      ~&  >  "New game state: {<val>}"
+      =.  game.state
+        val
       `this
     ==
-    
   ==
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
@@ -145,7 +146,7 @@
     :: 
     %subscribe
   :_  state
-    :~  :*  %pass  /game/(scot %ud game-id.client-action)/(scot %p host.client-action)
+    :~  :*  %pass  /game-updates/(scot %ud game-id.client-action)
             %agent  [host.client-action %poker-server]
             %watch  /game/(scot %ud game-id.client-action)/(scot %p our.bowl)
           ==

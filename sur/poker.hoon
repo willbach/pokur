@@ -64,7 +64,7 @@
   $%
     [%register-game challenge=poker-challenge]
     [%kick paths=(list path) subscriber=ship]
-    [%send-deal game-id=@ud]
+    [%deal-hand game-id=@ud]
   ==
 ::
 --
