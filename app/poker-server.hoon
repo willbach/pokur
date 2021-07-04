@@ -6,7 +6,7 @@
     ==
 +$  state-zero
     $:  %0
-        active-games=(map @ud server-game-data) 
+        active-games=(map @ud server-game-state) 
     ==
 ::
 +$  card  card:agent:gall
@@ -124,17 +124,21 @@
       type=type.challenge.server-action
       chips=(turn players.challenge.server-action |=(a=ship [a 1.000]))
       my-hand=~
-      current-board=~
+      board=~
+      my-turn=~
+      dealer=~
+      pot=0
     ]
-  =/  new-game
+  =/  new-server-state
     [
       game=new-game-state
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
-      paused=%.y
+      paused=%.n
+      whose-turn=~
     ]
   =.  active-games.state
-    (~(put by active-games.state) [game-id.challenge.server-action new-game])
+    (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
   :_  state
     ~
     ::

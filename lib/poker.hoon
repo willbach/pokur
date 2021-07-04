@@ -68,23 +68,71 @@
 ::  state changes made by server
 ::
 ++  deal-hands
-  |=  [data=server-game-data]
-  ^-  server-game-data
-  =/  player-count  (lent players.game.data)
+  |=  [state=server-game-state]
+  ^-  server-game-state
+  =/  player-count  (lent players.game.state)
   |-
   ?:  =(player-count 0)
-    data
-  =/  new  (draw 2 deck.data)
-  =/  player  (snag (dec player-count) players.game.data)
+    state
+  =/  new  (draw 2 deck.state)
+  =/  player  (snag (dec player-count) players.game.state)
   %=  $
-    hands.data    [player hand:new]^hands.data
-    deck.data     rest:new
+    hands.state    [player hand:new]^hands.state
+    deck.state     rest:new
     player-count  (dec player-count)
   ==
 ++  send-hands
-  |=  [hand=[ship poker-deck] data=server-game-data]
+  |=  [hand=[ship poker-deck] state=server-game-state]
   :: wtf is the type this spits out
-  =.  my-hand.game.data
+  =.  my-hand.game.state
     (tail hand)
-  [%give %fact ~[/game/(scot %ud game-id.game.data)/(scot %p (head hand))] [%poker-game-state !>(game.data)]]
+  [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
+++  assign-dealer
+  |=  [who=ship state=server-game-state]
+  ^-  server-game-state
+  =.  dealer.game.state
+    who
+  state
+++  chips-to-pot
+  |=  [who=ship amt=@ud state=server-game-state]
+  ^-  server-game-state
+  =/  f
+    |=  [p=ship n=@ud]
+    ?:  =(p who)
+      =.  pot.game.state  
+        (add pot.game.state amt)
+      [p (sub n amt)]
+    [p n] 
+  =.  chips.game.state  (turn chips.game.state f)
+  state
+++  take-blinds
+  |=  [sb-size=@ud state=server-game-state]
+  ^-  server-game-state
+  =/  sb  
+    dealer.game.state
+  =/  sb-position  
+    (find [sb]~ players.game.state)
+  =/  bb  
+    (snag (mod (add 1 u.+.sb-position) (lent players.game.state)) players.game.state)
+  =.  state
+    (chips-to-pot sb sb-size state)
+  =.  state
+    (chips-to-pot bb (mul 2 sb-size) state)
+  =.  current-bet.game.state
+    (mul 2 sb-size)
+  state
+++  next-player-turn
+  |=  [state]
+++  process-player-action
+  |=  [action=poker-action state=server-game-state]
+  ^-  server-game-state
+  ?-  -.action
+    %check
+  ::  ?.  =(current-bet.game.state 0)
+    :: error, player must match current bet
+    :: do i need to handle this in gall though? probably
+  
+    %bet
+
+    %fold
 --

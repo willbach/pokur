@@ -14,13 +14,17 @@
 ::
 +$  poker-game-type  ?(%cash %tournament) :: will need to be fleshed out
 ::
-+$  server-game-data
+::  This is the data a poker-server holds for a given game
+::  Game state pertaining to a player stored in 'game'
++$  server-game-state
   $:  game=poker-game-state
       hands=(list [ship poker-deck])
       deck=poker-deck
       paused=?
+      whose-turn=ship
   ==
 ::
+::  This is the data a poker-client holds for a given game
 +$  poker-game-state
   $:  
     game-id=@ud
@@ -30,6 +34,10 @@
     chips=(list [ship @ud])
     my-hand=poker-deck
     board=poker-deck
+    my-turn=?
+    dealer=ship
+    pot=@ud
+    current-bet=@ud
   ==  
 ::
 +$  poker-challenge
@@ -53,7 +61,6 @@
   ==
 +$  poker-action
   $%
-    %deal-hand
     %check
     [%bet amount=@ud]
     %fold
