@@ -59,6 +59,10 @@
     remaining     (dec remaining)
     unshuffled    (oust [index 1] unshuffled)
   ==
+++  shuffle-deck-in-state
+  |=  [state=server-game-state eny=@]
+  =.  deck.state  (shuffle-deck deck.state eny)
+  state
 ++  draw
   |=  [n=@ud d=poker-deck]
   ^-  [hand=poker-deck rest=poker-deck]
@@ -67,8 +71,18 @@
 ::
 ::  state changes made by server
 ::
+++  initialize-hand
+  |=  [sb-size=@ud dealer=ship state=server-game-state]
+  ^-  server-game-state
+  ::  **takes in a shuffled deck**
+  ::  assign dealer, assign blinds, assign first action to dealer
+  ::  make sure to shuffle deck from outside with eny!!!
+  =.  dealer.game.state  dealer
+  =.  state              (deal-hands (assign-blinds sb-size state))
+  =.  whose-turn.state   dealer
+  state
 ++  deal-hands
-  |=  [state=server-game-state]
+  |=  state=server-game-state
   ^-  server-game-state
   =/  player-count  (lent players.game.state)
   |-
@@ -87,52 +101,138 @@
   =.  my-hand.game.state
     (tail hand)
   [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
-++  assign-dealer
-  |=  [who=ship state=server-game-state]
+++  deal-to-board
+  |=  [n=@ud state=server-game-state]
   ^-  server-game-state
-  =.  dealer.game.state
-    who
+  =/  burn  (draw 1 deck.state)
+  =/  turn  (draw n rest:burn)
+  =.  deck.state
+    rest:turn
+  =.  board.game.state
+    (weld hand:turn board.game.state)
+  :: setting who goes first in betting round here
+  =.  whose-turn.state
+    big-blind.game.state
   state
-++  chips-to-pot
-  |=  [who=ship amt=@ud state=server-game-state]
+++  get-next-player
+  |=  [current-player=ship players=(list ship)]
+  ^-  ship
+  =/  current-player-position
+    (find [current-player]~ players)
+  (snag (mod (add 1 u.+.current-player-position) (lent players)) players)
+++  get-player-chips
+  |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud])]
+  ^-  [who=ship in-stack=@ud committed=@ud]
+  =/  f
+    |=  [p=ship n=@ud c=@ud]
+    =(p who)
+  (head (skim chips f))
+++  next-player-turn
+  |=  state=server-game-state
+  ^-  server-game-state 
+  =.  whose-turn.state
+    (get-next-player whose-turn.state players.game.state)
+  state
+++  commit-chips
+  |=  [who=ship amount=@ud state=server-game-state]
   ^-  server-game-state
   =/  f
-    |=  [p=ship n=@ud]
+    |=  [p=ship n=@ud c=@ud]
     ?:  =(p who)
-      =.  pot.game.state  
-        (add pot.game.state amt)
-      [p (sub n amt)]
-    [p n] 
+      [p (sub n amount) (add c amount)]
+    [p n c] 
   =.  chips.game.state  (turn chips.game.state f)
   state
-++  take-blinds
+++  committed-chips-to-pot
+  |=  state=server-game-state
+  ^-  server-game-state
+  =/  f
+    |=  [[p=ship n=@ud c=@ud] pot=@ud]
+      =.  pot  
+        (add c pot)
+      [[p n 0] pot]
+  =/  new  (spin chips.game.state pot.game.state f)
+  =.  pot.game.state          q.new
+  =.  chips.game.state        p.new
+  =.  current-bet.game.state  0
+  state
+++  assign-blinds
   |=  [sb-size=@ud state=server-game-state]
   ^-  server-game-state
-  =/  sb  
+  ::  THIS CHANGES WHEN NOT HEADS-UP (future)
+  =.  small-blind.game.state  
     dealer.game.state
   =/  sb-position  
-    (find [sb]~ players.game.state)
-  =/  bb  
+    (find [small-blind.game.state]~ players.game.state)
+  =.  big-blind.game.state    
     (snag (mod (add 1 u.+.sb-position) (lent players.game.state)) players.game.state)
   =.  state
-    (chips-to-pot sb sb-size state)
+    (commit-chips small-blind.game.state sb-size state)
   =.  state
-    (chips-to-pot bb (mul 2 sb-size) state)
+    (commit-chips big-blind.game.state (mul 2 sb-size) state)
   =.  current-bet.game.state
     (mul 2 sb-size)
   state
-++  next-player-turn
-  |=  [state]
-++  process-player-action
-  |=  [action=poker-action state=server-game-state]
+++  process-win
+  |=  [winner=ship state=server-game-state]
   ^-  server-game-state
-  ?-  -.action
+  :: give pot to winner
+  =/  f
+    |=  [p=ship n=@ud c=@ud]
+    ?:  =(p winner) 
+      [p (add n (add c pot.game.state)) 0]
+    [p n 0] 
+  =.  chips.game.state  (turn chips.game.state f)
+  =.  pot.game.state  0
+  :: take hands away, clear board, clear bet
+  =.  board.game.state
+    ~
+  =.  current-bet.game.state
+    0
+  =.  hands.state
+    (turn hands.state |=([s=ship h=poker-deck] [s ~]))
+  :: inc hands-played
+  =.  hands-played.state
+    (add 1 hands-played.state)
+  :: NOTE: BLINDS UP/DOWN etc should be here?
+  (initialize-hand 20 (get-next-player dealer.game.state players.game.state) state)
+++  process-player-action
+  :: what type should rule violating actions return?
+  ::
+  |=  [who=ship action=poker-action:poker state=server-game-state]
+  ^-  server-game-state
+  ?.  =(who whose-turn.state)
+    :: error, wrong player making move
+    !!
+  ?-  action
     %check
-  ::  ?.  =(current-bet.game.state 0)
+  ?:  (gth current-bet.game.state 0)
     :: error, player must match current bet
-    :: do i need to handle this in gall though? probably
-  
-    %bet
-
+    !!
+  (next-player-turn state)
+    [%bet amount=@ud]
+  =/  bet-plus-committed  
+    (add amount.action committed:(get-player-chips who chips.game.state))
+  ?:  =(bet-plus-committed current-bet.game.state)
+    :: this is a call
+    (next-player-turn (commit-chips who amount.action state))
+  ?:  (lth bet-plus-committed (mul 2 current-bet.game.state))
+    :: error, raise must be 2x current bet
+    !!
+  :: process raise 
+  =.  current-bet.game.state
+    bet-plus-committed
+  (next-player-turn (commit-chips who amount.action state))
     %fold
+  :: this changes with n players rather than 2.. but for now just end hand
+  =.  state
+    (committed-chips-to-pot state)
+  (process-win (get-next-player who players.game.state) state)
+  ==
+++  determine-winner
+  :: This is the hand evaluation arm
+  :: currently a placeholder
+  |=  state=server-game-state
+  ^-  ship
+  (head players.game.state)
 --

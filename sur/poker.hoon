@@ -22,6 +22,7 @@
       deck=poker-deck
       paused=?
       whose-turn=ship
+      hands-played=@ud
   ==
 ::
 ::  This is the data a poker-client holds for a given game
@@ -31,11 +32,13 @@
     players=(list ship)
     host=ship
     type=poker-game-type
-    chips=(list [ship @ud])
+    chips=(list [ship in-stack=@ud committed=@ud])
     my-hand=poker-deck
     board=poker-deck
     my-turn=?
     dealer=ship
+    small-blind=ship
+    big-blind=ship
     pot=@ud
     current-bet=@ud
   ==  
@@ -60,7 +63,7 @@
     [%subscribe game-id=@ud host=ship]
   ==
 +$  poker-action
-  $%
+  $?
     %check
     [%bet amount=@ud]
     %fold
