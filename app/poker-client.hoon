@@ -55,6 +55,12 @@
     =^  cards  state
     (handle-client-action:hc !<(client-action:poker vase))
     [cards this]
+    ::
+    %poker-game-action
+    ~&  >  !<(game-action:poker vase)
+    =^  cards  state
+    (handle-game-action:hc !<(game-action:poker vase))
+    [cards this]
   ==
 ::
 ++  on-watch  on-watch:def
@@ -81,6 +87,20 @@
 ::  start helper core
 ::
 |_  bowl=bowl:gall
+++  handle-game-action
+  |=  action=game-action:poker
+  ^-  (quip card _state)
+  ?-  -.action
+    %check
+  :_  state
+    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%check game-id=game-id.game.state])]]
+    %bet
+  :_  state
+    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%bet game-id=game-id.game.state amount=amount.action])]]
+    %fold
+  :_  state
+    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%fold game-id=game-id.game.state])]]
+  ==
 ++  handle-client-action
   |=  =client-action:poker
   ^-  (quip card _state)

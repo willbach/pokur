@@ -63,11 +63,11 @@
     [%challenge-accepted by=ship]
     [%subscribe game-id=@ud host=ship]
   ==
-+$  poker-action
-  $?
-    %check
-    [%bet amount=@ud]
-    %fold
++$  game-action
+  $%
+    [%check game-id=@ud]
+    [%bet game-id=@ud amount=@ud]
+    [%fold game-id=@ud]
   ==  
 ::
 ::  server actions
@@ -76,6 +76,8 @@
     [%register-game challenge=poker-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@ud]
+    [%send-game-updates game=server-game-state]
+    [%wipe-all-games game-id=@ud]
   ==
 ::
 --

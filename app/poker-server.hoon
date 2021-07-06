@@ -48,11 +48,17 @@
       ~&  >>  &2.bowl  `this
     ==
     ::
-      %poker-server-action
-      ~&  >>>  !<(server-action:poker vase)
-      =^  cards  state
-      (handle-server-action:hc !<(server-action:poker vase))
-      [cards this]
+    %poker-server-action
+    :: ~&  >>>  !<(server-action:poker vase)
+    =^  cards  state
+    (handle-server-action:hc !<(server-action:poker vase))
+    [cards this]
+    ::
+    %poker-game-action
+    ~&  >  !<(game-action:poker vase)
+    =^  cards  state
+    (handle-game-action:hc !<(game-action:poker vase))
+    [cards this]
   ==
 ::
 ++  on-watch
@@ -110,10 +116,41 @@
 --
 ::  start helper core
 |_  bowl=bowl:gall
+++  get-game-by-id
+  |=  game-id=@ud
+  ^-  server-game-state
+  ::  obviously add error handling to this
+  (~(got by active-games.state) game-id)
+++  handle-game-action
+  |=  action=game-action:poker
+  ^-  (quip card _state)
+  ?-  -.action
+    %check
+  =/  game  (get-game-by-id game-id.action)
+  =/  game  (~(process-player-action modify-state game) src.bowl [%check game-id=game-id.action])
+  =.  active-games.state
+    (~(put by active-games.state) [game-id.action game])
+  :_  state
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+    %bet
+  =/  game  (get-game-by-id game-id.action)
+  =/  game  (~(process-player-action modify-state game) src.bowl [%bet game-id=game-id.action amount=amount.action])
+  =.  active-games.state
+    (~(put by active-games.state) [game-id.action game])
+  :_  state
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+    %fold
+  =/  game  (get-game-by-id game-id.action)
+  =/  game  (~(process-player-action modify-state game) src.bowl [%fold game-id=game-id.action])
+  =.  active-games.state
+    (~(put by active-games.state) [game-id.action game])
+  :_  state
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+  ==
 ++  handle-server-action
   |=  =server-action:poker
   ^-  (quip card _state)
-  ?-    -.server-action
+  ?-  -.server-action
     %register-game
   ~&  >>  "Game initiated with server {<our.bowl>}."
   =/  new-game-state
@@ -147,14 +184,23 @@
   :_  state
     ~
     ::
-    ::
+    :: :poker-server &poker-server-action [%initialize-hand 60]
     %initialize-hand
-  =/  game  (~(got by active-games.state) game-id.server-action)
-    ::  deal a hand
+  =/  game  (get-game-by-id game-id.server-action)
+    :: first, deal a hand
   =/  game
     (~(initialize-hand modify-state game) dealer.game.game)
   =/  cards
-    (turn hands.game |=(hand=[ship poker-deck] (~(send-hand modify-state game) hand)))
+    (turn hands.game |=(hand=[ship poker-deck] (~(make-player-cards modify-state game) hand)))
+  =.  active-games.state
+    (~(put by active-games.state) [game-id.server-action game])
+  :_  state
+    cards
+    ::
+    ::
+    %send-game-updates
+  =/  cards
+    (turn hands.game.server-action |=(hand=[ship poker-deck] (~(make-player-cards modify-state game.server-action) hand)))
   :_  state
     cards
     ::
@@ -162,5 +208,13 @@
     %kick
   :_  state
     ~[[%give %kick paths.server-action `subscriber.server-action]]  
+    ::
+    ::
+    %wipe-all-games :: for debugging, mostly
+  =.  active-games.state
+    ~  
+  ~&  >>>  "server wiped"
+  :_  state
+    ~
   ==
 --

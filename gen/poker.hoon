@@ -37,33 +37,33 @@
   (~(initialize-hand modify-state state) ~bus)
 :: pre-flop ROUND
 =/  state
-  (~(process-player-action modify-state state) ~bus [%bet 20])
+  (~(process-player-action modify-state state) ~bus [%bet 1 20])
 =/  state
   ~(poker-flop modify-state state)
 :: flop ROUND
 =/  state
-  (~(process-player-action modify-state state) ~zod [%bet 60])
+  (~(process-player-action modify-state state) ~zod [%bet 1 60])
 ~&  state
 =/  state
-  (~(process-player-action modify-state state) ~bus [%bet 120])
+  (~(process-player-action modify-state state) ~bus [%bet 1 120])
 =/  state
-  (~(process-player-action modify-state state) ~zod [%bet 60])
+  (~(process-player-action modify-state state) ~zod [%bet 1 60])
 =/  state
   ~(turn-river modify-state state)
 :: turn ROUND
 =/  state
-  (~(process-player-action modify-state state) ~zod [%check])
+  (~(process-player-action modify-state state) ~zod [%check 1])
 =/  state
-  (~(process-player-action modify-state state) ~bus [%check])
+  (~(process-player-action modify-state state) ~bus [%check 1])
 =/  state
   ~(turn-river modify-state state)
 :: river ROUND
 =/  state
-  (~(process-player-action modify-state state) ~zod [%check])
+  (~(process-player-action modify-state state) ~zod [%check 1])
 =/  state
-  (~(process-player-action modify-state state) ~bus [%bet 100])
+  (~(process-player-action modify-state state) ~bus [%bet 1 100])
 =/  state
-  (~(process-player-action modify-state state) ~zod [%bet 100])
+  (~(process-player-action modify-state state) ~zod [%bet 1 100])
 :: HAND EVALUATION
 ::  =/  state   (~(committed-chips-to-pot modify-state state))
 =/  winner  ~(determine-winner modify-state state)
