@@ -29,18 +29,19 @@
 +$  poker-game-state
   $:  
     game-id=@ud
-    players=(list ship)
     host=ship
     type=poker-game-type
+    players=(list ship)
     chips=(list [ship in-stack=@ud committed=@ud])
-    my-hand=poker-deck
+    pot=@ud
+    current-bet=@ud
+    min-bet=@ud
     board=poker-deck
+    my-hand=poker-deck
     my-turn=?
     dealer=ship
     small-blind=ship
     big-blind=ship
-    pot=@ud
-    current-bet=@ud
   ==  
 ::
 +$  poker-challenge
@@ -74,7 +75,7 @@
   $%
     [%register-game challenge=poker-challenge]
     [%kick paths=(list path) subscriber=ship]
-    [%deal-hand game-id=@ud]
+    [%initialize-hand game-id=@ud]
   ==
 ::
 --

@@ -118,17 +118,20 @@
   ~&  >>  "Game initiated with server {<our.bowl>}."
   =/  new-game-state
     [
-      game-id=game-id.challenge.server-action
-      players=players.challenge.server-action
+      game-id=game-id.challenge.server-action  
       host=host.challenge.server-action
       type=type.challenge.server-action
+      players=players.challenge.server-action
       chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0]))
-      my-hand=~
-      board=~
-      my-turn=~
-      dealer=~
       pot=0
       current-bet=0
+      min-bet=40
+      board=~
+      my-hand=~
+      my-turn=%.n
+      dealer=(snag 1 players.challenge.server-action)  :: heads-up specific
+      small-blind=(snag 1 players.challenge.server-action)
+      big-blind=(snag 0 players.challenge.server-action)
     ]
   =/  new-server-state
     [
@@ -136,7 +139,7 @@
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       paused=%.n
-      whose-turn=~
+      whose-turn=(snag 1 players.challenge.server-action)
       hands-played=0
     ]
   =.  active-games.state
@@ -145,13 +148,13 @@
     ~
     ::
     ::
-    %deal-hand
+    %initialize-hand
   =/  game  (~(got by active-games.state) game-id.server-action)
     ::  deal a hand
-  =/  new-game
-    (deal-hands game)
+  =/  game
+    (~(initialize-hand modify-state game) dealer.game.game)
   =/  cards
-    (turn hands.new-game |=(hand=[ship poker-deck] (send-hands hand new-game)))
+    (turn hands.game |=(hand=[ship poker-deck] (~(send-hand modify-state game) hand)))
   :_  state
     cards
     ::

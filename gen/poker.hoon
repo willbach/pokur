@@ -6,18 +6,19 @@
 =/  new-game-state
   [
     game-id=1
-    players=~[~zod ~bus]
     host=~zod
     type=%cash
+    players=~[~zod ~bus] 
     chips=(turn ~[~zod ~bus] |=(a=ship [a 1.000 0]))
-    my-hand=~
+    pot=0
+    current-bet=0
+    min-bet=40
     board=~
+    my-hand=~
     my-turn=%.n
     dealer=~bus
     small-blind=~bus
     big-blind=~zod
-    pot=0
-    current-bet=0
   ]
 =/  state
   [
@@ -30,40 +31,42 @@
   ]
 ::  ~&  state
 :: start of hand
+=.  deck.state
+  (shuffle-deck deck.state eny)
 =/  state
-  (initialize-hand 20 ~bus (shuffle-deck-in-state state eny))
-~&  state
+  (~(initialize-hand modify-state state) ~bus)
 :: pre-flop ROUND
 =/  state
-  (process-player-action ~bus [%bet 20] state)
+  (~(process-player-action modify-state state) ~bus [%bet 20])
 =/  state
-  (deal-to-board 3 (committed-chips-to-pot state))
+  ~(poker-flop modify-state state)
 :: flop ROUND
 =/  state
-  (process-player-action ~zod [%bet 60] state)
+  (~(process-player-action modify-state state) ~zod [%bet 60])
+~&  state
 =/  state
-  (process-player-action ~bus [%bet 120] state)
+  (~(process-player-action modify-state state) ~bus [%bet 120])
 =/  state
-  (process-player-action ~zod [%bet 60] state)
+  (~(process-player-action modify-state state) ~zod [%bet 60])
 =/  state
-  (deal-to-board 1 (committed-chips-to-pot state))
+  ~(turn-river modify-state state)
 :: turn ROUND
 =/  state
-  (process-player-action ~zod [%check] state)
+  (~(process-player-action modify-state state) ~zod [%check])
 =/  state
-  (process-player-action ~bus [%check] state)
+  (~(process-player-action modify-state state) ~bus [%check])
 =/  state
-  (deal-to-board 1 (committed-chips-to-pot state))
+  ~(turn-river modify-state state)
 :: river ROUND
 =/  state
-  (process-player-action ~zod [%check] state)
+  (~(process-player-action modify-state state) ~zod [%check])
 =/  state
-  (process-player-action ~bus [%bet 100] state)
+  (~(process-player-action modify-state state) ~bus [%bet 100])
 =/  state
-  (process-player-action ~zod [%bet 100] state)
+  (~(process-player-action modify-state state) ~zod [%bet 100])
 :: HAND EVALUATION
-=/  state   (committed-chips-to-pot state)
-=/  winner  (determine-winner state)
-=/  state   (process-win winner state)
+::  =/  state   (~(committed-chips-to-pot modify-state state))
+=/  winner  ~(determine-winner modify-state state)
+=/  state   (~(process-win modify-state state) winner)
 :-  %noun
 state
