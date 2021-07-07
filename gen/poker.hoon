@@ -8,14 +8,16 @@
     game-id=1
     host=~zod
     type=%cash
-    players=~[~zod ~bus] 
+    players=~[~zod ~bus]
+    paused=%.n
+    hands-played=0 
     chips=(turn ~[~zod ~bus] |=(a=ship [a 1.000 0]))
     pot=0
     current-bet=0
     min-bet=40
     board=~
     my-hand=~
-    my-turn=%.n
+    whose-turn=~bus
     dealer=~bus
     small-blind=~bus
     big-blind=~zod
@@ -25,9 +27,6 @@
     game=new-game-state
     hands=~
     deck=(shuffle-deck generate-deck eny)
-    paused=%.n
-    whose-turn=~bus
-    hands-played=0
   ]
 ::  ~&  state
 :: start of hand

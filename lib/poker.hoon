@@ -3,15 +3,29 @@
 |%
 ++  modify-state
   |_  state=server-game-state
-  ::  checks if all players have committed the same amount of chips
-  ::  excludes BB from this if BB has not yet bet
+  ::  checks if all players have acted, and committed the same amount of chips
   ::  returns a bool
   ++  is-betting-over
+    =/  acted-check
+      |=  [who=ship n=@ud c=@ud acted=?]
+      =(acted %.y)
+    ?.  (levy chips.game.state acted)
+      %.n
     =/  x  committed:(head chips.game.state)
     =/  f
-      |=  [who=ship n=@ud c=@ud]
+      |=  [who=ship n=@ud c=@ud acted=?]
       =(c x)
     (levy chips.game.state f)
+  ::  checks cards on table and either initiates flop, turn, river, or determine-winner
+  ++  next-round
+    ^-  server-game-state
+    :: better way to write this?
+    =/  n  (lent board.game.state)
+    ?:  |(=(3 n) =(4 n))
+      turn-river
+    ?:  =(5 n)
+      (process-win determine-winner)
+    poker-flop
   ::  **takes in a shuffled deck**
   ::  assign dealer, assign blinds, assign first action to person left of BB
   ::  (which is dealer in heads-up)
@@ -22,7 +36,7 @@
     =.  dealer.game.state  dealer
     =.  state              assign-blinds
     =.  state              deal-hands
-    =.  whose-turn.state   (get-next-player big-blind.game.state players.game.state)
+    =.  whose-turn.game.state   (get-next-player big-blind.game.state players.game.state)
     state
   ::  deals 2 cards from deck to each player in game
   ++  deal-hands
@@ -43,13 +57,6 @@
     |=  hand=[ship poker-deck]
     =.  my-hand.game.state
       (tail hand)
-    :: need to write this better...
-    ?:  =(whose-turn.state (head hand))
-      =.  my-turn.game.state
-        %.y
-      [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
-    =.  my-turn.game.state
-      %.n
     [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
   ++  poker-flop
     ^-  server-game-state
@@ -73,14 +80,14 @@
     =.  board.game.state
       (weld hand:turn board.game.state)
     :: setting who goes first in betting round here
-    =.  whose-turn.state
+    =.  whose-turn.game.state
       (get-next-player dealer.game.state players.game.state)
     state
   ::  sets whose-turn to next player in list ("clockwise")
   ++  next-player-turn
     ^-  server-game-state 
-    =.  whose-turn.state
-      (get-next-player whose-turn.state players.game.state)
+    =.  whose-turn.game.state
+      (get-next-player whose-turn.game.state players.game.state)
     state
   ::  sends chips from player's 'stack' to their 'committed' pile
   ::  used after a bet, call, raise is made
@@ -89,7 +96,7 @@
     |=  [who=ship amount=@ud]
     ^-  server-game-state
     =/  f
-      |=  [p=ship n=@ud c=@ud]
+      |=  [p=ship n=@ud c=@ud acted=?]
       ?:  =(p who)
         [p (sub n amount) (add c amount)]
       [p n c] 
@@ -99,10 +106,10 @@
   ++  committed-chips-to-pot
     ^-  server-game-state
     =/  f
-      |=  [[p=ship n=@ud c=@ud] pot=@ud]
+      |=  [[p=ship n=@ud c=@ud acted=?] pot=@ud]
         =.  pot  
           (add c pot)
-        [[p n 0] pot]
+        [[p n 0 %.n] pot]
     =/  new  (spin chips.game.state pot.game.state f)
     =.  pot.game.state          q.new
     =.  chips.game.state        p.new
@@ -135,32 +142,27 @@
     |=  winner=ship
     ^-  server-game-state
     :: sends any extra committed chips to pot
-    ~&  >>  "here? 2"
     =.  state
       committed-chips-to-pot
     :: give pot to winner
     =/  f
-      |=  [p=ship n=@ud c=@ud]
+      |=  [p=ship n=@ud c=@ud acted=?]
       ?:  =(p winner) 
-        [p (add n (add c pot.game.state)) 0]
-      [p n 0] 
-    ~&  >>  "here? 2.1"
+        [p (add n (add c pot.game.state)) 0 %.n]
+      [p n 0 %.n] 
     =.  chips.game.state  (turn chips.game.state f)
     =.  pot.game.state  0
     :: take hands away, clear board, clear bet
     =.  board.game.state
       ~
-    ~&  >>  "here? 2.2"
     =.  current-bet.game.state
       0
     =.  hands.state
       (turn hands.state |=([s=ship h=poker-deck] [s ~]))
     :: inc hands-played
-    ~&  >>  "here? 2.3"
-    =.  hands-played.state
-      (add 1 hands-played.state)
+    =.  hands-played.game.state
+      (add 1 hands-played.game.state)
     :: set fresh deck
-    ~&  >>  "here? 3"
     =.  deck.state
       generate-deck
     :: NOTE: BLINDS UP/DOWN etc should be here?
@@ -169,13 +171,14 @@
   ::  currently checks for being given the wrong player (not their turn),
   ::  bad bet (2x existing bet, >BB, or matches current bet (call)),
   ::  and trying to check when there's a bet to respond to.
+  ::  * if betting is complete, go right into flop/turn/river/determine-winner
   ::  * folds trigger win for other player (assumes heads-up)
   ++  process-player-action
     :: what type should rule violating actions return?
     ::
     |=  [who=ship action=game-action:poker]
     ^-  server-game-state
-    ?.  =(who whose-turn.state)
+    ?.  =(who whose-turn.game.state)
       :: error, wrong player making move
       !!
     ?-  -.action
@@ -183,9 +186,10 @@
     ?:  (gth current-bet.game.state 0)
       :: error, player must match current bet
       !!
-    next-player-turn
+    ?.  is-betting-over
+      next-player-turn
+    next-round
       %bet
-    ~&  >>  "{<current-bet.game.state>},,, {<=(current-bet.game.state 0)>}"
     =/  bet-plus-committed  
       (add amount.action committed:(get-player-chips who chips.game.state))
     ?:  &(=(current-bet.game.state 0) (lth bet-plus-committed min-bet.game.state))
@@ -194,7 +198,9 @@
       :: this is a call
       =.  state
         (commit-chips who amount.action)
-      next-player-turn
+      ?.  is-betting-over
+        next-player-turn
+      next-round
     ?:  (lth bet-plus-committed (mul 2 current-bet.game.state))
       :: error, raise must be 2x current bet
       !!
@@ -203,9 +209,10 @@
       bet-plus-committed
     =.  state
       (commit-chips who amount.action)
-    next-player-turn
+    ?.  is-betting-over
+      next-player-turn
+    next-round
       %fold
-    ~&  >>  "here? 1"
     :: this changes with n players rather than 2.. but for now just end hand
     (process-win (get-next-player who players.game.state))
     ==

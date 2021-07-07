@@ -20,9 +20,6 @@
   $:  game=poker-game-state
       hands=(list [ship poker-deck])
       deck=poker-deck
-      paused=?
-      whose-turn=ship
-      hands-played=@ud
   ==
 ::
 ::  This is the data a poker-client holds for a given game
@@ -32,13 +29,15 @@
     host=ship
     type=poker-game-type
     players=(list ship)
-    chips=(list [ship in-stack=@ud committed=@ud])
+    paused=?
+    hands-played=@ud
+    chips=(list [ship in-stack=@ud committed=@ud acted=?])
     pot=@ud
     current-bet=@ud
     min-bet=@ud
     board=poker-deck
     my-hand=poker-deck
-    my-turn=?
+    whose-turn=ship
     dealer=ship
     small-blind=ship
     big-blind=ship

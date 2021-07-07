@@ -159,13 +159,15 @@
       host=host.challenge.server-action
       type=type.challenge.server-action
       players=players.challenge.server-action
-      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0]))
+      paused=%.n
+      hands-played=0
+      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n]))
       pot=0
       current-bet=0
       min-bet=40
       board=~
       my-hand=~
-      my-turn=%.n
+      whose-turn=(snag 1 players.challenge.server-action)
       dealer=(snag 1 players.challenge.server-action)  :: heads-up specific
       small-blind=(snag 1 players.challenge.server-action)
       big-blind=(snag 0 players.challenge.server-action)
@@ -175,9 +177,6 @@
       game=new-game-state
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
-      paused=%.n
-      whose-turn=(snag 1 players.challenge.server-action)
-      hands-played=0
     ]
   =.  active-games.state
     (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
