@@ -8,15 +8,15 @@ How to run (at the moment)
 
    :poker-client &poker-client-action [%issue-challenge (ship to challenge) 1 (ship running %poker-server) %cash]]
    
-4: respond on the ship you just sent a challenge to with:
+4. respond on the ship you just sent a challenge to with:
 
    :poker-client &poker-client-action [%accept-challenge (ship that sent challenge)]
 
-5: now, start the game on the server with (note 1 here is the same number in %issue-challenge -- this is the game ID):
+5. now, start the game on the server with (note 1 here is the same number in %issue-challenge -- this is the game ID):
 
    :poker-server &poker-server-action [%initialize-hand 1]
    
-6: from here, you can play a hand of poker between the two clients. The actions available are:
+6. from here, you can play a hand of poker between the two clients. The actions available are:
 
    :poker-client &poker-game-action [%check (game ID)]
                                     [%bet (game ID) (amount)]
