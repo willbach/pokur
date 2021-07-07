@@ -4,11 +4,23 @@
 ::
 +$  suit  ?(%spades %hearts %diamonds %clubs)
 +$  card-val
-  $~  %ace
-  ?(%ace %2 %3 %4 %5 %6 %7 %8 %9 %10 %jack %queen %king)
+  ?(%2 %3 %4 %5 %6 %7 %8 %9 %10 %jack %queen %king %ace)
 +$  poker-card  [card-val suit]
 :: a deck is any amount of cards, thus also represents a hand
 +$  poker-deck  (list poker-card)
++$  poker-hand-rank
+  $?
+    %royal-flush
+    %straight-flush
+    %four-of-a-kind
+    %full-house
+    %flush
+    %straight
+    %three-of-a-kind
+    %two-pair
+    %pair
+    %high-card
+  ==
 ::
 :: poker game types
 ::

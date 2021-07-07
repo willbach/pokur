@@ -252,43 +252,121 @@
 ::
 ::  Assorted helper arms
 ::
+++  eval-5-cards
+  |=  hand=poker-deck
+  ^-  poker-hand-rank 
+  :: check for pairs 
+  =/  make-histogram
+    |=  [c=[@ud @ud] h=(list @ud)]
+      =/  new-hist  (snap h -.c (add 1 (snag -.c h)))
+      [c new-hist]
+  =/  r  (spin (turn hand card-to-raw) (reap 13 0) make-histogram) 
+  =/  raw-hand  p.r
+  =/  histogram  (sort (skip q.r |=(x=@ud =(x 0))) gth)
+  ?:  =(histogram ~[4 1])
+    %four-of-a-kind
+  ?:  =(histogram ~[3 2])
+    %full-house
+  ?:  =(histogram ~[3 1 1])
+    %three-of-a-kind
+  ?:  =(histogram ~[2 2 1])
+    %two-pair
+  ?:  =(histogram ~[2 1 1 1])
+    %pair
+  :: check for flush
+  =/  is-flush  %.n
+  =/  first-card-suit  +:(head raw-hand)
+  =/  suit-check
+    |=  c=[@ud @ud]
+      =(+.c first-card-suit)
+  =/  is-flush  (levy raw-hand suit-check)
+  :: check for straight
+  =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
+  :: check for royal flush here too
+  ?:  =(4 (sub -.-.raw-hand -.+>+>-.raw-hand))
+    ?:  is-flush
+      ?:  &(=(-.-.raw-hand 12) =(-.+>+>-.raw-hand 8))
+        :: if this code ever executes i will smile
+        ~&  >  "someone just got a royal flush!"
+        %royal-flush
+      %straight-flush
+    %straight
+  :: also need to check for wheel straight
+  ?:  &(=(-.-.raw-hand 12) =(-.+<.raw-hand 3))
+    ?:  is-flush
+      %straight-flush
+    %straight
+  ?:  is-flush
+    %flush
+  %high-card
+++  card-to-raw
+  |=  c=poker-card
+  ^-  [@ud @ud]
+  [(card-val-to-atom -.c) (suit-to-atom +.c)]
+++  card-val-to-atom
+  |=  c=card-val
+  ^-  @ud
+  ?-  c
+    %2      0 
+    %3      1
+    %4      2
+    %5      3
+    %6      4
+    %7      5
+    %8      6
+    %9      7
+    %10     8
+    %jack   9
+    %queen  10
+    %king   11
+    %ace    12
+  ==
+++  suit-to-atom
+  |=  s=suit
+  ^-  @ud
+  ?-  s
+    %hearts    0
+    %spades    1
+    %clubs     2
+    %diamonds  3
+  ==
 ++  atom-to-card-val
   |=  n=@ud
   ^-  card-val
   ?+  n  !! :: ^-(card-val `@tas`n) :: if non-face card just use number?? need to coerce type
-    %1   %ace
-    %2   %2
-    %3   %3
-    %4   %4
-    %5   %5
-    %6   %6
-    %7   %7
-    %8   %8
-    %9   %9
-    %10  %10
-    %11  %jack
-    %12  %queen
-    %13  %king
+    %0   %2
+    %1   %3
+    %2   %4
+    %3   %5
+    %4   %6
+    %5   %7
+    %6   %8
+    %7   %9
+    %8   %10
+    %9   %jack
+    %10  %queen
+    %11  %king
+    %12  %ace
   ==
 ++  atom-to-suit
   |=  val=@ud
   ^-  suit
   ?+  val  !!
-    %1  %hearts
-    %2  %spades
-    %3  %clubs
-    %4  %diamonds
+    %0  %hearts
+    %1  %spades
+    %2  %clubs
+    %3  %diamonds
   ==
 ++  generate-deck
   ^-  poker-deck
   =|  new-deck=poker-deck
-  =/  i  1
+  =/  i  0
   |-
-  ?:  (gth i 4)
+  ?:  (gth i 3)
     new-deck
-  =/  j  1
+  =/  j  0
   |-
-  ?.  (lte j 13)
+  ?.  (lte j 12)
     ^$(i +(i))
   %=  $
     j         +(j)
