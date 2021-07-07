@@ -3,6 +3,15 @@
 |%
 ++  modify-state
   |_  state=server-game-state
+  ::  checks if all players have committed the same amount of chips
+  ::  excludes BB from this if BB has not yet bet
+  ::  returns a bool
+  ++  is-betting-over
+    =/  x  committed:(head chips.game.state)
+    =/  f
+      |=  [who=ship n=@ud c=@ud]
+      =(c x)
+    (levy chips.game.state f)
   ::  **takes in a shuffled deck**
   ::  assign dealer, assign blinds, assign first action to person left of BB
   ::  (which is dealer in heads-up)
@@ -97,7 +106,6 @@
     =/  new  (spin chips.game.state pot.game.state f)
     =.  pot.game.state          q.new
     =.  chips.game.state        p.new
-    ~&  >>  "here? 4.2"
     =.  current-bet.game.state  0
     state
   ::  takes blinds from the two players left of dealer
