@@ -20,6 +20,7 @@
   $:  game=poker-game-state
       hands=(list [ship poker-deck])
       deck=poker-deck
+      hand-is-over=?
   ==
 ::
 ::  This is the data a poker-client holds for a given game
@@ -56,7 +57,7 @@
 ::
 +$  client-action
   $%
-    [%issue-challenge to=ship challenge=poker-challenge]
+    [%issue-challenge to=ship game-id=@ud host=ship type=poker-game-type]
     [%accept-challenge from=ship]
     [%receive-challenge challenge=poker-challenge]
     [%challenge-accepted by=ship]

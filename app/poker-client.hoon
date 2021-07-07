@@ -105,14 +105,22 @@
   |=  =client-action:poker
   ^-  (quip card _state)
   ?-  -.client-action
-    :: :poker-client &poker-client-action [%issue-challenge ~bus [game-id=100 challenger=~zod players=~[~zod ~bus] host=~zod type=%cash]]
+    :: :poker-client &poker-client-action [%issue-challenge ~bus 1 ~zod %cash]]
     %issue-challenge
   ?>  (team:title [our src]:bowl)
+  =/  challenge
+    [
+      game-id=game-id.client-action
+      challenger=our.bowl
+      players=~[our.bowl to.client-action] :: change this for multiplayer
+      host=host.client-action
+      type=type.client-action
+    ]
   =.  challenges-sent.state  
-    (~(put by challenges-sent.state) [to.client-action challenge.client-action])
+    (~(put by challenges-sent.state) [to.client-action challenge])
   :_  state
     :~  :*  %pass  /poke-wire  %agent  [to.client-action %poker-client] 
-            %poke  %poker-client-action  !>([%receive-challenge challenge=challenge.client-action])
+            %poke  %poker-client-action  !>([%receive-challenge challenge=challenge])
           ==
       ==  
     ::

@@ -9,7 +9,7 @@
     =/  acted-check
       |=  [who=ship n=@ud c=@ud acted=?]
       =(acted %.y)
-    ?.  (levy chips.game.state acted)
+    ?.  (levy chips.game.state acted-check)
       %.n
     =/  x  committed:(head chips.game.state)
     =/  f
@@ -33,10 +33,11 @@
   ++  initialize-hand
     |=  dealer=ship
     ^-  server-game-state
-    =.  dealer.game.state  dealer
-    =.  state              assign-blinds
-    =.  state              deal-hands
+    =.  dealer.game.state       dealer
+    =.  state                   assign-blinds
+    =.  state                   deal-hands
     =.  whose-turn.game.state   (get-next-player big-blind.game.state players.game.state)
+    =.  hand-is-over.state      %.n
     state
   ::  deals 2 cards from deck to each player in game
   ++  deal-hands
@@ -98,13 +99,22 @@
     =/  f
       |=  [p=ship n=@ud c=@ud acted=?]
       ?:  =(p who)
-        [p (sub n amount) (add c amount)]
-      [p n c] 
+        [p (sub n amount) (add c amount) acted]
+      [p n c acted] 
     =.  chips.game.state  (turn chips.game.state f)
     state
-  ::  takes all chips in 'committed' pile from each player and sends to pot
-  ++  committed-chips-to-pot
+  ++  set-player-as-acted
+    |=  who=ship
     ^-  server-game-state
+    =/  f
+      |=  [p=ship n=@ud c=@ud acted=?]
+      ?:  =(p who)
+        [p n c %.y]
+      [p n c acted] 
+    =.  chips.game.state  (turn chips.game.state f)
+    state
+  ++  committed-chips-to-pot
+    ^-  server-game-state 
     =/  f
       |=  [[p=ship n=@ud c=@ud acted=?] pot=@ud]
         =.  pot  
@@ -158,13 +168,19 @@
     =.  current-bet.game.state
       0
     =.  hands.state
-      (turn hands.state |=([s=ship h=poker-deck] [s ~]))
+      ~
     :: inc hands-played
     =.  hands-played.game.state
       (add 1 hands-played.game.state)
     :: set fresh deck
     =.  deck.state
       generate-deck
+    :: rotate dealer
+    =.  dealer.game.state
+      (get-next-player dealer.game.state players.game.state)
+    :: set hand to OVEr
+    =.  hand-is-over.state
+      %.y
     :: NOTE: BLINDS UP/DOWN etc should be here?
     state
   ::  given a player and a poker-action, handles the action.
@@ -186,6 +202,9 @@
     ?:  (gth current-bet.game.state 0)
       :: error, player must match current bet
       !!
+    ::  set checking player to 'acted'
+    =.  state
+      (set-player-as-acted who)
     ?.  is-betting-over
       next-player-turn
     next-round
@@ -198,6 +217,8 @@
       :: this is a call
       =.  state
         (commit-chips who amount.action)
+      =.  state
+      (set-player-as-acted who)
       ?.  is-betting-over
         next-player-turn
       next-round
@@ -209,11 +230,15 @@
       bet-plus-committed
     =.  state
       (commit-chips who amount.action)
+    =.  state
+      (set-player-as-acted who)
     ?.  is-betting-over
       next-player-turn
     next-round
       %fold
     :: this changes with n players rather than 2.. but for now just end hand
+    =.  state
+      (set-player-as-acted who)
     (process-win (get-next-player who players.game.state))
     ==
   :: TODO: hand evaluation. given state, look at hands+board to see
@@ -302,10 +327,10 @@
   (snag (mod (add 1 u.+.player-position) (lent players)) players)
 ::  given a ship in game, returns their chip count [name stack committed]
 ++  get-player-chips
-  |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud])]
-  ^-  [who=ship in-stack=@ud committed=@ud]
+  |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud acted=?])]
+  ^-  [who=ship in-stack=@ud committed=@ud acted=?]
   =/  f
-    |=  [p=ship n=@ud c=@ud]
+    |=  [p=ship n=@ud c=@ud acted=?]
     =(p who)
   (head (skim chips f))
 --

@@ -121,31 +121,42 @@
   ^-  server-game-state
   ::  obviously add error handling to this
   (~(got by active-games.state) game-id)
+++  generate-update-cards
+  |=  game=server-game-state
+  ^-  (list card)
+  ?.  hand-is-over.game
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+  :: initialize new hand
+  ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.game.game])]]
 ++  handle-game-action
   |=  action=game-action:poker
   ^-  (quip card _state)
+  :: state changes will throw an error if a player who's not in a game
+  :: or playing out-of-turn tries to register a move, but let's check here
+  :: anyways that the person poking us is a member of the game they are poking...
   ?-  -.action
-    %check
-  =/  game  (get-game-by-id game-id.action)
-  =/  game  (~(process-player-action modify-state game) src.bowl [%check game-id=game-id.action])
-  =.  active-games.state
-    (~(put by active-games.state) [game-id.action game])
-  :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
-    %bet
-  =/  game  (get-game-by-id game-id.action)
-  =/  game  (~(process-player-action modify-state game) src.bowl [%bet game-id=game-id.action amount=amount.action])
-  =.  active-games.state
-    (~(put by active-games.state) [game-id.action game])
-  :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
-    %fold
-  =/  game  (get-game-by-id game-id.action)
-  =/  game  (~(process-player-action modify-state game) src.bowl [%fold game-id=game-id.action])
-  =.  active-games.state
-    (~(put by active-games.state) [game-id.action game])
-  :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+  :: TODO: how do i avoid repeating all this code?
+      %check
+    =/  game  (get-game-by-id game-id.action)
+    =.  game  (~(process-player-action modify-state game) src.bowl [%check game-id=game-id.action])
+    =.  active-games.state
+      (~(put by active-games.state) [game-id.action game])
+    :_  state
+      (generate-update-cards game)  
+      %bet
+    =/  game  (get-game-by-id game-id.action)
+    =.  game  (~(process-player-action modify-state game) src.bowl [%bet game-id=game-id.action amount=amount.action])
+    =.  active-games.state
+      (~(put by active-games.state) [game-id.action game])
+    :_  state
+      (generate-update-cards game)  
+      %fold
+    =/  game  (get-game-by-id game-id.action)
+    =.  game  (~(process-player-action modify-state game) src.bowl [%fold game-id=game-id.action])
+    =.  active-games.state
+      (~(put by active-games.state) [game-id.action game])
+    :_  state
+      (generate-update-cards game)
   ==
 ++  handle-server-action
   |=  =server-action:poker
@@ -177,16 +188,19 @@
       game=new-game-state
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
+      hand-is-over=%.y
     ]
   =.  active-games.state
     (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
   :_  state
     ~
     ::
-    :: :poker-server &poker-server-action [%initialize-hand 60]
+    :: :poker-server &poker-server-action [%initialize-hand 1]
     %initialize-hand
   =/  game  (get-game-by-id game-id.server-action)
-    :: first, deal a hand
+    :: first, shuffle
+  =.  deck.game
+    (shuffle-deck deck.game eny.bowl)
   =/  game
     (~(initialize-hand modify-state game) dealer.game.game)
   =/  cards

@@ -27,6 +27,7 @@
     game=new-game-state
     hands=~
     deck=(shuffle-deck generate-deck eny)
+    hand-is-over=%.n
   ]
 ::  ~&  state
 :: start of hand
