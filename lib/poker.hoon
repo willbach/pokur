@@ -250,15 +250,68 @@
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
       =/  result  (evaluate-hand hand)
-      [who result]
+      [who [result hand]]
     =/  hand-ranks  (turn hands.state eval-each-hand)
-    ::  return player with highest hand rank
-    =/  player-ranks  (sort hand-ranks |=([a=[p=ship r=@ud] b=[p=ship r=@ud]] (gth r.a r.b)))
+    :: return player with highest hand rank
+    =/  player-ranks  
+      (sort hand-ranks |=([a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]] (gth r.a r.b)))
+    :: check for tie(s) and break before returning winner
+    :: ?:  =(r.-.player-ranks r.+<.player-ranks)
     -:(head player-ranks)
   --
 ::
 ::  Assorted helper arms
 ::
+:: given two hands, returns %.y if 1 is better than 2 (like gth)
+:: use in a sort function to sort hands with more granularity to find true winner
+++  break-ties
+  |=  [hand1=[r=@ud h=poker-deck] hand2=[r=@ud h=poker-deck]]
+  ^-  ?
+  :: may try to avoid this for speedup in future, 
+  :: but internally sort each hand to make process easy for now.
+  =/  sorter
+   |=  [a=[card-val suit] b=[card-val suit]]
+     (gth (card-val-to-atom -.a) (card-val-to-atom -.b))
+  =.  h.hand1  (sort h.hand1 sorter)
+  =.  h.hand2  (sort h.hand2 sorter)
+  :: union to match tie-breaking strategy to type of hand, in order of easy-ness
+  ?+  r.hand1  !!  :: will be same for both
+    %9  :: two royal flushes... impossible!
+  !!
+    %8  :: straight flushes, high card wins
+  (find-high-card-recursive h.hand1 h.hand2)
+    %5  :: flush, high card wins
+  (find-high-card-recursive h.hand1 h.hand2)
+    %4  :: straight, high wins
+  (find-high-card-recursive h.hand1 h.hand2)
+    %0  :: high card -- high wins
+  (find-high-card-recursive h.hand1 h.hand2)
+    %7  :: four of a kind -- high set wins, then kicker
+  (find-high-card-recursive h.hand1 h.hand2)
+    %6  :: full house -- high 3 wins, then 2, then kicker
+  (find-high-card-recursive h.hand1 h.hand2)
+    %3  :: set, high 3 wins, then kicker(s)
+  (find-high-card-recursive h.hand1 h.hand2)
+    %2  :: 2 pair, high pair, then low pair, then kicker
+  (find-high-card-recursive h.hand1 h.hand2)
+    %1  :: high pair then kicker(s)
+  (find-high-card-recursive h.hand1 h.hand2)
+  ==
+:: %.y if hand1 has higher card, %.n if hand2 does  
+++  find-high-card-recursive
+  |=  [hand1=poker-deck hand2=poker-deck]
+  ^-  ?
+  =/  top-card-1
+    (card-val-to-atom -:(head hand1)) 
+  =/  top-card-2
+    (card-val-to-atom -:(head hand2))
+  ?:  =(top-card-1 top-card-2)  
+    $(hand1 (tail hand1), hand2 (tail hand2))
+  ?:  %+  gth   
+        top-card-1
+      top-card-2
+    %.y
+  %.n
 :: **returns a hierarchy number which translates to hand rank**
 ++  evaluate-hand
   |=  hand=poker-deck
@@ -268,21 +321,23 @@
     ::  generate a hand without card c
     [(oust [c 1] h) h]
   =/  possible-6-hands  
-    (turn p:(spin (gulf 0 6) hand get-sub-hand) |=(h=poker-deck [(rank-to-hierarchy (eval-6-cards h)) h]))
+    (turn p:(spin (gulf 0 6) hand get-sub-hand) |=(h=poker-deck [(eval-6-cards h) h]))
   =.  possible-6-hands
     (sort possible-6-hands |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b)))
   ::  need to break ties between equally-ranked hands here...
+  ::  ~&  >>  possible-6-hands
   =/  best-6  +:(head possible-6-hands)
   =/  possible-5-hands
-    (turn p:(spin (gulf 0 5) best-6 get-sub-hand) |=(h=poker-deck [(rank-to-hierarchy (eval-5-cards h)) h]))
+    (turn p:(spin (gulf 0 5) best-6 get-sub-hand) |=(h=poker-deck [(eval-5-cards h) h]))
   =.  possible-5-hands
     (sort possible-5-hands |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b)))
   ::  ...and again here.
+  ::  ~&  >>  possible-5-hands
   ::(hierarchy-to-rank -:(head possible-5-hands))
   -:(head possible-5-hands)
 ++  eval-6-cards
   |=  hand=poker-deck
-  ^-  poker-hand-rank
+  ^-  @ud
   ::  ~&  >>  "evaluating hand: {<hand>}" 
   :: check for pairs 
   =/  make-histogram
@@ -293,32 +348,32 @@
   =/  raw-hand  p.r
   =/  histogram  (sort (skip q.r |=(x=@ud =(x 0))) gth)
   ?:  |(=(histogram ~[4 1 1]) =(histogram ~[4 2]))
-    %four-of-a-kind
+    7
   ?:  |(=(histogram ~[3 2 1]) =(histogram ~[3 3]))
-    %full-house
+    6
   ?:  =(histogram ~[3 1 1 1])
-    %three-of-a-kind
+    3
   ?:  |(=(histogram ~[2 2 1 1]) =(histogram ~[2 2 2]))
-    %two-pair
+    2
+  :: at this point, must sort hand
+  =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   :: check for flush
   =/  is-flush  (check-6-hand-flush raw-hand)
   :: check for straight
-  :: when checking, exclude highest, then lowest card in sort to find 5-straights
   =/  is-straight  (check-6-hand-straight raw-hand)
   ?:  &(is-straight is-flush)
-    %straight-flush
+    8
   ?:  is-flush
-    %flush
+    5
   ?:  is-straight
-    %straight
+    4
   :: check down here cause this can possibly contain flush too
   ?:  =(histogram ~[2 1 1 1 1])
-    %pair
-  %high-card
+    1
+  0
 ++  eval-5-cards
   |=  hand=poker-deck
-  ~&  >>  "evaluating hand: {<hand>}"
-  ^-  poker-hand-rank 
+  ^-  @ud 
   :: check for pairs 
   =/  make-histogram
     |=  [c=[@ud @ud] h=(list @ud)]
@@ -328,31 +383,33 @@
   =/  raw-hand  p.r
   =/  histogram  (sort (skip q.r |=(x=@ud =(x 0))) gth)
   ?:  =(histogram ~[4 1])
-    %four-of-a-kind
+    7
   ?:  =(histogram ~[3 2])
-    %full-house
+    6
   ?:  =(histogram ~[3 1 1])
-    %three-of-a-kind
+    3
   ?:  =(histogram ~[2 2 1])
-    %two-pair
+    2
   ?:  =(histogram ~[2 1 1 1])
-    %pair
+    1
+  :: at this point, must sort hand
+  =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   :: check for flush
   =/  is-flush  (check-5-hand-flush raw-hand)
   :: check for straight
   =/  is-straight  (check-5-hand-straight raw-hand)
   :: check for royal flush
-  ?:  &(=(-.-.raw-hand 12) =(-.+>+>-.raw-hand 8))
-    :: if this code ever executes i will smile
-    ~&  >  "someone just got a royal flush!"
-    %royal-flush
   ?:  &(is-straight is-flush)
-    %straight-flush
+    ?:  &(=(-.-.raw-hand 12) =(-.+>+>-.raw-hand 8))
+      :: if this code ever executes i will smile
+      :: ~&  >  "someone just got a royal flush!"
+      9
+    8
   ?:  is-flush
-    %flush
+    5
   ?:  is-straight
-    %straight
-  %high-card
+    4
+  0
 ++  check-6-hand-flush
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
@@ -369,6 +426,7 @@
     |=  c=[@ud @ud]
       =(+.c first-card-suit)
   (levy raw-hand suit-check)
+:: **hand must be sorted before using this
 ++  check-6-hand-straight
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
@@ -377,10 +435,10 @@
     ::  generate a hand without card c
     [(oust [c 1] h) h]
   (lien (turn p:(spin (gulf 0 5) raw-hand f) check-5-hand-straight) |=(a=? a))
+:: **hand must be sorted before using this
 ++  check-5-hand-straight
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
-  =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   ?:  =(4 (sub -.-.raw-hand -.+>+>-.raw-hand))
     %.y
   :: also need to check for wheel straight
