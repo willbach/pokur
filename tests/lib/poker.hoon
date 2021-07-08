@@ -2,6 +2,14 @@
 /+  poker
 =,  poker
 |%
+:: 7-card hand evaluation tests
+++  test-eval-royal
+  ^-  tang
+  =/  hand
+    ~[[%10 %spades] [%jack %clubs] [%jack %spades] [%queen %spades] [%king %spades] [%ace %spades]]
+  ?>  =(%royal-flush (evaluate-hand hand))
+  ~
+:: 5-card hand evaluation tests
 ++  test-eval-royal
   ^-  tang
   =/  hand
