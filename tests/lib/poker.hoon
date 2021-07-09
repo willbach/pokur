@@ -34,6 +34,70 @@
     ~(determine-winner modify-state state)
   ?>  =(winner ~zod)
   ~
+++  test-determine-winner-2
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=1
+      host=~zod
+      type=%cash
+      players=~[~zod ~bus]
+      paused=%.n
+      hands-played=0
+      chips=~[[~zod 1.000 0 %.n] [~bus 1.000 0 %.n]]
+      pot=0
+      current-bet=0
+      min-bet=40
+      board=~[[%2 %spades] [%2 %clubs] [%jack %hearts] [%6 %spades] [%queen %clubs]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%jack %spades] [%6 %clubs]]] [~bus ~[[%jack %diamonds] [%queen %spades]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+    ]
+  =/  winner
+    ~(determine-winner modify-state state)
+  ?>  =(winner ~bus)
+  ~
+++  test-determine-winner-3
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=1
+      host=~zod
+      type=%cash
+      players=~[~zod ~bus]
+      paused=%.n
+      hands-played=0
+      chips=~[[~zod 1.000 0 %.n] [~bus 1.000 0 %.n]]
+      pot=0
+      current-bet=0
+      min-bet=40
+      board=~[[%2 %hearts] [%3 %clubs] [%3 %hearts] [%jack %spades] [%queen %spades]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%2 %spades] [%2 %clubs]]] [~bus ~[[%2 %diamonds] [%3 %spades]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+    ]
+  =/  winner
+    ~(determine-winner modify-state state)
+  ?>  =(winner ~bus)
+  ~
 :: tie breaking tests
 ++  test-tie-break-1
   ^-  tang
@@ -115,6 +179,26 @@
         ==
   ?>  (break-ties hand2 hand1)
   ~
+++  test-tie-break-5
+  ^-  tang
+  =/  hand1
+    :-  1 :: pair
+      :~  [%2 %spades] 
+          [%3 %spades] 
+          [%4 %hearts] 
+          [%5 %clubs] 
+          [%6 %spades] 
+        ==
+  =/  hand2
+    :-  1
+      :~  [%3 %spades] 
+          [%4 %hearts] 
+          [%5 %clubs] 
+          [%6 %spades] 
+          [%7 %hearts] 
+        ==
+  ?>  (break-ties hand2 hand1)
+  ~
 :: 7-card hand evaluation tests
 ++  test-eval1
   ^-  tang
@@ -127,7 +211,7 @@
         [%king %spades] 
         [%ace %spades]
       ==
-  ?>  =(9 (evaluate-hand hand))
+  ?>  =(9 -:(evaluate-hand hand))
   ~
 ++  test-eval2
   ^-  tang
@@ -140,7 +224,7 @@
         [%king %hearts] 
         [%king %diamonds]
       ==
-  ?>  =(2 (evaluate-hand hand))
+  ?>  =(2 -:(evaluate-hand hand))
   ~
 ++  test-eval3
   ^-  tang
@@ -153,7 +237,7 @@
         [%ace %diamonds] 
         [%ace %spades]
       ==
-  ?>  =(1 (evaluate-hand hand))
+  ?>  =(1 -:(evaluate-hand hand))
   ~
 ++  test-eval4
   ^-  tang
@@ -166,7 +250,7 @@
         [%king %spades] 
         [%ace %spades]
       ==
-  ?>  =(0 (evaluate-hand hand))
+  ?>  =(0 -:(evaluate-hand hand))
   ~
 ++  test-eval5
   ^-  tang
@@ -179,7 +263,7 @@
         [%king %hearts] 
         [%ace %spades]
       ==
-  ?>  =(5 (evaluate-hand hand))
+  ?>  =(5 -:(evaluate-hand hand))
   ~
 ++  test-eval6
   ^-  tang
@@ -192,7 +276,7 @@
         [%queen %spades] 
         [%jack %hearts] 
       ==
-  ?>  =(5 (evaluate-hand hand))
+  ?>  =(5 -:(evaluate-hand hand))
   ~
 :: 5-card hand evaluation tests
 ++  test-eval-royal

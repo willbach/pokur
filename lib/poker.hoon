@@ -269,9 +269,8 @@
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
       =/  hand  
-        (weld hand board.game.state)
-      =/  result  (evaluate-hand hand)
-      [who [result hand]]
+        (weld hand board.game.state)  
+      [who (evaluate-hand hand)]
     =/  hand-ranks  (turn hands.state eval-each-hand)
     :: return player with highest hand rank
     =/  player-ranks  
@@ -361,34 +360,47 @@
     (card-val-to-atom -:(head hand1)) 
   =/  top-card-2
     (card-val-to-atom -:(head hand2))
-  ?:  =(top-card-1 top-card-2)  
+  ?:  =(top-card-1 top-card-2)
+    ?:  &(=((lent hand1) 1) =((lent hand2) 1))
+      %.n  
     $(hand1 (tail hand1), hand2 (tail hand2))
   ?:  %+  gth   
         top-card-1
       top-card-2
     %.y
   %.n
-:: **returns a hierarchy number which translates to hand rank**
+:: **returns a cell of [hierarchy-number hand]
 ++  evaluate-hand
   |=  hand=poker-deck
-  ^-  @ud
+  ^-  [@ud poker-deck]
   =/  get-sub-hand
     |=  [c=@ud h=poker-deck]
     ::  generate a hand without card c
     [(oust [c 1] h) h]
-  ::
-  ::  This needs to change. Need to use a (7 choose 5) to generate all 5-hands.
-  ::
   =/  possible-6-hands  
     (turn p:(spin (gulf 0 6) hand get-sub-hand) |=(h=poker-deck [(eval-6-cards h) h]))
   =.  possible-6-hands
     %+  sort 
       possible-6-hands 
     |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b))
-  ::  need to break ties between equally-ranked hands here...?
-  =/  best-6  +:(head possible-6-hands)
+  ::  need to break ties between equally-ranked hands here
+  =/  best-6-hand-rank
+    -.-.possible-6-hands
+  =.  possible-6-hands
+    %+  skim
+      possible-6-hands
+    |=  [r=@ud h=poker-deck]
+    ^-  ?
+    =(r best-6-hand-rank)
+  =/  best-6-hand
+    ?:  (gth (lent possible-6-hands) 1) 
+      %-  head
+      %+  sort
+        possible-6-hands
+      break-ties
+    (head possible-6-hands)
   =/  possible-5-hands
-    (turn p:(spin (gulf 0 5) best-6 get-sub-hand) |=(h=poker-deck [(eval-5-cards h) h]))
+    (turn p:(spin (gulf 0 5) +.best-6-hand get-sub-hand) |=(h=poker-deck [(eval-5-cards h) h]))
   =.  possible-5-hands
     %+  sort 
       possible-5-hands 
@@ -397,20 +409,19 @@
   ::  if there are multiple, sort them by break-ties
   =/  best-hand-rank
     -.-.possible-5-hands
-  =/  possible-5-hands
+  =.  possible-5-hands
     %+  skim
       possible-5-hands
     |=  [r=@ud h=poker-deck]
     ^-  ?
     =(r best-hand-rank)
   ?:  (gth (lent possible-5-hands) 1)
-    ~&  >  "tie found"
-    =/  possible-5-hands
+    =.  possible-5-hands
       %+  sort
         possible-5-hands
       break-ties
-    -:(head possible-5-hands)
-  -:(head possible-5-hands)
+    (head possible-5-hands)
+  (head possible-5-hands)
 ++  eval-6-cards
   |=  hand=poker-deck
   ^-  @ud
