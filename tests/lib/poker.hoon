@@ -2,6 +2,119 @@
 /+  poker
 =,  poker
 |%
+++  test-determine-winner-1
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=1
+      host=~zod
+      type=%cash
+      players=~[~zod ~bus]
+      paused=%.n
+      hands-played=0
+      chips=~[[~zod 1.000 0 %.n] [~bus 1.000 0 %.n]]
+      pot=0
+      current-bet=0
+      min-bet=40
+      board=~[[%10 %spades] [%jack %clubs] [%jack %hearts] [%jack %spades] [%queen %spades]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%king %spades] [%ace %spades]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+    ]
+  =/  winner
+    ~(determine-winner modify-state state)
+  ?>  =(winner ~zod)
+  ~
+:: tie breaking tests
+++  test-tie-break-1
+  ^-  tang
+  =/  hand1
+    :-  0 :: high card
+      :~  [%ace %spades] 
+          [%2 %clubs] 
+          [%3 %hearts] 
+          [%4 %spades] 
+          [%queen %spades] 
+        ==
+  =/  hand2
+    :-  0
+      :~  [%10 %spades] 
+          [%jack %clubs] 
+          [%5 %hearts] 
+          [%6 %spades] 
+          [%queen %spades] 
+        ==
+  ?>  (break-ties hand1 hand2)
+  ~
+++  test-tie-break-2
+  ^-  tang
+  =/  hand1
+    :-  1 :: pair
+      :~  [%2 %spades] 
+          [%2 %clubs] 
+          [%3 %hearts] 
+          [%4 %spades] 
+          [%queen %spades] 
+        ==
+  =/  hand2
+    :-  1
+      :~  [%10 %spades] 
+          [%queen %clubs] 
+          [%5 %hearts] 
+          [%6 %spades] 
+          [%queen %spades] 
+        ==
+  ?>  (break-ties hand2 hand1)
+  ~
+++  test-tie-break-3
+  ^-  tang
+  =/  hand1
+    :-  1 :: pair
+      :~  [%king %spades] 
+          [%king %clubs] 
+          [%ace %hearts] 
+          [%4 %spades] 
+          [%queen %spades] 
+        ==
+  =/  hand2
+    :-  1
+      :~  [%ace %spades] 
+          [%queen %clubs] 
+          [%5 %hearts] 
+          [%6 %spades] 
+          [%queen %spades] 
+        ==
+  ?>  (break-ties hand1 hand2)
+  ~
+++  test-tie-break-4
+  ^-  tang
+  =/  hand1
+    :-  1 :: pair
+      :~  [%king %spades] 
+          [%2 %clubs] 
+          [%queen %hearts] 
+          [%4 %spades] 
+          [%queen %spades] 
+        ==
+  =/  hand2
+    :-  1
+      :~  [%ace %spades] 
+          [%2 %clubs] 
+          [%queen %hearts] 
+          [%6 %spades] 
+          [%queen %spades] 
+        ==
+  ?>  (break-ties hand2 hand1)
+  ~
 :: 7-card hand evaluation tests
 ++  test-eval1
   ^-  tang

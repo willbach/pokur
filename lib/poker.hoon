@@ -241,14 +241,12 @@
       (set-player-as-acted who)
     (process-win (get-next-player who players.game.state))
     ==
-  :: TODO: hand evaluation. given state, look at hands+board to see
-  :: who has the best hand, and return their name
   ++  determine-winner
-    :: This is the hand evaluation arm
-    :: currently a placeholder
     ^-  ship
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
+      =/  hand  
+        (weld hand board.game.state)
       =/  result  (evaluate-hand hand)
       [who [result hand]]
     =/  hand-ranks  (turn hands.state eval-each-hand)
@@ -256,7 +254,13 @@
     =/  player-ranks  
       (sort hand-ranks |=([a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]] (gth r.a r.b)))
     :: check for tie(s) and break before returning winner
-    :: ?:  =(r.-.player-ranks r.+<.player-ranks)
+    ?:  =(-.+.-.player-ranks -.+.+<.player-ranks)
+      =/  player-ranks
+        %+  sort  player-ranks
+          |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
+          ^-  ?
+          (break-ties +.a +.b)
+      -:(head player-ranks)
     -:(head player-ranks)
   --
 ::
@@ -267,36 +271,65 @@
 ++  break-ties
   |=  [hand1=[r=@ud h=poker-deck] hand2=[r=@ud h=poker-deck]]
   ^-  ?
-  :: may try to avoid this for speedup in future, 
-  :: but internally sort each hand to make process easy for now.
+  ::  sort whole hands to start
   =/  sorter
-   |=  [a=[card-val suit] b=[card-val suit]]
+   |=  [a=poker-card b=poker-card]
      (gth (card-val-to-atom -.a) (card-val-to-atom -.b))
   =.  h.hand1  (sort h.hand1 sorter)
   =.  h.hand2  (sort h.hand2 sorter)
-  :: union to match tie-breaking strategy to type of hand, in order of easy-ness
-  ?+  r.hand1  !!  :: will be same for both
-    %9  :: two royal flushes... impossible!
-  !!
-    %8  :: straight flushes, high card wins
-  (find-high-card-recursive h.hand1 h.hand2)
-    %5  :: flush, high card wins
-  (find-high-card-recursive h.hand1 h.hand2)
-    %4  :: straight, high wins
-  (find-high-card-recursive h.hand1 h.hand2)
-    %0  :: high card -- high wins
-  (find-high-card-recursive h.hand1 h.hand2)
-    %7  :: four of a kind -- high set wins, then kicker
-  (find-high-card-recursive h.hand1 h.hand2)
-    %6  :: full house -- high 3 wins, then 2, then kicker
-  (find-high-card-recursive h.hand1 h.hand2)
-    %3  :: set, high 3 wins, then kicker(s)
-  (find-high-card-recursive h.hand1 h.hand2)
-    %2  :: 2 pair, high pair, then low pair, then kicker
-  (find-high-card-recursive h.hand1 h.hand2)
-    %1  :: high pair then kicker(s)
-  (find-high-card-recursive h.hand1 h.hand2)
-  ==
+  ::  match tie-breaking strategy to type of hand
+  ?:  ?|  =(r.hand1 8)
+          =(r.hand1 5)
+          =(r.hand1 4)
+          =(r.hand1 0)
+        ==
+    (find-high-card-recursive h.hand1 h.hand2)
+  ?:  ?|  =(r.hand1 7)
+          =(r.hand1 6)
+          =(r.hand1 3)
+          =(r.hand1 2)
+          =(r.hand1 1)
+        ==
+    =.  h.hand1
+      %-  sort-hand-by-frequency 
+        h.hand1
+    =.  h.hand2
+      %-  sort-hand-by-frequency 
+        h.hand2
+    %+  find-high-card-recursive 
+      h.hand1 
+    h.hand2
+  :: if we get here we were given a wrong hand rank or a royal flush (can't tie those)
+  %.n
+:: **this assumes it is getting a rank-sorted hand**
+++  sort-hand-by-frequency
+  |=  hand=poker-deck
+  ^-  poker-deck
+  ::  need to preserve sorting, other than moving pairs/sets to top
+  ::  this is n^2 complexity and can/should be better... 
+  =/  get-frequency
+    |=  c=poker-card
+    ^-  @ud
+    %-  lent
+      %+  skim
+        hand
+      |=  [d=poker-card]
+        =(-.d -.c)  
+  =/  sorted-cards-with-frequencies
+    %+  sort
+      %+  turn
+        hand
+      |=  [c=poker-card]
+        [c (get-frequency c)]
+    |=  [a=[c=poker-card f=@ud] b=[c=poker-card f=@ud]]
+      ?:  =(f.a f.b)
+        (gth -.c.a -.c.b)
+      (gth f.a f.b)
+  :: get rid of freq counts for final return
+  %+  turn
+    sorted-cards-with-frequencies
+  |=  [c=poker-card f=@ud]
+    c
 :: %.y if hand1 has higher card, %.n if hand2 does  
 ++  find-high-card-recursive
   |=  [hand1=poker-deck hand2=poker-deck]
@@ -320,25 +353,44 @@
     |=  [c=@ud h=poker-deck]
     ::  generate a hand without card c
     [(oust [c 1] h) h]
+  ::
+  ::  This needs to change. Need to use a (7 choose 5) to generate all 5-hands.
+  ::
   =/  possible-6-hands  
     (turn p:(spin (gulf 0 6) hand get-sub-hand) |=(h=poker-deck [(eval-6-cards h) h]))
   =.  possible-6-hands
-    (sort possible-6-hands |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b)))
-  ::  need to break ties between equally-ranked hands here...
-  ::  ~&  >>  possible-6-hands
+    %+  sort 
+      possible-6-hands 
+    |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b))
+  ::  need to break ties between equally-ranked hands here...?
   =/  best-6  +:(head possible-6-hands)
   =/  possible-5-hands
     (turn p:(spin (gulf 0 5) best-6 get-sub-hand) |=(h=poker-deck [(eval-5-cards h) h]))
   =.  possible-5-hands
-    (sort possible-5-hands |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b)))
-  ::  ...and again here.
-  ::  ~&  >>  possible-5-hands
-  ::(hierarchy-to-rank -:(head possible-5-hands))
+    %+  sort 
+      possible-5-hands 
+    |=([a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]] (gth r.a r.b))
+  ::  elimate any hand without a score that matches top hand
+  ::  if there are multiple, sort them by break-ties
+  =/  best-hand-rank
+    -.-.possible-5-hands
+  =/  possible-5-hands
+    %+  skim
+      possible-5-hands
+    |=  [r=@ud h=poker-deck]
+    ^-  ?
+    =(r best-hand-rank)
+  ?:  (gth (lent possible-5-hands) 1)
+    ~&  >  "tie found"
+    =/  possible-5-hands
+      %+  sort
+        possible-5-hands
+      break-ties
+    -:(head possible-5-hands)
   -:(head possible-5-hands)
 ++  eval-6-cards
   |=  hand=poker-deck
   ^-  @ud
-  ::  ~&  >>  "evaluating hand: {<hand>}" 
   :: check for pairs 
   =/  make-histogram
     |=  [c=[@ud @ud] h=(list @ud)]

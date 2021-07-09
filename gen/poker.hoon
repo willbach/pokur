@@ -3,6 +3,6 @@
 =,  poker
 :-  %say
 |=  [[* eny=@uv *] *]
-=/  hand  ~[[%king %hearts] [%ace %spades] [%3 %spades] [%4 %spades] [%5 %spades] [%8 %spades] [%2 %hearts]]
+=/  hand  ~[[%4 %spades] [%4 %hearts] [%king %clubs] [%king %spades] [%ace %hearts]]
 :-  %noun
-(evaluate-hand hand)
+(sort-hand-by-frequency hand)
