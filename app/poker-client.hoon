@@ -106,6 +106,7 @@
   ^-  (quip card _state)
   ?-  -.client-action
     :: :poker-client &poker-client-action [%issue-challenge ~bus 1 ~zod %cash]]
+    ::
     %issue-challenge
   ?>  (team:title [our src]:bowl)
   =/  challenge
@@ -124,7 +125,6 @@
           ==
       ==  
     ::
-    ::
     %receive-challenge
   =.  challenges-received.state  
     (~(put by challenges-received.state) [challenger.challenge.client-action challenge.client-action])
@@ -133,6 +133,7 @@
     :: :poker-client &poker-client-action [%accept-challenge ~zod]
     ::
     %accept-challenge
+  ?>  (team:title [our src]:bowl)
   =/  challenge  
     (~(get by challenges-received.state) from.client-action)
   ?~  challenge
@@ -150,7 +151,6 @@
             %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
           ==
       ==
-    ::
     ::
     %challenge-accepted
   =/  challenge  
@@ -171,13 +171,18 @@
           ==
       ==
     ::
-    :: 
     %subscribe
+  ?>  (team:title [our src]:bowl)
   :_  state
     :~  :*  %pass  /game-updates/(scot %ud game-id.client-action)
             %agent  [host.client-action %poker-server]
             %watch  /game/(scot %ud game-id.client-action)/(scot %p our.bowl)
           ==
       ==
+    ::
+    %leave-game
+  ?>  (team:title [our src]:bowl)  
+  :_  state
+  ~[[%pass /game-updates/(scot %ud game-id.client-action) %agent [host.game.state %poker-server] %leave ~]]
   ==
 --

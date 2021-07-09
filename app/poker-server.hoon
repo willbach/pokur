@@ -99,18 +99,7 @@
   |=  =path
   ~&  "got leave request from {<src.bowl>}"  `this
 ++  on-peek   on-peek:def
-++  on-agent
-  |=  [=wire =sign:agent:gall]
-  ^-  (quip card _this)
-  ?+  wire  (on-agent:def wire sign)
-    [%game ~]
-      ?+  -.sign  (on-agent:def wire sign)
-          %fact
-        =/  deck=%poker-deck  !<(%poker-deck q.cage.sign)
-        ~&  >>  "deck from {<src.bowl>} is {<deck>}"
-        `this
-        ==
-  ==
+++  on-agent  on-agent:def
 ++  on-arvo   on-arvo:def
 ++  on-fail   on-fail:def
 --
@@ -197,6 +186,7 @@
     ::
     :: :poker-server &poker-server-action [%initialize-hand 1]
     %initialize-hand
+  ?>  (team:title [our src]:bowl)
   =/  game  (get-game-by-id game-id.server-action)
     :: first, shuffle
   =.  deck.game
@@ -212,6 +202,7 @@
     ::
     ::
     %send-game-updates
+  ?>  (team:title [our src]:bowl)
   =/  cards
     (turn hands.game.server-action |=(hand=[ship poker-deck] (~(make-player-cards modify-state game.server-action) hand)))
   :_  state
@@ -219,11 +210,13 @@
     ::
     ::
     %kick
+  ?>  (team:title [our src]:bowl)
   :_  state
     ~[[%give %kick paths.server-action `subscriber.server-action]]  
     ::
     ::
     %wipe-all-games :: for debugging, mostly
+  ?>  (team:title [our src]:bowl)
   =.  active-games.state
     ~  
   ~&  >>>  "server wiped"

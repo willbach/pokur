@@ -74,6 +74,7 @@
     [%receive-challenge challenge=poker-challenge]
     [%challenge-accepted by=ship]
     [%subscribe game-id=@ud host=ship]
+    [%leave-game game-id=@ud]
   ==
 +$  game-action
   $%
