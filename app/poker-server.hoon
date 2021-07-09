@@ -193,7 +193,7 @@
   =.  active-games.state
     (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
   :_  state
-    ~
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.game.new-server-state])]]
     ::
     :: :poker-server &poker-server-action [%initialize-hand 1]
     %initialize-hand
