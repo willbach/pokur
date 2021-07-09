@@ -143,13 +143,13 @@
     (~(del by challenges-received.state) from.client-action)
   :_  state
     :~  :*  :: notify challenger that we've accepted
-            %pass  /poke-wire  %agent  [from.client-action %poker-client]
-            %poke  %poker-client-action  !>([%challenge-accepted by=our.bowl])
-          ==
+          %pass  /poke-wire  %agent  [from.client-action %poker-client]
+          %poke  %poker-client-action  !>([%challenge-accepted by=our.bowl])
+        ==
         :*  :: subscribe to path which game will be served from
-            %pass  /poke-wire  %agent  [our.bowl %poker-client]
-            %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
-          ==
+          %pass  /poke-wire  %agent  [our.bowl %poker-client]
+          %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+        ==
       ==
     ::
     %challenge-accepted
@@ -161,15 +161,29 @@
   =.  challenges-sent.state
     (~(del by challenges-sent.state) by.client-action)
   :_  state
-    :~  :*  :: register game with server
-            %pass  /poke-wire  %agent  [host.u.challenge %poker-server]
-            %poke  %poker-server-action  !>([%register-game challenge=u.challenge])
-          ==
-        :*  :: subscribe to path which game will be served from
-            %pass  /poke-wire  %agent  [our.bowl %poker-client]
-            %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
-          ==
+    :~
+      :*  :: register game with server
+        %pass  /poke-wire  %agent  [host.u.challenge %poker-server]
+        %poke  %poker-server-action  !>([%register-game challenge=u.challenge])
       ==
+      :*  :: subscribe to path which game will be served from
+        %pass  /poke-wire  %agent  [our.bowl %poker-client]
+        %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+      ==
+      :*  :: notify other player the game is registered
+        %pass  /poke-wire  %agent  [by.client-action %poker-client]
+        %poke  %poker-client-action  !>([%game-registered challenge=u.challenge])
+      ==
+    ==
+    ::
+    %game-registered
+  :_  state
+    :~  
+      :*  :: request first hand initialization
+        %pass  /poke-wire  %agent  [host.challenge.client-action %poker-server]
+        %poke  %poker-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
+      ==
+    ==
     ::
     %subscribe
   ?>  (team:title [our src]:bowl)

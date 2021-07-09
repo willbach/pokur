@@ -73,6 +73,7 @@
     [%accept-challenge from=ship]
     [%receive-challenge challenge=poker-challenge]
     [%challenge-accepted by=ship]
+    [%game-registered challenge=poker-challenge]
     [%subscribe game-id=@ud host=ship]
     [%leave-game game-id=@ud]
   ==
@@ -89,6 +90,7 @@
     [%register-game challenge=poker-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@ud]
+    [%request-hand-initialization game-id=@ud]
     [%send-game-updates game=server-game-state]
     [%wipe-all-games game-id=@ud]
   ==

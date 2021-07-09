@@ -76,7 +76,6 @@
     == 
   =/  game  (~(get by active-games.state) u.game-id)
   ?~  game
-    ~&  >>  "current state: {<active-games.state>}"
     :_  this
       =/  err  "invalid game id {<u.game-id>}"
       :~  [%give %watch-ack `~[leaf+err]]
@@ -182,7 +181,20 @@
   =.  active-games.state
     (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
   :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.game.new-server-state])]]
+  ~
+    ::
+    %request-hand-initialization
+  =/  game  
+  (~(get by active-games.state) game-id.server-action)
+  ?~  game
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: game does not exist on server"]]]
+  ?:  hand-is-over.u.game 
+    :_  state
+    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.server-action])]]
+  :_  state
+  =/  err  "error: game has already started"
+  ~[[%give %poke-ack `~[leaf+err]]]  
     ::
     :: :poker-server &poker-server-action [%initialize-hand 1]
     %initialize-hand
