@@ -3,9 +3,18 @@
 |%
 ++  modify-state
   |_  state=server-game-state
-  ::  checks if all players have acted, and committed the same amount of chips
-  ::  returns a bool
+  ::  modifies game-state with hand from 
+  ::  server-state to send copy to given player
+  ++  make-player-cards
+    |=  hand=[ship poker-deck]
+    =.  my-hand.game.state
+      (tail hand)
+    [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
+  ::  checks if all players have acted, and 
+  ::  committed the same amount of chips
+  ::  
   ++  is-betting-over
+    ^-  ?
     =/  acted-check
       |=  [who=ship n=@ud c=@ud acted=?]
       =(acted %.y)
@@ -16,10 +25,11 @@
       |=  [who=ship n=@ud c=@ud acted=?]
       =(c x)
     (levy chips.game.state f)
-  ::  checks cards on table and either initiates flop, turn, river, or determine-winner
+  ::  checks cards on table and either initiates flop, 
+  ::  turn, river, or determine-winner
+  ::
   ++  next-round
     ^-  server-game-state
-    :: better way to write this?
     =/  n  (lent board.game.state)
     ?:  |(=(3 n) =(4 n))
       turn-river
@@ -27,38 +37,41 @@
       (process-win determine-winner)
     poker-flop
   ::  **takes in a shuffled deck**
-  ::  assign dealer, assign blinds, assign first action to person left of BB
-  ::  (which is dealer in heads-up)
+  ::  assign dealer, assign blinds, assign first action 
+  ::  to person left of BB (which is dealer in heads-up)
   ::  make sure to shuffle deck from outside with eny!!!
   ++  initialize-hand
     |=  dealer=ship
     ^-  server-game-state
-    =.  dealer.game.state       dealer
-    =.  state                   assign-blinds
-    =.  state                   deal-hands
-    =.  whose-turn.game.state   (get-next-player big-blind.game.state players.game.state)
-    =.  hand-is-over.state      %.n
+    =.  dealer.game.state       
+    dealer
+    =.  state                   
+    assign-blinds
+    =.  state                   
+    deal-hands
+    =.  whose-turn.game.state   
+    %+  get-next-player 
+      big-blind.game.state 
+    players.game.state
+    =.  hand-is-over.state      
+    %.n
     state
   ::  deals 2 cards from deck to each player in game
   ++  deal-hands
     ^-  server-game-state
-    =/  player-count  (lent players.game.state)
+    =/  dealt-count  (lent players.game.state)
     |-
-    ?:  =(player-count 0)
+    ?:  =(dealt-count 0)
       state
-    =/  new  (draw 2 deck.state)
-    =/  player  (snag (dec player-count) players.game.state)
+    =/  new  
+    (draw 2 deck.state)
+    =/  player  
+    (snag (dec dealt-count) players.game.state)
     %=  $
       hands.state    [player hand:new]^hands.state
       deck.state     rest:new
-      player-count  (dec player-count)
+      dealt-count  (dec dealt-count)
     ==
-  ::  modifies game-state with their hand from server-state to send copy to them
-  ++  make-player-cards
-    |=  hand=[ship poker-deck]
-    =.  my-hand.game.state
-      (tail hand)
-    [%give %fact ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))] [%poker-game-state !>(game.state)]]
   ++  poker-flop
     ^-  server-game-state
     =.  state
@@ -69,8 +82,9 @@
     =.  state
       committed-chips-to-pot
     (deal-to-board 1)
-  ::  draws n cards (after burning 1) from deck and appends them to board state,
-  ::  and sets action to the player left of dealer
+  ::  draws n cards (after burning 1) from deck, 
+  ::  appends them to board state, and sets action 
+  ::  to the player left of dealer
   ++  deal-to-board
     |=  n=@ud
     ^-  server-game-state
@@ -79,20 +93,27 @@
     =.  deck.state
       rest:turn
     =.  board.game.state
-      (weld hand:turn board.game.state)
+      %+  weld
+        hand:turn
+      board.game.state
     :: setting who goes first in betting round here
     =.  whose-turn.game.state
-      (get-next-player dealer.game.state players.game.state)
+      %+  get-next-player 
+        dealer.game.state 
+      players.game.state
     state
   ::  sets whose-turn to next player in list ("clockwise")
   ++  next-player-turn
     ^-  server-game-state 
     =.  whose-turn.game.state
-      (get-next-player whose-turn.game.state players.game.state)
+      %+  get-next-player 
+        whose-turn.game.state 
+      players.game.state
     state
-  ::  sends chips from player's 'stack' to their 'committed' pile
-  ::  used after a bet, call, raise is made
-  ::  committed chips don't go to pot until round of betting is complete
+  ::  sends chips from player's 'stack' to their 
+  ::  'committed' pile. used after a bet, call, raise
+  ::  is made. committed chips don't go to pot until 
+  ::  round of betting is complete
   ++  commit-chips
     |=  [who=ship amount=@ud]
     ^-  server-game-state
@@ -199,7 +220,9 @@
       !!
     ?-  -.action
       %check
-    ?:  (gth current-bet.game.state 0)
+    =/  committed
+    committed:(get-player-chips who chips.game.state)
+    ?:  (gth current-bet.game.state committed)
       :: error, player must match current bet
       !!
     ::  set checking player to 'acted'
