@@ -1,2 +1,3 @@
 node_modules
 .vscode
+src/app/pokur/js/index.js
