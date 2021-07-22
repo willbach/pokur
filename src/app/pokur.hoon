@@ -1,5 +1,5 @@
-/-  *poker
-/+  default-agent, dbug, *poker
+/-  *pokur
+/+  default-agent, dbug, *pokur
 |%
 +$  versioned-state
     $%  state-zero
@@ -25,15 +25,20 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ~&  >  '%poker-client initialized successfully'
-  `this
+  ~&  >  '%pokur initialized successfully'
+  =/  launchapp  [%launch-action !>([%add %pokur [[%basic 'pokur' '/~pokur/img/tile.png' '/~pokur'] %.y]])]
+  =/  filea  [%file-server-action !>([%serve-dir /'~pokur' /app/pokur %.n %.n])]
+  :_  this
+  :~  [%pass /srv %agent [our.bowl %file-server] %poke filea]
+      [%pass /pokur %agent [our.bowl %launch] %poke launchapp]
+      ==
 ++  on-save
   ^-  vase
   !>(state)
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  ~&  >  '%poker-client recompiled successfully'
+  ~&  >  '%pokur recompiled successfully'
   `this(state !<(versioned-state old-state))
 ++  on-poke
   ::  ?>  (team:title [our src]:bowl)
@@ -50,20 +55,27 @@
       ~&  >>  &2.bowl  `this
     ==
     ::
-    %poker-client-action
-    ~&  >  !<(client-action:poker vase)
+    %pokur-client-action
+    ~&  >  !<(client-action:pokur vase)
     =^  cards  state
-    (handle-client-action:hc !<(client-action:poker vase))
+    (handle-client-action:hc !<(client-action:pokur vase))
     [cards this]
     ::
-    %poker-game-action
-    ~&  >  !<(game-action:poker vase)
+    %pokur-game-action
+    ~&  >  !<(game-action:pokur vase)
     =^  cards  state
-    (handle-game-action:hc !<(game-action:poker vase))
+    (handle-game-action:hc !<(game-action:pokur vase))
     [cards this]
   ==
 ::
-++  on-watch  on-watch:def
+++  on-watch
+  |=  =path
+  ^-  (quip card _this)
+  ?:  ?=([%http-response *] path)
+    `this
+  ?.  =(/ path)
+    (on-watch:def path)
+  [[%give %fact ~ %json !>(*json)]~ this]
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
 ++  on-agent
@@ -81,31 +93,36 @@
       `this
     ==
   ==
-++  on-arvo   on-arvo:def
+++  on-arvo
+  |=  [=wire =sign-arvo]
+  ^-  (quip card _this)
+  ?.  ?=(%bound +<.sign-arvo)
+    (on-arvo:def wire sign-arvo)
+  [~ this]
 ++  on-fail   on-fail:def
 --
 ::  start helper core
 ::
 |_  bowl=bowl:gall
 ++  handle-game-action
-  |=  action=game-action:poker
+  |=  action=game-action:pokur
   ^-  (quip card _state)
   ?-  -.action
     %check
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%check game-id=game-id.game.state])]]
+    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%check game-id=game-id.game.state])]]
     %bet
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%bet game-id=game-id.game.state amount=amount.action])]]
+    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%bet game-id=game-id.game.state amount=amount.action])]]
     %fold
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %poker-server] %poke %poker-game-action !>([%fold game-id=game-id.game.state])]]
+    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%fold game-id=game-id.game.state])]]
   ==
 ++  handle-client-action
-  |=  =client-action:poker
+  |=  =client-action:pokur
   ^-  (quip card _state)
   ?-  -.client-action
-    :: :poker-client &poker-client-action [%issue-challenge ~bus 1 ~zod %cash]]
+    :: :pokur &pokur-client-action [%issue-challenge ~bus 1 ~zod %cash]]
     ::
     %issue-challenge
   ?>  (team:title [our src]:bowl)
@@ -120,8 +137,8 @@
   =.  challenges-sent.state  
     (~(put by challenges-sent.state) [to.client-action challenge])
   :_  state
-    :~  :*  %pass  /poke-wire  %agent  [to.client-action %poker-client] 
-            %poke  %poker-client-action  !>([%receive-challenge challenge=challenge])
+    :~  :*  %pass  /poke-wire  %agent  [to.client-action %pokur] 
+            %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
           ==
       ==  
     ::
@@ -130,7 +147,7 @@
     (~(put by challenges-received.state) [challenger.challenge.client-action challenge.client-action])
   :_  state
     ~
-    :: :poker-client &poker-client-action [%accept-challenge ~zod]
+    :: :pokur &pokur-client-action [%accept-challenge ~zod]
     ::
     %accept-challenge
   ?>  (team:title [our src]:bowl)
@@ -143,12 +160,12 @@
     (~(del by challenges-received.state) from.client-action)
   :_  state
     :~  :*  :: notify challenger that we've accepted
-          %pass  /poke-wire  %agent  [from.client-action %poker-client]
-          %poke  %poker-client-action  !>([%challenge-accepted by=our.bowl])
+          %pass  /poke-wire  %agent  [from.client-action %pokur]
+          %poke  %pokur-client-action  !>([%challenge-accepted by=our.bowl])
         ==
         :*  :: subscribe to path which game will be served from
-          %pass  /poke-wire  %agent  [our.bowl %poker-client]
-          %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+          %pass  /poke-wire  %agent  [our.bowl %pokur]
+          %poke  %pokur-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
         ==
       ==
     ::
@@ -163,16 +180,16 @@
   :_  state
     :~
       :*  :: register game with server
-        %pass  /poke-wire  %agent  [host.u.challenge %poker-server]
-        %poke  %poker-server-action  !>([%register-game challenge=u.challenge])
+        %pass  /poke-wire  %agent  [host.u.challenge %pokur-server]
+        %poke  %pokur-server-action  !>([%register-game challenge=u.challenge])
       ==
       :*  :: subscribe to path which game will be served from
-        %pass  /poke-wire  %agent  [our.bowl %poker-client]
-        %poke  %poker-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+        %pass  /poke-wire  %agent  [our.bowl %pokur]
+        %poke  %pokur-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
       ==
       :*  :: notify other player the game is registered
-        %pass  /poke-wire  %agent  [by.client-action %poker-client]
-        %poke  %poker-client-action  !>([%game-registered challenge=u.challenge])
+        %pass  /poke-wire  %agent  [by.client-action %pokur]
+        %poke  %pokur-client-action  !>([%game-registered challenge=u.challenge])
       ==
     ==
     ::
@@ -180,8 +197,8 @@
   :_  state
     :~  
       :*  :: request first hand initialization
-        %pass  /poke-wire  %agent  [host.challenge.client-action %poker-server]
-        %poke  %poker-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
+        %pass  /poke-wire  %agent  [host.challenge.client-action %pokur-server]
+        %poke  %pokur-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
       ==
     ==
     ::
@@ -189,7 +206,7 @@
   ?>  (team:title [our src]:bowl)
   :_  state
     :~  :*  %pass  /game-updates/(scot %ud game-id.client-action)
-            %agent  [host.client-action %poker-server]
+            %agent  [host.client-action %pokur-server]
             %watch  /game/(scot %ud game-id.client-action)/(scot %p our.bowl)
           ==
       ==
@@ -197,6 +214,6 @@
     %leave-game
   ?>  (team:title [our src]:bowl)  
   :_  state
-  ~[[%pass /game-updates/(scot %ud game-id.client-action) %agent [host.game.state %poker-server] %leave ~]]
+  ~[[%pass /game-updates/(scot %ud game-id.client-action) %agent [host.game.state %pokur-server] %leave ~]]
   ==
 --

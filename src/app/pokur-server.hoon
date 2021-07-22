@@ -1,5 +1,5 @@
-/-  *poker
-/+  default-agent, dbug, *poker
+/-  *pokur
+/+  default-agent, dbug, *pokur
 |%
 +$  versioned-state
     $%  state-zero
@@ -23,7 +23,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ~&  >  '%poker-server initialized successfully'
+  ~&  >  '%pokur-server initialized successfully'
   ::  =.  state  [%0 
   `this
 ++  on-save
@@ -32,7 +32,7 @@
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  ~&  >  '%poker-server recompiled successfully'
+  ~&  >  '%pokur-server recompiled successfully'
   `this(state !<(versioned-state old-state))
 ++  on-poke
   |=  [=mark =vase]
@@ -48,16 +48,15 @@
       ~&  >>  &2.bowl  `this
     ==
     ::
-    %poker-server-action
-    :: ~&  >>>  !<(server-action:poker vase)
+    %pokur-server-action
     =^  cards  state
-    (handle-server-action:hc !<(server-action:poker vase))
+    (handle-server-action:hc !<(server-action:pokur vase))
     [cards this]
     ::
-    %poker-game-action
-    ~&  >  !<(game-action:poker vase)
+    %pokur-game-action
+    ~&  >  !<(game-action:pokur vase)
     =^  cards  state
-    (handle-game-action:hc !<(game-action:poker vase))
+    (handle-game-action:hc !<(game-action:pokur vase))
     [cards this]
   ==
 ::
@@ -113,11 +112,11 @@
   |=  game=server-game-state
   ^-  (list card)
   ?.  hand-is-over.game
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%send-game-updates game])]]
+    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
   :: initialize new hand
-  ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.game.game])]]
+  ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
 ++  handle-game-action
-  |=  action=game-action:poker
+  |=  action=game-action:pokur
   ^-  (quip card _state)
   :: state changes will throw an error if a player who's not in a game
   :: or playing out-of-turn tries to register a move, but let's check here
@@ -147,7 +146,7 @@
       (generate-update-cards game)
   ==
 ++  handle-server-action
-  |=  =server-action:poker
+  |=  =server-action:pokur
   ^-  (quip card _state)
   ?-  -.server-action
     %register-game
@@ -191,12 +190,12 @@
       ~[[%give %poke-ack `~[leaf+"error: game does not exist on server"]]]
   ?:  hand-is-over.u.game 
     :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %poker-server] %poke %poker-server-action !>([%initialize-hand game-id.server-action])]]
+    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.server-action])]]
   :_  state
   =/  err  "error: game has already started"
   ~[[%give %poke-ack `~[leaf+err]]]  
     ::
-    :: :poker-server &poker-server-action [%initialize-hand 1]
+    :: :pokur-server &pokur-server-action [%initialize-hand 1]
     %initialize-hand
   ?>  (team:title [our src]:bowl)
   =/  game  (get-game-by-id game-id.server-action)

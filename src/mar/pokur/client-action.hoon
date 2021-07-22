@@ -1,8 +1,8 @@
-/-  poker
-|_  act=game-action:poker
+/-  pokur
+|_  act=client-action:pokur
 ++  grab
   |%
-  ++  noun  game-action:poker
+  ++  noun  client-action:pokur
   --
 ++  grow
   |%

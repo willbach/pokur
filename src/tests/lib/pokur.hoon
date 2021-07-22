@@ -1,6 +1,6 @@
-/-  poker
-/+  poker
-=,  poker
+/-  pokur
+/+  pokur
+=,  pokur
 |%
 ++  test-determine-winner-1
   ^-  tang
