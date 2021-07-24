@@ -56,7 +56,7 @@
     big-blind=ship
   ==  
 ::
-+$  poker-challenge
++$  pokur-challenge
   $:
     game-id=@ud
     challenger=ship :: person who issued challenge
@@ -71,9 +71,9 @@
   $%
     [%issue-challenge to=ship game-id=@ud host=ship type=poker-game-type]
     [%accept-challenge from=ship]
-    [%receive-challenge challenge=poker-challenge]
+    [%receive-challenge challenge=pokur-challenge]
     [%challenge-accepted by=ship]
-    [%game-registered challenge=poker-challenge]
+    [%game-registered challenge=pokur-challenge]
     [%subscribe game-id=@ud host=ship]
     [%leave-game game-id=@ud]
   ==
@@ -87,7 +87,7 @@
 ::  server actions
 +$  server-action
   $%
-    [%register-game challenge=poker-challenge]
+    [%register-game challenge=pokur-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@ud]
     [%request-hand-initialization game-id=@ud]

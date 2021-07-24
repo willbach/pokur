@@ -7,8 +7,8 @@
 +$  state-zero
     $:  %0
         game=poker-game-state
-        challenges-sent=(map ship poker-challenge)
-        challenges-received=(map ship poker-challenge)
+        challenges-sent=(map ship pokur-challenge)
+        challenges-received=(map ship pokur-challenge)
     ==
 ::
 +$  card  card:agent:gall
@@ -73,7 +73,14 @@
     [cards this]
   ==
 ::
-++  on-watch  on-watch:def
+++  on-watch
+  |=  =path
+  ^-  (quip card _this)
+  ?+    path  (on-watch:def path)
+    [%challenge-updates ~]
+    ~&  >>>  "got %challenge-updates subscription"
+    `this
+  ==
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
 ++  on-agent
@@ -120,7 +127,7 @@
   |=  =client-action:pokur
   ^-  (quip card _state)
   ?-  -.client-action
-    :: :pokur &pokur-client-action [%issue-challenge ~bus 1 ~zod %cash]]
+    :: :pokur &pokur-client-action [%issue-challenge ~bus 1 ~zod %cash]
     ::
     %issue-challenge
   ?>  (team:title [our src]:bowl)
@@ -138,13 +145,21 @@
     :~  :*  %pass  /poke-wire  %agent  [to.client-action %pokur] 
             %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
           ==
-      ==  
+        :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge !>(challenge)]
+        ==
+    ==  
     ::
     %receive-challenge
   =.  challenges-received.state  
     (~(put by challenges-received.state) [challenger.challenge.client-action challenge.client-action])
   :_  state
-    ~
+    :~  :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge !>(challenge)]
+        ==
+    ==
     :: :pokur &pokur-client-action [%accept-challenge ~zod]
     ::
     %accept-challenge

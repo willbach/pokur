@@ -14,7 +14,6 @@
       :~  [%check get-id]
           [%bet get-id-and-amount]
           [%fold get-id]
-          [%leave-game leave]
       ==
     ++  get-id
       %-  ot:dejs
