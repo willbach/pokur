@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
+import ChallengeForm from './ChallengeForm.jsx'
 import { Channel } from './js/channel.js'
 
 declare global {
@@ -9,39 +10,14 @@ declare global {
   }
 }
 
-function setTitle () {
-  document.title = "Pokur ♠";
-}
-
 function render (): void {
-  setTitle()
   ReactDOM.render((
     <>
-      <p>greetings</p>
+      <ChallengeForm />
     </>
   ), document.querySelectorAll('#root')[0])
 }
 
 window.urb = new Channel()
-
-// window.urb.subscribe(
-//   window.ship,
-//   'pokur',
-//   '/challenges',
-//   () => {},
-//   (data: ChessUpdate) => onChessUpdate(data),
-//   () => {},
-//   () => {}
-// )
-
-// window.urb.subscribe(
-//   window.ship,
-//   'chess',
-//   '/active-games',
-//   () => {},
-//   (data: ChessGameInfo) => onActiveGame(data),
-//   () => {},
-//   () => {}
-// )
 
 render()

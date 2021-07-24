@@ -288,4 +288,3 @@ export class Channel {
       return this.requestId++;
     }
   }
-  

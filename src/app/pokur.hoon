@@ -42,10 +42,15 @@
   `this(state !<(versioned-state old-state))
 ++  on-poke
   ::  ?>  (team:title [our src]:bowl)
+  ~&  >>  "we are loaching."
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+    mark  (on-poke:def mark vase)
-      %noun
+    %json
+    ~&  >>  !<(json vase)
+    `this
+    ::
+    %noun
     ?+    q.vase  (on-poke:def mark vase)
         %print-state
       ~&  >  state
@@ -68,14 +73,7 @@
     [cards this]
   ==
 ::
-++  on-watch
-  |=  =path
-  ^-  (quip card _this)
-  ?:  ?=([%http-response *] path)
-    `this
-  ?.  =(/ path)
-    (on-watch:def path)
-  [[%give %fact ~ %json !>(*json)]~ this]
+++  on-watch  on-watch:def
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
 ++  on-agent
