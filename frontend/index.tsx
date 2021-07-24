@@ -1,7 +1,6 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import ChallengeForm from './ChallengeForm.jsx'
-import ChallengeList from './ChallengeList.jsx'
+import App from './App.jsx'
 import { Channel } from './js/channel.js'
 
 declare global {
@@ -14,8 +13,7 @@ declare global {
 function render (): void {
   ReactDOM.render((
     <>
-      <ChallengeForm />
-      <ChallengeList />
+      <App />
     </>
   ), document.querySelectorAll('#root')[0])
 }

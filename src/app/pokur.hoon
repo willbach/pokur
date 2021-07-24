@@ -41,8 +41,6 @@
   ~&  >  '%pokur recompiled successfully'
   `this(state !<(versioned-state old-state))
 ++  on-poke
-  ::  ?>  (team:title [our src]:bowl)
-  ~&  >>  "we are loaching."
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+    mark  (on-poke:def mark vase)
@@ -78,7 +76,7 @@
   ^-  (quip card _this)
   ?+    path  (on-watch:def path)
     [%challenge-updates ~]
-    ~&  >>>  "got %challenge-updates subscription"
+    :: TODO we should send a new subscriber the list of active challenges sent & recieved
     `this
   ==
 ++  on-leave  on-leave:def
@@ -157,7 +155,7 @@
   :_  state
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge !>(challenge)]
+            [%pokur-challenge !>(challenge.client-action)]
         ==
     ==
     :: :pokur &pokur-client-action [%accept-challenge ~zod]
