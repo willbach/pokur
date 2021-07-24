@@ -2,7 +2,7 @@
 Urbit poker app
 
 How to install
-1. Run 'npm install', then 'npm run serve'
+1. Run 'npm install', then 'npm run build'
 2. Copy files from src/ into your pier (moon / throwaway ship reccomended of course)
 3. |commit %home, then |start %pokur on two ships, and |start %pokur-server on one of them (or a third ship)
 4. Click the new Pokur tile on your ship
