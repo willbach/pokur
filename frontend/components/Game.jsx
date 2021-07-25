@@ -77,6 +77,21 @@ class Game extends Component {
     );
   }
 
+  leaveGame() {
+    window.urb.poke(
+      window.ship,
+      'pokur',
+      'pokur-client-action',
+      {
+        'leave-game': {
+          'game-id': this.props.game.id,
+        }
+      },
+      () => {},
+      (err) => { console.log(err) }
+    );
+  }
+
   render() {
     const game = this.props.game;
     return <div className="game-wrapper">
@@ -89,17 +104,17 @@ class Game extends Component {
       <br />
       <p>Current board:</p>
       {game.board.map(card => (
-        <p>* {this.rawCardToVal(card.val)} of {card.suit}</p>
+        <li key={card.val+card.suit}>{this.rawCardToVal(card.val)} of {card.suit}</li>
         ))}
       <p>Hand:</p>
       {game.hand.map(card => (
-        <p>* {this.rawCardToVal(card.val)} of {card.suit}</p>
+        <li key={card.val+card.suit}>{this.rawCardToVal(card.val)} of {card.suit}</li>
         ))}
       <p>Pot: ${this.calcFullPot(game.pot)}</p>
       <br />
       <p>Chip counts:</p>
       {Object.entries(game.chips).map(([player, data]) => (
-          <p>{player}: ${data.stack}</p>
+          <li key={player}>{player}: ${data.stack}</li>
       ))}
       <br />
       {game.whose_turn == window.ship
@@ -117,6 +132,10 @@ class Game extends Component {
         </button>
         <button onClick={() => this.handleFold()}>
           Fold
+        </button>
+        <br />
+        <button onClick={() => this.leaveGame()}>
+          Leave Game
         </button>
     </div>
   };

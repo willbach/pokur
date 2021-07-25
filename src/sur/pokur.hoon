@@ -57,6 +57,7 @@
   == 
 +$  pokur-game-update
   $%  [%update game=poker-game-state]
+      [%left-game t=?]
   ==
 ::
 +$  pokur-challenge

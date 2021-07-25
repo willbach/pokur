@@ -59,7 +59,7 @@ class ChallengeForm extends Component {
         </label>
         <label>
           Game type:
-          <select value={this.state.type} onChange={this.handleChange}>
+          <select name="type" value={this.state.type} onChange={this.handleChange}>
             <option value="cash">Cash</option>
             <option value="tournament">Tournament (not yet functional)</option>
           </select>

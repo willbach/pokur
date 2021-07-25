@@ -233,6 +233,10 @@
     ::
     %subscribe
   ?>  (team:title [our src]:bowl)
+  :: if we're already in a game, we need to leave it
+  ?:  =(in-game.state %.y)
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
   =.  in-game.state  %.y
   :_  state
     :~  :*  %pass  /game-updates/(scot %da game-id.client-action)
@@ -243,12 +247,20 @@
             ~[/challenge-updates]
             [%pokur-challenge-update !>([%close-challenge game-id.client-action])]
         ==
-      ==
+    ==
     ::
     %leave-game
   ?>  (team:title [our src]:bowl)
   =.  in-game.state  %.n
   :_  state
-  ~[[%pass /game-updates/(scot %da game-id.client-action) %agent [host.game.state %pokur-server] %leave ~]]
+    :~  :*  %pass  /game-updates/(scot %da game-id.client-action)
+            %agent  [host.game.state %pokur-server]
+            %leave  ~
+        ==
+        :*  %give  %fact
+            ~[/game]  
+            %pokur-game-update  !>([%left-game in-game.state])
+        ==
+    ==
   ==
 --

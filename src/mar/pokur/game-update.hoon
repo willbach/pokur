@@ -10,9 +10,10 @@
   ++  noun  upd
   ++  json
     ?-  -.upd
-    %update
-    %-  pairs:enjs
-      :~  ['id' [%s (scot %da game-id.game.upd)]]
+      %update
+      %-  pairs:enjs
+      :~  ['in_game' [%b %.y]]
+          ['id' [%s (scot %da game-id.game.upd)]]
           ['host' (ship:enjs host.game.upd)]
           ['type' [%s type.game.upd]]
           ['players' [%a (turn players.game.upd ship:enjs)]]
@@ -54,6 +55,10 @@
           ['dealer' (ship:enjs dealer.game.upd)]
           ['small_blind' (ship:enjs small-blind.game.upd)]
           ['big_blind' (ship:enjs big-blind.game.upd)]
+      ==
+      %left-game
+      %-  pairs:enjs
+      :~  ['in_game' [%b %.n]]
       ==
     ==
   --

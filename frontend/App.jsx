@@ -25,10 +25,18 @@ class App extends Component {
   }
 
   updateGameState(newGameState) {
-    this.setState({
-      inGame: true,
-      gameData: newGameState,
-    });
+    if (newGameState.in_game) {
+      this.setState({
+        inGame: true,
+        gameData: newGameState,
+      });
+    } else {
+      this.setState({
+        inGame: false,
+        gameData: null,
+      });
+    }
+    
   }
 
   render() {
