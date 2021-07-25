@@ -9,7 +9,7 @@ class ChallengeForm extends Component {
     this.state = {
       to: '',
       host: '',
-      type: 'cash'
+      type: 'cash',
     }
 
     this.handleChange = this.handleChange.bind(this);

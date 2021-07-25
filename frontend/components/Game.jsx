@@ -6,8 +6,10 @@ class Game extends Component {
     super(props);
 
     this.state = {
+      currentBet: 0,
     }
 
+    this.handleBetChange = this.handleBetChange.bind(this);
   }
 
   rawCardToVal(n) {
@@ -21,6 +23,58 @@ class Game extends Component {
         pot = pot + data.committed;
     }
     return pot
+  }
+
+  handleBetChange(event) {
+    this.setState({
+      currentBet: event.target.value,
+    });
+  }
+
+  handleBet(amount) {
+    window.urb.poke(
+      window.ship,
+      'pokur',
+      'pokur-game-action',
+      {
+        'bet': {
+          'game-id': this.props.game.id,
+          'amount': parseInt(amount),
+        }
+      },
+      () => {},
+      (err) => { console.log(err) }
+    );
+  }
+
+  handleCheck() {
+    window.urb.poke(
+      window.ship,
+      'pokur',
+      'pokur-game-action',
+      {
+        'check': {
+          'game-id': this.props.game.id,
+        }
+      },
+      () => {},
+      (err) => { console.log(err) }
+    );
+  }
+
+  handleFold() {
+    window.urb.poke(
+      window.ship,
+      'pokur',
+      'pokur-game-action',
+      {
+        'fold': {
+          'game-id': this.props.game.id,
+        }
+      },
+      () => {},
+      (err) => { console.log(err) }
+    );
   }
 
   render() {
@@ -51,7 +105,19 @@ class Game extends Component {
       {game.whose_turn == window.ship
        ? <p>It's your turn!</p>
        : <p>Waiting for {game.whose_turn} to play</p>}
-      <p></p>
+        <label>
+          Bet: $
+          <input name="bet" type="number" value={this.state.currentBet} onChange={this.handleBetChange} />
+        </label>
+        <button onClick={() => this.handleBet(this.state.currentBet)}>
+          Bet
+        </button>
+        <button onClick={() => this.handleCheck()}>
+          Check
+        </button>
+        <button onClick={() => this.handleFold()}>
+          Fold
+        </button>
     </div>
   };
 }

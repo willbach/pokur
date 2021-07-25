@@ -17,11 +17,11 @@
       ==
     ++  get-id
       %-  ot:dejs
-      :~  [%game-id ni:dejs]
+      :~  [%game-id (se:dejs %da)]
       ==
     ++  get-id-and-amount
       %-  ot:dejs
-      :~  [%game-id ni:dejs]
+      :~  [%game-id (se:dejs %da)]
           [%amount ni:dejs]
       ==
     --

@@ -27,7 +27,7 @@
       ==
     ++  leave
       %-  ot:dejs
-      :~  [%game-id du:dejs]
+      :~  [%game-id (se:dejs %da)]
       == 
     --
   --

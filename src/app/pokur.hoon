@@ -127,6 +127,7 @@
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
+  ?>  (team:title [our src]:bowl)
   ?-  -.action
     %check
   :_  state
