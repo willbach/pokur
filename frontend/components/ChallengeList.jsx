@@ -6,7 +6,7 @@ class ChallengeList extends Component {
     super(props);
 
     this.state = {
-      challenges: {}
+      challenges: {},
     }
 
     this.acceptChallenge = this.acceptChallenge.bind(this);
@@ -18,7 +18,7 @@ class ChallengeList extends Component {
       (err) => console.log(err),
       (data) => this.processChallengeUpdate(data),
       () => console.log("Sub Quit")
-    )
+    );
   }
 
   acceptChallenge(from) {
@@ -38,16 +38,22 @@ class ChallengeList extends Component {
 
   processChallengeUpdate(data) {
     console.log(data)
-    const id = data["game-id"]
-    const newChallenge = {
+    if (data["update"] == "open") {
+      const newChallenge = {
         challenger: data["challenger"],
         host: data["host"],
-        type: data["type"]
+        type: data["type"],
+      }
+      this.setState({
+        challenges: { ...this.state.challenges, [data["id"]]: newChallenge}
+      });
+    } else if (data["update"] == "close") {
+      var newList = {...this.state.challenges};
+      delete newList[data["id"]];
+      this.setState({
+        challenges: newList,
+      });
     }
-    this.setState({
-        challenges: { ...this.state.challenges, [id]: newChallenge}
-    });
-
   }
 
   render() {
@@ -63,7 +69,7 @@ class ChallengeList extends Component {
         </thead>
         <tbody>
           {
-            Object.entries(this.state.challenges).map(([id, data]) =>(
+            Object.entries(this.state.challenges).map(([id, data]) => (
               <tr key={id}>
                 <td>{data.challenger == '~'+window.ship ? "You" : data.challenger}</td>
                 <td>{data.host}</td>

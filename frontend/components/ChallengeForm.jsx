@@ -8,7 +8,6 @@ class ChallengeForm extends Component {
 
     this.state = {
       to: '',
-      id: 0,
       host: '',
       type: 'cash'
     }
@@ -35,7 +34,6 @@ class ChallengeForm extends Component {
       {
         'issue-challenge': {
           'to': this.state.to,
-          'game-id': parseInt(this.state.id),
           'host': this.state.host,
           'type': this.state.type
         }
@@ -65,10 +63,6 @@ class ChallengeForm extends Component {
             <option value="cash">Cash</option>
             <option value="tournament">Tournament (not yet functional)</option>
           </select>
-        </label>
-        <label>
-          Game ID (pick a number you haven't used yet..):
-          <input name="id" type="number" value={this.state.id} onChange={this.handleChange} />
         </label>
         <input type="submit" value="Submit" />
       </form>

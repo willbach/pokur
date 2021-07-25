@@ -38,7 +38,7 @@
 ::  This is the data a poker-client holds for a given game
 +$  poker-game-state
   $:  
-    game-id=@ud
+    game-id=@da
     host=ship
     type=poker-game-type
     players=(list ship)
@@ -54,34 +54,42 @@
     dealer=ship
     small-blind=ship
     big-blind=ship
-  ==  
+  == 
++$  pokur-game-update
+  $%  [%update game=poker-game-state]
+  ==
 ::
 +$  pokur-challenge
   $:
-    game-id=@ud
+    game-id=@da
     challenger=ship :: person who issued challenge
     players=(list ship)
     host=ship :: address of poker-server used for game
     type=poker-game-type
+  ==
++$  pokur-challenge-update
+  $%
+    [%open-challenge challenge=pokur-challenge]
+    [%close-challenge id=@da]
   ==
 ::
 :: client actions
 ::
 +$  client-action
   $%
-    [%issue-challenge to=ship game-id=@ud host=ship type=poker-game-type]
+    [%issue-challenge to=ship host=ship type=poker-game-type]
     [%accept-challenge from=ship]
     [%receive-challenge challenge=pokur-challenge]
     [%challenge-accepted by=ship]
     [%game-registered challenge=pokur-challenge]
-    [%subscribe game-id=@ud host=ship]
-    [%leave-game game-id=@ud]
+    [%subscribe game-id=@da host=ship]
+    [%leave-game game-id=@da]
   ==
 +$  game-action
   $%
-    [%check game-id=@ud]
-    [%bet game-id=@ud amount=@ud]
-    [%fold game-id=@ud]
+    [%check game-id=@da]
+    [%bet game-id=@da amount=@ud]
+    [%fold game-id=@da]
   ==  
 ::
 ::  server actions
@@ -89,10 +97,10 @@
   $%
     [%register-game challenge=pokur-challenge]
     [%kick paths=(list path) subscriber=ship]
-    [%initialize-hand game-id=@ud]
-    [%request-hand-initialization game-id=@ud]
+    [%initialize-hand game-id=@da]
+    [%request-hand-initialization game-id=@da]
     [%send-game-updates game=server-game-state]
-    [%wipe-all-games game-id=@ud]
+    [%wipe-all-games game-id=@da]
   ==
 ::
 --

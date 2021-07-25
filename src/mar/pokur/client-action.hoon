@@ -13,13 +13,11 @@
       %-  of:dejs
       :~  [%issue-challenge parse-challenge]
           [%accept-challenge accept]
-          [%subscribe subscribe]
           [%leave-game leave]
       ==
     ++  parse-challenge
       %-  ot:dejs
       :~  [%to (se:dejs %p)]
-          [%game-id ni:dejs]
           [%host (se:dejs %p)]
           [%type so:dejs]
       ==
@@ -27,14 +25,9 @@
       %-  ot:dejs
       :~  [%from (se:dejs %p)]
       ==
-    ++  subscribe
-      %-  ot:dejs
-      :~  [%game-id ni:dejs]
-          [%host (se:dejs %p)]
-      == 
     ++  leave
       %-  ot:dejs
-      :~  [%game-id ni:dejs]
+      :~  [%game-id du:dejs]
       == 
     --
   --

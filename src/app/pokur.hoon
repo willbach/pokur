@@ -5,7 +5,7 @@
     $%  state-zero
     ==
 +$  state-zero
-    $:  %0
+    $:  in-game=?
         game=poker-game-state
         challenges-sent=(map ship pokur-challenge)
         challenges-received=(map ship pokur-challenge)
@@ -28,6 +28,7 @@
   ~&  >  '%pokur initialized successfully'
   =/  launchapp  [%launch-action !>([%add %pokur [[%basic 'pokur' '/~pokur/img/tile.png' '/~pokur'] %.y]])]
   =/  filea  [%file-server-action !>([%serve-dir /'~pokur' /app/pokur %.n %.n])]
+  =.  in-game.state  %.n
   :_  this
   :~  [%pass /srv %agent [our.bowl %file-server] %poke filea]
       [%pass /pokur %agent [our.bowl %launch] %poke launchapp]
@@ -76,7 +77,22 @@
   ^-  (quip card _this)
   ?+    path  (on-watch:def path)
     [%challenge-updates ~]
-    :: TODO we should send a new subscriber the list of active challenges sent & recieved
+    =/  cards
+      %+  turn
+        %+  weld  
+          ~(tap by challenges-received.state)
+        ~(tap by challenges-sent.state)
+      |=  item=[s=ship c=pokur-challenge]
+      :^    %give
+          %fact
+        ~[/challenge-updates]
+      [%pokur-challenge-update !>([%open-challenge c.item])]
+    [cards this]
+    ::
+    [%game ~]
+    ?:  in-game.state
+      :_  this
+        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update game.state])]]]
     `this
   ==
 ++  on-leave  on-leave:def
@@ -89,11 +105,12 @@
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
         %fact
-      =/  val=poker-game-state  !<(poker-game-state q.cage.sign)
-      ~&  >  "New game state: {<val>}"
+      =/  new-state=poker-game-state  !<(poker-game-state q.cage.sign)
+      ~&  >  "New game state: {<new-state>}"
       =.  game.state
-        val
-      `this
+        new-state
+      :_  this
+        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state])]]]
     ==
   ==
 ++  on-arvo
@@ -131,7 +148,7 @@
   ?>  (team:title [our src]:bowl)
   =/  challenge
     [
-      game-id=game-id.client-action
+      game-id=now.bowl
       challenger=our.bowl
       players=~[our.bowl to.client-action] :: change this for multiplayer
       host=host.client-action
@@ -145,7 +162,7 @@
           ==
         :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge !>(challenge)]
+            [%pokur-challenge-update !>([%open-challenge challenge])]
         ==
     ==  
     ::
@@ -155,7 +172,7 @@
   :_  state
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge !>(challenge.client-action)]
+            [%pokur-challenge-update !>([%open-challenge challenge.client-action])]
         ==
     ==
     :: :pokur &pokur-client-action [%accept-challenge ~zod]
@@ -215,16 +232,22 @@
     ::
     %subscribe
   ?>  (team:title [our src]:bowl)
+  =.  in-game.state  %.y
   :_  state
-    :~  :*  %pass  /game-updates/(scot %ud game-id.client-action)
+    :~  :*  %pass  /game-updates/(scot %da game-id.client-action)
             %agent  [host.client-action %pokur-server]
-            %watch  /game/(scot %ud game-id.client-action)/(scot %p our.bowl)
+            %watch  /game/(scot %da game-id.client-action)/(scot %p our.bowl)
           ==
+        :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge-update !>([%close-challenge game-id.client-action])]
+        ==
       ==
     ::
     %leave-game
-  ?>  (team:title [our src]:bowl)  
+  ?>  (team:title [our src]:bowl)
+  =.  in-game.state  %.n
   :_  state
-  ~[[%pass /game-updates/(scot %ud game-id.client-action) %agent [host.game.state %pokur-server] %leave ~]]
+  ~[[%pass /game-updates/(scot %da game-id.client-action) %agent [host.game.state %pokur-server] %leave ~]]
   ==
 --

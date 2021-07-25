@@ -6,7 +6,7 @@
     ==
 +$  state-zero
     $:  %0
-        active-games=(map @ud server-game-state) 
+        active-games=(map @da server-game-state) 
     ==
 ::
 +$  card  card:agent:gall
@@ -67,7 +67,7 @@
   ?+  path  (on-watch:def path)
     [%game @ta @ta ~]
   :: make sure the subscriber is in game and on their path, reject if not
-  =/  game-id  `(unit @ud)`(slaw %ud i.t.path)
+  =/  game-id  `(unit @da)`(slaw %da i.t.path)
   ?~  game-id
     :_  this
       =/  err  "invalid game id {<game-id>}"
@@ -104,7 +104,7 @@
 ::  start helper core
 |_  bowl=bowl:gall
 ++  get-game-by-id
-  |=  game-id=@ud
+  |=  game-id=@da
   ^-  server-game-state
   ::  obviously add error handling to this
   (~(got by active-games.state) game-id)

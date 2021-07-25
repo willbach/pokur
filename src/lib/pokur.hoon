@@ -11,7 +11,7 @@
       (tail hand)
     :^  %give 
         %fact 
-        ~[/game/(scot %ud game-id.game.state)/(scot %p (head hand))]
+        ~[/game/(scot %da game-id.game.state)/(scot %p (head hand))]
         [%pokur-game-state !>(game.state)]
 ::  checks if all players have acted, and 
 ::  committed the same amount of chips
