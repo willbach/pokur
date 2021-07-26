@@ -42,7 +42,7 @@ class App extends Component {
   render() {
     return <>
       
-      {this.state.inGame ? <Game game={this.state.gameData}/>
+      {this.state.inGame ? <Game game={this.state.gameData} />
               : <div><ChallengeForm />
                 <ChallengeList /></div>}
     </>
