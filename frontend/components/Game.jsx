@@ -116,7 +116,7 @@ class Game extends Component {
       <p>Chip counts:</p>
       {Object.entries(game.chips).map(([player, data]) => (
           <li key={player}>{player}: ${data.stack} {data.left ? 
-                                                      <span>(left)</span> 
+                                                      <span>(left game)</span> 
                                                       : data.folded ? <span>(folded)</span> 
                                                                     : <span></span>}</li>
       ))}
