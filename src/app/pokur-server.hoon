@@ -176,9 +176,9 @@
       board=~
       my-hand=~
       whose-turn=(snag 1 players.challenge.server-action)
-      dealer=(snag 1 players.challenge.server-action)  :: heads-up specific
-      small-blind=(snag 1 players.challenge.server-action)
-      big-blind=(snag 0 players.challenge.server-action)
+      dealer=(snag 1 players.challenge.server-action)  :: TODO this should be random?
+      small-blind=~zod :: these get re-assigned in hand initialization
+      big-blind=~zod
     ]
   =/  new-server-state
     [

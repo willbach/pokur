@@ -206,17 +206,20 @@
     ^-  server-game-state
     ::  THIS CHANGES WHEN NOT HEADS-UP (future)
     =.  small-blind.game.state  
-      dealer.game.state
-    =/  sb-position  
-      %+  find 
-        [small-blind.game.state]~ 
-      players.game.state
-    =.  big-blind.game.state    
-      %+  snag 
-        %+  mod 
-          +(u.+.sb-position)
-        (lent players.game.state)
-        players.game.state
+      ?:  =((lent players.game.state) 2)
+        dealer.game.state
+      (get-next-player dealer.game.state players.game.state)
+    :: =/  sb-position  
+    ::   %+  find 
+    ::     [small-blind.game.state]~ 
+    ::   players.game.state
+    =.  big-blind.game.state   
+      (get-next-player small-blind.game.state players.game.state)
+    ::   %+  snag 
+    ::     %+  mod 
+    ::       +(u.+.sb-position)
+    ::     (lent players.game.state)
+    ::     players.game.state
     =.  state
       %+  commit-chips 
         small-blind.game.state 
