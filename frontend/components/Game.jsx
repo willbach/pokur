@@ -94,6 +94,7 @@ class Game extends Component {
 
   render() {
     const game = this.props.game;
+    const betToMatch = game.current_bet - game.chips['~' + window.ship].committed;
     return <div className="game-wrapper">
       <h2>Pokur Game</h2>
       <p>Game ID: {game.id}</p>
@@ -114,11 +115,14 @@ class Game extends Component {
       <br />
       <p>Chip counts:</p>
       {Object.entries(game.chips).map(([player, data]) => (
-          <li key={player}>{player}: ${data.stack}</li>
+          <li key={player}>{player}: ${data.stack} {data.left ? 
+                                                      <span>(left)</span> 
+                                                      : data.folded ? <span>(folded)</span> 
+                                                                    : <span></span>}</li>
       ))}
       <br />
       {game.whose_turn == window.ship
-       ? <p>It's your turn!</p>
+       ? <p>It's your turn! Current bet to match: {betToMatch}</p>
        : <p>Waiting for {game.whose_turn} to play</p>}
         <label>
           Bet: $
@@ -126,6 +130,9 @@ class Game extends Component {
         </label>
         <button onClick={() => this.handleBet(this.state.currentBet)}>
           Bet
+        </button>
+        <button onClick={() => this.handleBet(betToMatch)}>
+          Call
         </button>
         <button onClick={() => this.handleCheck()}>
           Check
