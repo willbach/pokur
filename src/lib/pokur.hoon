@@ -18,7 +18,7 @@
   ++  is-betting-over
     ^-  ?
     =/  acted-check
-      |=  [who=ship n=@ud c=@ud acted=? folded=?]
+      |=  [who=ship n=@ud c=@ud acted=? folded=? left=?]
       ?|  =(acted %.y)
           =(folded %.y)
       ==
@@ -26,7 +26,7 @@
       %.n
     =/  x  committed:(head chips.game.state)
     =/  f
-      |=  [who=ship n=@ud c=@ud acted=? folded=?]
+      |=  [who=ship n=@ud c=@ud acted=? folded=? left=?]
       ?|  =(c x)
           =(folded %.y)
       ==
@@ -45,9 +45,20 @@
 ::  assign dealer, assign blinds, assign first action 
 ::  to person left of BB (which is dealer in heads-up)
 ::  make sure to shuffle deck from outside with eny!!!
+::  check for players who have left, remove them
   ++  initialize-hand
     |=  dealer=ship
     ^-  server-game-state
+    =.  players.game.state
+      %+  skip
+        players.game.state
+      |=  s=ship
+        left:(get-player-chips s chips.game.state)
+    =.  chips.game.state
+      %+  skip
+        chips.game.state
+      |=  [ship @ud @ud ? ? left=?]
+        left
     =.  dealer.game.state       
     dealer
     =.  state                   
@@ -114,9 +125,9 @@
       %+  turn
         %+  skip
           chips.game.state
-        |=  [s=ship @ud @ud ? folded=?]
+        |=  [s=ship @ud @ud ? folded=? ?]
           folded
-      |=  [s=ship @ud @ud ? ?]
+      |=  [s=ship @ud @ud ? ? ?]
         s
     =/  whose-turn  whose-turn.game.state   
     |-
@@ -139,39 +150,49 @@
     |=  [who=ship amount=@ud]
     ^-  server-game-state
     =/  f
-      |=  [p=ship n=@ud c=@ud acted=? folded=?]
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
       ?:  =(p who)
-        [p (sub n amount) (add c amount) acted folded]
-      [p n c acted folded] 
+        [p (sub n amount) (add c amount) acted folded left]
+      [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
   ++  set-player-as-acted
     |=  who=ship
     ^-  server-game-state
     =/  f
-      |=  [p=ship n=@ud c=@ud acted=? folded=?]
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
       ?:  =(p who)
-        [p n c %.y folded]
-      [p n c acted folded] 
+        [p n c %.y folded left]
+      [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
   ++  set-player-as-folded
     |=  who=ship
     ^-  server-game-state
     =/  f
-      |=  [p=ship n=@ud c=@ud acted=? folded=?]
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
       ?:  =(p who)
-        [p n c acted %.y]
-      [p n c acted folded] 
+        [p n c acted %.y left]
+      [p n c acted folded left] 
+    =.  chips.game.state  (turn chips.game.state f)
+    state
+  ++  set-player-as-left
+    |=  who=ship
+    ^-  server-game-state
+    =/  f
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+      ?:  =(p who)
+        [p n c %.y %.y %.y]
+      [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
   ++  committed-chips-to-pot
     ^-  server-game-state 
     =/  f
-      |=  [[p=ship n=@ud c=@ud acted=? folded=?] pot=@ud]
+      |=  [[p=ship n=@ud c=@ud acted=? folded=? left=?] pot=@ud]
         =.  pot  
           (add c pot)
-        [[p n 0 %.n folded] pot]
+        [[p n 0 %.n folded left] pot]
     =/  new  (spin chips.game.state pot.game.state f)
     =.  pot.game.state          q.new
     =.  chips.game.state        p.new
@@ -218,10 +239,10 @@
       committed-chips-to-pot
     :: give pot to winner
     =/  f
-      |=  [p=ship n=@ud c=@ud acted=? folded=?]
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
       ?:  =(p winner) 
-        [p (add n (add c pot.game.state)) 0 %.n %.n]
-      [p n 0 %.n %.n] 
+        [p (add n (add c pot.game.state)) 0 %.n %.n left]
+      [p n 0 %.n %.n left] 
     =.  chips.game.state  (turn chips.game.state f)
     =.  pot.game.state  0
     :: take hands away, clear board, clear bet
@@ -320,9 +341,9 @@
       %+  turn
         %+  skip
           chips.game.state
-        |=  [ship @ud @ud ? folded=?]
+        |=  [ship @ud @ud ? folded=? ?]
           folded
-      |=  [s=ship @ud @ud ? ?]
+      |=  [s=ship @ud @ud ? ? ?]
         s
     ?:  =((lent players-left) 1)
       %-  process-win  -.players-left
@@ -354,6 +375,24 @@
           (break-ties +.a +.b)
       -:(head player-ranks)
     -:(head player-ranks)
+  ++  remove-player
+    |=  who=ship
+    ^-  server-game-state
+    :: set player to folded/acted/left, then
+    :: take player out of player list.
+    :: if it was their turn, go to next player's turn
+    =.  state
+      (set-player-as-left who)
+    :: =.  players.game.state
+    ::   %+  skip
+    ::     players.game.state
+    ::   |=  s=ship
+    ::     =(s who)
+    ?:  =(whose-turn.game.state who)
+      ?.  is-betting-over
+        next-player-turn
+      next-round
+    state
   --
 ::
 ::  Hand evaluation and sorted helper arms
@@ -744,10 +783,10 @@
   (snag (mod +(u.+.player-position) (lent players)) players)
 ::  given a ship in game, returns their chip count [name stack committed]
 ++  get-player-chips
-  |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud acted=? folded=?])]
-  ^-  [who=ship in-stack=@ud committed=@ud acted=? folded=?]
+  |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud ? ? ?])]
+  ^-  [who=ship in-stack=@ud committed=@ud acted=? folded=? left=?]
   =/  f
-    |=  [p=ship n=@ud c=@ud acted=? folded=?]
+    |=  [p=ship n=@ud c=@ud ? ? ?]
     =(p who)
   (head (skim chips f))
 --

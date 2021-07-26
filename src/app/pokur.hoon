@@ -100,7 +100,6 @@
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
-  ::  ~&  >>  "smth on {<wire>}: {<-.sign>}" :: {<q.cage.sign>}"
   ?+    wire  (on-agent:def wire sign)
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
@@ -274,14 +273,6 @@
           !>([%subscribe game-id=game-id.challenge.client-action host=host.challenge.client-action])
         ==
     ==
-    :: do this somewhere else
-    :: :~  
-    ::   :*  :: request first hand initialization
-    ::     %pass  /poke-wire  %agent  [host.challenge.client-action %pokur-server]
-    ::     %poke  %pokur-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
-    ::   ==
-    :: ==
-    ::
     %subscribe
   ?>  (team:title [our src]:bowl)
   :: if we're already in a game, we need to leave it
@@ -303,11 +294,19 @@
     %leave-game
   ?>  (team:title [our src]:bowl)
   =.  in-game.state  %.n
-  :_  state
-    :~  :*  %pass  /game-updates/(scot %da game-id.client-action)
+  :_  state    
+    :~  :: unsub from game's path
+        :*  %pass  /game-updates/(scot %da game-id.client-action)
             %agent  [host.game.state %pokur-server]
             %leave  ~
         ==
+        :: tell server we're leaving game
+        :*  %pass  /poke-wire  %agent 
+            [host.game.state %pokur-server] 
+            %poke  %pokur-server-action
+            !>([%leave-game game-id=game-id.game.state])
+        ==
+        :: tell frontend we left a game
         :*  %give  %fact
             ~[/game]  
             %pokur-game-update  !>([%left-game in-game.state])

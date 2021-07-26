@@ -7,6 +7,7 @@ class ChallengeList extends Component {
 
     this.state = {
       challenges: {},
+      acceptButtonText: {},
     }
 
     this.acceptChallenge = this.acceptChallenge.bind(this);
@@ -22,6 +23,9 @@ class ChallengeList extends Component {
   }
 
   acceptChallenge(id, from) {
+    this.setState({
+      acceptButtonText: { ...this.state.acceptButtonText, [id]: 'Accepted...'},
+    })
     window.urb.poke(
         window.ship,
         'pokur',
@@ -46,7 +50,8 @@ class ChallengeList extends Component {
         type: data["type"],
       }
       this.setState({
-        challenges: { ...this.state.challenges, [data["id"]]: newChallenge}
+        challenges: { ...this.state.challenges, [data["id"]]: newChallenge},
+        acceptButtonText: { ...this.state.acceptButtonText, [data["id"]]: "Accept"},
       });
     } else if (data["update"] == "close") {
       var newList = {...this.state.challenges};
@@ -78,7 +83,7 @@ class ChallengeList extends Component {
                 <td>{data.challenger == '~'+window.ship 
                  ? <span></span> 
                  : <button onClick={() => this.acceptChallenge(id, data.challenger)}>
-                     Accept Challenge
+                     {this.state.acceptButtonText[id]}
                    </button>}</td>
               </tr>
             ))

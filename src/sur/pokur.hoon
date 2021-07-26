@@ -44,7 +44,7 @@
     players=(list ship)
     paused=?
     hands-played=@ud
-    chips=(list [ship in-stack=@ud committed=@ud acted=? folded=?])
+    chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
     pot=@ud
     current-bet=@ud
     min-bet=@ud
@@ -97,6 +97,7 @@
 ::  server actions
 +$  server-action
   $%
+    [%leave-game game-id=@da]
     [%register-game challenge=pokur-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@da]

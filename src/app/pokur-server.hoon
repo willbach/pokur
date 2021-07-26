@@ -54,7 +54,6 @@
     [cards this]
     ::
     %pokur-game-action
-    ~&  >  !<(game-action:pokur vase)
     =^  cards  state
     (handle-game-action:hc !<(game-action:pokur vase))
     [cards this]
@@ -63,7 +62,6 @@
 ++  on-watch
   |=  =path
   ^-  (quip card _this)
-  ::  ~&  >  "sub::: {<path>}"
   ?+  path  (on-watch:def path)
     [%game @ta @ta ~]
   :: make sure the subscriber is in game and on their path, reject if not
@@ -106,7 +104,8 @@
   ==
 ++  on-leave
   |=  =path
-  ~&  "got leave request from {<src.bowl>}"  `this
+  ~&  "got leave request from {<src.bowl>}"
+  `this
 ++  on-peek   on-peek:def
 ++  on-agent  on-agent:def
 ++  on-arvo   on-arvo:def
@@ -170,7 +169,7 @@
       players=players.challenge.server-action
       paused=%.n
       hands-played=0
-      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n %.n]))
+      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n %.n %.n]))
       pot=0
       current-bet=0
       min-bet=40
@@ -199,20 +198,16 @@
         ==
     ==
     ::
-    ::    %request-hand-initialization
-    ::  =/  game  
-    ::  (~(get by active-games.state) game-id.server-action)
-    ::  ?~  game
-    ::    :_  state
-    ::      ~[[%give %poke-ack `~[leaf+"error: game does not exist on server"]]]
-    ::  ?:  hand-is-over.u.game 
-    ::    :_  state
-    ::    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.server-action])]]
-    ::  :_  state
-    ::  =/  err  "error: game has already started"
-    ::  ~[[%give %poke-ack `~[leaf+err]]]  
+    %leave-game
+  =/  game  (get-game-by-id game-id.server-action)
+  :: remove sender from their game
+  =/  game
+    (~(remove-player modify-state game) src.bowl)
+  =.  active-games.state
+    (~(put by active-games.state) [game-id.server-action game])
+  :_  state
+    (generate-update-cards game)
     ::
-    :: :pokur-server &pokur-server-action [%initialize-hand 1]
     %initialize-hand
   ?>  (team:title [our src]:bowl)
   =/  game  (get-game-by-id game-id.server-action)
