@@ -7,7 +7,9 @@ class ChallengeForm extends Component {
     super(props);
 
     this.state = {
-      to: '',
+      toInputs: {
+        0: '',
+      },
       host: '',
       type: 'cash',
     }
@@ -20,20 +22,35 @@ class ChallengeForm extends Component {
     const target = event.target;
     const value = target.value;
     const name = target.name;
+    
+    if (name == "to") {
+      const id = target.id;
+      this.setState({
+        toInputs: {...this.state.toInputs, [id]: value },
+      });
+    } else {
+      this.setState({
+        [name]: value,
+      });
+    }
+  }
 
+  addToInput() {
+    var n = Object.keys(this.state.toInputs).length;
     this.setState({
-      [name]: value
+      toInputs: {...this.state.toInputs, [n]: '' },
     });
   }
 
   handleSubmit(event) {
+    const to = Object.values(this.state.toInputs);
     window.urb.poke(
       window.ship,
       'pokur',
       'pokur-client-action',
       {
         'issue-challenge': {
-          'to': ["~bus", "~nec"],
+          'to': to,
           'host': this.state.host,
           'type': this.state.type
         }
@@ -49,14 +66,22 @@ class ChallengeForm extends Component {
     return <div>
       <p>Send a challenge poke</p>
       <form onSubmit={this.handleSubmit}>
-        <label>
-          To:
-          <input name="to" type="text" value={this.state.to} onChange={this.handleChange} />
+        {Object.entries(this.state.toInputs).map(([i, data]) => ( 
+          <label>
+            <br />
+            To:
+            <input name="to" id={i} key={i} type="text" value={data} onChange={this.handleChange} />
         </label>
+        ))}
+        <button onClick={() => this.addToInput()}>
+          Invite another ship
+        </button>
+        <br />
         <label>
           Host ship:
           <input name="host" type="text" value={this.state.host} onChange={this.handleChange} />
         </label>
+        <br />
         <label>
           Game type:
           <select name="type" value={this.state.type} onChange={this.handleChange}>
@@ -64,6 +89,7 @@ class ChallengeForm extends Component {
             <option value="tournament">Tournament (not yet functional)</option>
           </select>
         </label>
+        <br />
         <input type="submit" value="Submit" />
       </form>
     </div>
