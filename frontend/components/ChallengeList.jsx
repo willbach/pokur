@@ -21,7 +21,7 @@ class ChallengeList extends Component {
     );
   }
 
-  acceptChallenge(from) {
+  acceptChallenge(id, from) {
     window.urb.poke(
         window.ship,
         'pokur',
@@ -29,6 +29,7 @@ class ChallengeList extends Component {
         {
           'accept-challenge': {
             'from': from,
+            'game-id': id,
           }
         },
         () => {},
@@ -76,7 +77,7 @@ class ChallengeList extends Component {
                 <td>{data.type}</td>
                 <td>{data.challenger == '~'+window.ship 
                  ? <span></span> 
-                 : <button onClick={() => this.acceptChallenge(data.challenger)}>
+                 : <button onClick={() => this.acceptChallenge(id, data.challenger)}>
                      Accept Challenge
                    </button>}</td>
               </tr>

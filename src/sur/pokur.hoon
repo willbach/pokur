@@ -44,7 +44,7 @@
     players=(list ship)
     paused=?
     hands-played=@ud
-    chips=(list [ship in-stack=@ud committed=@ud acted=?])
+    chips=(list [ship in-stack=@ud committed=@ud acted=? folded=?])
     pot=@ud
     current-bet=@ud
     min-bet=@ud
@@ -65,6 +65,7 @@
     game-id=@da
     challenger=ship :: person who issued challenge
     players=(list ship)
+    accepted=(list [ship ?])
     host=ship :: address of poker-server used for game
     type=poker-game-type
   ==
@@ -78,10 +79,10 @@
 ::
 +$  client-action
   $%
-    [%issue-challenge to=ship host=ship type=poker-game-type]
-    [%accept-challenge from=ship]
+    [%issue-challenge to=(list ship) host=ship type=poker-game-type]
+    [%accept-challenge from=ship id=@da]
     [%receive-challenge challenge=pokur-challenge]
-    [%challenge-accepted by=ship]
+    [%challenge-accepted by=ship id=@da]
     [%game-registered challenge=pokur-challenge]
     [%subscribe game-id=@da host=ship]
     [%leave-game game-id=@da]
@@ -99,7 +100,7 @@
     [%register-game challenge=pokur-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@da]
-    [%request-hand-initialization game-id=@da]
+    :: [%request-hand-initialization game-id=@da]
     [%send-game-updates game=server-game-state]
     [%wipe-all-games game-id=@da]
   ==

@@ -23,12 +23,13 @@
           %-  pairs:enjs 
           %+  turn
             chips.game.upd
-          |=  [s=ship stack=@ud committed=@ud acted=?]
+          |=  [s=ship stack=@ud committed=@ud acted=? folded=?]
             :-  `@t`(scot %p s)
             %-  pairs:enjs 
             :~  ['stack' (numb:enjs stack)]
                 ['committed' (numb:enjs committed)]
                 ['acted' [%b acted]]
+                ['folded' [%b folded]]
             ==
           ['pot' (numb:enjs pot.game.upd)]
           ['current_bet' (numb:enjs current-bet.game.upd)]

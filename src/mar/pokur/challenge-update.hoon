@@ -15,7 +15,7 @@
       :~  ['update' [%s 'open']]
           ['id' [%s (scot %da game-id.challenge.upd)]]
           ['challenger' [%s (scot %p challenger.challenge.upd)]]
-          :: TODO ['players' [%s challenger-side.challenge.upd]]
+          ['players' [%a (turn players.challenge.upd ship:enjs)]]
           ['host' [%s (scot %p host.challenge.upd)]]
           ['type' [%s type.challenge.upd]]
       ==

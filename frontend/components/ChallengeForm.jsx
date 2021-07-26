@@ -33,7 +33,7 @@ class ChallengeForm extends Component {
       'pokur-client-action',
       {
         'issue-challenge': {
-          'to': this.state.to,
+          'to': ["~bus", "~nec"],
           'host': this.state.host,
           'type': this.state.type
         }

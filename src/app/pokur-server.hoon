@@ -91,7 +91,18 @@
       :~  [%give %watch-ack `~[leaf+err]]
     ==
   ?>  =(src.bowl u.player)
-    `this
+    :: give a good subscriber their game state
+    :: find their hand
+    =.  my-hand.game.u.game
+      +.-:(skim hands.u.game |=([s=ship h=poker-deck] =(s u.player)))
+    :_  this
+      :~  :*  
+            %give 
+            %fact 
+            ~[/game/(scot %da u.game-id)/(scot %p u.player)]
+            [%pokur-game-state !>(game.u.game)]
+          ==
+      ==
   ==
 ++  on-leave
   |=  =path
@@ -159,7 +170,7 @@
       players=players.challenge.server-action
       paused=%.n
       hands-played=0
-      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n]))
+      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n %.n]))
       pot=0
       current-bet=0
       min-bet=40
@@ -180,20 +191,26 @@
   =.  active-games.state
     (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
   :_  state
-  ~
+    :: init first hand here
+    :~  :*  %pass  /poke-wire  %agent 
+            [our.bowl %pokur-server] 
+            %poke  %pokur-server-action 
+            !>([%initialize-hand game-id.challenge.server-action])
+        ==
+    ==
     ::
-    %request-hand-initialization
-  =/  game  
-  (~(get by active-games.state) game-id.server-action)
-  ?~  game
-    :_  state
-      ~[[%give %poke-ack `~[leaf+"error: game does not exist on server"]]]
-  ?:  hand-is-over.u.game 
-    :_  state
-    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.server-action])]]
-  :_  state
-  =/  err  "error: game has already started"
-  ~[[%give %poke-ack `~[leaf+err]]]  
+    ::    %request-hand-initialization
+    ::  =/  game  
+    ::  (~(get by active-games.state) game-id.server-action)
+    ::  ?~  game
+    ::    :_  state
+    ::      ~[[%give %poke-ack `~[leaf+"error: game does not exist on server"]]]
+    ::  ?:  hand-is-over.u.game 
+    ::    :_  state
+    ::    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.server-action])]]
+    ::  :_  state
+    ::  =/  err  "error: game has already started"
+    ::  ~[[%give %poke-ack `~[leaf+err]]]  
     ::
     :: :pokur-server &pokur-server-action [%initialize-hand 1]
     %initialize-hand

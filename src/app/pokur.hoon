@@ -7,8 +7,8 @@
 +$  state-zero
     $:  in-game=?
         game=poker-game-state
-        challenges-sent=(map ship pokur-challenge)
-        challenges-received=(map ship pokur-challenge)
+        challenges-sent=(map @da pokur-challenge)
+        challenges-received=(map @da pokur-challenge)
     ==
 ::
 +$  card  card:agent:gall
@@ -82,7 +82,7 @@
         %+  weld  
           ~(tap by challenges-received.state)
         ~(tap by challenges-sent.state)
-      |=  item=[s=ship c=pokur-challenge]
+      |=  item=[id=@da c=pokur-challenge]
       :^    %give
           %fact
         ~[/challenge-updates]
@@ -131,13 +131,28 @@
   ?-  -.action
     %check
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%check game-id=game-id.game.state])]]
+    :~  :*  %pass  /poke-wire  %agent 
+            [host.game.state %pokur-server] 
+            %poke  %pokur-game-action 
+            !>([%check game-id=game-id.game.state])
+        ==
+    ==
     %bet
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%bet game-id=game-id.game.state amount=amount.action])]]
+    :~  :*  %pass  /poke-wire  %agent 
+            [host.game.state %pokur-server]
+            %poke  %pokur-game-action
+            !>([%bet game-id=game-id.game.state amount=amount.action])
+        ==
+    ==
     %fold
   :_  state
-    ~[[%pass /poke-wire %agent [host.game.state %pokur-server] %poke %pokur-game-action !>([%fold game-id=game-id.game.state])]]
+    :~  :*  %pass  /poke-wire  %agent
+            [host.game.state %pokur-server]
+            %poke  %pokur-game-action
+            !>([%fold game-id=game-id.game.state])
+        ==
+    ==
   ==
 ++  handle-client-action
   |=  =client-action:pokur
@@ -147,29 +162,41 @@
     ::
     %issue-challenge
   ?>  (team:title [our src]:bowl)
+  =/  player-list  
+    (weld to.client-action ~[our.bowl])
+  =/  accepted-list
+    %+  turn 
+      to.client-action
+    |=  s=ship
+    [s %.n]
   =/  challenge
     [
       game-id=now.bowl
       challenger=our.bowl
-      players=~[our.bowl to.client-action] :: change this for multiplayer
+      players=player-list
+      accepted=accepted-list
       host=host.client-action
       type=type.client-action
     ]
   =.  challenges-sent.state  
-    (~(put by challenges-sent.state) [to.client-action challenge])
+    (~(put by challenges-sent.state) [game-id.challenge challenge])
   :_  state
-    :~  :*  %pass  /poke-wire  %agent  [to.client-action %pokur] 
-            %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
+    %+  welp 
+      :~  :*  %give  %fact  
+              ~[/challenge-updates]
+              [%pokur-challenge-update !>([%open-challenge challenge])]
           ==
-        :*  %give  %fact  
-            ~[/challenge-updates]
-            [%pokur-challenge-update !>([%open-challenge challenge])]
-        ==
-    ==  
+      ==
+    %+  turn
+      to.client-action
+    |=  player=ship
+    :*  %pass  /poke-wire  %agent  [player %pokur] 
+        %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
+    ==
     ::
     %receive-challenge
   =.  challenges-received.state  
-    (~(put by challenges-received.state) [challenger.challenge.client-action challenge.client-action])
+    (~(put by challenges-received.state) [game-id.challenge.client-action challenge.client-action])
   :_  state
     :~  :*  %give  %fact  
             ~[/challenge-updates]
@@ -181,55 +208,79 @@
     %accept-challenge
   ?>  (team:title [our src]:bowl)
   =/  challenge  
-    (~(get by challenges-received.state) from.client-action)
+    (~(get by challenges-received.state) id.client-action)
   ?~  challenge
     :_  state
       ~[[%give %poke-ack `~[leaf+"error: no challenge from {<from.client-action>} exists"]]]
   =.  challenges-received.state
-    (~(del by challenges-received.state) from.client-action)
+    (~(del by challenges-received.state) id.client-action)
   :_  state
     :~  :*  :: notify challenger that we've accepted
           %pass  /poke-wire  %agent  [from.client-action %pokur]
-          %poke  %pokur-client-action  !>([%challenge-accepted by=our.bowl])
+          %poke  %pokur-client-action  !>([%challenge-accepted by=our.bowl id=id.client-action])
+        ==
+    ==
+    ::
+    %challenge-accepted
+  =/  challenge  
+    (~(get by challenges-sent.state) id.client-action)
+  ?~  challenge
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: no challenge from {<by.client-action>} exists"]]]
+  =.  accepted.u.challenge
+    %+  turn
+      accepted.u.challenge
+    |=  [s=ship has=?]
+    ?:  =(by.client-action s)
+      [s %.y]
+    [s has]
+  ?.  %+  levy
+        accepted.u.challenge
+      |=  [s=ship has=?]
+      has
+    :: if not all have accepted, just wait and update stored challenge-sent
+    =.  challenges-sent.state  
+      (~(put by challenges-sent.state) [id.client-action u.challenge])
+    :_  state
+      ~
+  :: otherwise, init game
+  =.  challenges-sent.state
+    (~(del by challenges-sent.state) id.client-action)
+  :_  state
+    %+  welp
+      :~
+        :*  :: register game with server
+          %pass  /poke-wire  %agent  [host.u.challenge %pokur-server]
+          %poke  %pokur-server-action  !>([%register-game challenge=u.challenge])
         ==
         :*  :: subscribe to path which game will be served from
           %pass  /poke-wire  %agent  [our.bowl %pokur]
           %poke  %pokur-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
         ==
       ==
-    ::
-    %challenge-accepted
-  =/  challenge  
-    (~(get by challenges-sent.state) by.client-action)
-  ?~  challenge
-    :_  state
-      ~[[%give %poke-ack `~[leaf+"error: no challenge from {<by.client-action>} exists"]]]
-  =.  challenges-sent.state
-    (~(del by challenges-sent.state) by.client-action)
-  :_  state
-    :~
-      :*  :: register game with server
-        %pass  /poke-wire  %agent  [host.u.challenge %pokur-server]
-        %poke  %pokur-server-action  !>([%register-game challenge=u.challenge])
-      ==
-      :*  :: subscribe to path which game will be served from
-        %pass  /poke-wire  %agent  [our.bowl %pokur]
-        %poke  %pokur-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
-      ==
-      :*  :: notify other player the game is registered
-        %pass  /poke-wire  %agent  [by.client-action %pokur]
+    %+  turn
+      players.u.challenge
+    |=  player=ship
+      :*  :: notify all players that the game is registered
+        %pass  /poke-wire  %agent  [player %pokur]
         %poke  %pokur-client-action  !>([%game-registered challenge=u.challenge])
       ==
-    ==
     ::
     %game-registered
   :_  state
-    :~  
-      :*  :: request first hand initialization
-        %pass  /poke-wire  %agent  [host.challenge.client-action %pokur-server]
-        %poke  %pokur-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
-      ==
+    :~  :*  :: subscribe to path which game will be served from
+          %pass  /poke-wire  %agent  [our.bowl %pokur]
+          %poke  %pokur-client-action  
+          !>([%subscribe game-id=game-id.challenge.client-action host=host.challenge.client-action])
+        ==
     ==
+    :: do this somewhere else
+    :: :~  
+    ::   :*  :: request first hand initialization
+    ::     %pass  /poke-wire  %agent  [host.challenge.client-action %pokur-server]
+    ::     %poke  %pokur-server-action  !>([%request-hand-initialization game-id=game-id.challenge.client-action])
+    ::   ==
+    :: ==
     ::
     %subscribe
   ?>  (team:title [our src]:bowl)

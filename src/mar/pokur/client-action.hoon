@@ -17,13 +17,14 @@
       ==
     ++  parse-challenge
       %-  ot:dejs
-      :~  [%to (se:dejs %p)]
+      :~  [%to (ar:dejs (se:dejs %p))]
           [%host (se:dejs %p)]
           [%type so:dejs]
       ==
     ++  accept
       %-  ot:dejs
       :~  [%from (se:dejs %p)]
+          [%game-id (se:dejs %da)]
       ==
     ++  leave
       %-  ot:dejs
