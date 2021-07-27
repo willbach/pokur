@@ -5,3 +5,55 @@ tr, td {
     border: 1px solid black;
     padding: 2px;
 }
+
+body {
+    background-color: #FFE5B4;
+}
+
+.hand, .board {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+/*  card rendering stuff */
+.card {
+    display: flex;
+    width: 72px;
+    height: 120px;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid black;
+    margin: 16px;
+    padding: 4px;
+}
+  
+.black {
+    color: black;
+}
+  
+.red {
+    color: red;
+}
+  
+.card-value {
+    font-size: 24px;
+}
+  
+.card-suit {
+    font-size: 18px;
+}
+  
+.card-top {
+    display: flex;
+    flex-grow: 1;
+    flex-flow: column nowrap;
+    align-items: flex-start;
+}
+  
+.card-bot {
+    display: flex;
+    flex-grow: 1;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    transform:rotate(-180deg);
+}

@@ -4,9 +4,16 @@ class GameAction extends Component {
 
   constructor(props) {
     super(props);
-   
-    this.state = {
-      currentBet: 0,
+
+    if (this.props.game.current_bet > 0) {
+      this.state = {
+        // raise logic
+        myBet: this.props.game.current_bet + this.props.game.last_bet,
+      }
+    } else {
+      this.state = {
+        myBet: this.props.game.min_bet,
+      }
     }
 
     this.handleBetChange = this.handleBetChange.bind(this);
@@ -14,7 +21,7 @@ class GameAction extends Component {
 
   handleBetChange(event) {
     this.setState({
-      currentBet: event.target.value,
+      myBet: event.target.value,
     });
   }
 
@@ -64,59 +71,40 @@ class GameAction extends Component {
     );
   }
 
-  leaveGame() {
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-client-action',
-      {
-        'leave-game': {
-          'game-id': this.props.game.id,
-        }
-      },
-      () => {},
-      (err) => { console.log(err) }
-    );
-  }
-
   render() {
     const game = this.props.game;
     const betToMatch = game.current_bet - game.chips['~' + window.ship].committed;
     return <div id="game-info">
       <input name="bet"
            type="range" 
-           min={0} 
+           min={game.last_bet} 
            max={game.chips['~' + window.ship].stack} 
-           value={this.state.currentBet} 
+           value={this.state.myBet} 
            onChange={this.handleBetChange} />
       <br />
       <label>
         $
         <input name="bet"
                type="number" 
-               min={0} 
+               min={game.last_bet} 
                max={game.chips['~' + window.ship].stack} 
-               value={this.state.currentBet} 
+               value={this.state.myBet} 
                onChange={this.handleBetChange} />
       </label>
-      <button onClick={() => this.handleBet(this.state.currentBet)}>
-        {betToMatch > 0 ? <span>Raise to ${this.state.currentBet}</span> : <span>Bet ${this.state.currentBet}</span>}
+      <button onClick={() => this.handleBet(this.state.myBet)}>
+        {game.current_bet > 0 ? <span>Raise to ${this.state.myBet}</span> : <span>Bet ${this.state.myBet}</span>}
       </button>
       {betToMatch > 0 
       ? <button onClick={() => this.handleBet(betToMatch)}>
-          Call ${game.current_bet}
+          Call ${betToMatch}
         </button>
       : <button onClick={() => this.handleCheck()}>
           Check
         </button>}
-      
       <button onClick={() => this.handleFold()}>
         Fold
       </button>
       <br />
-      <button onClick={() => this.leaveGame()}>
-        Leave Game
-      </button>
     </div>
   }
 }

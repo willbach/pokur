@@ -104,8 +104,24 @@
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
         %fact
-      =/  new-state=poker-game-state  !<(poker-game-state q.cage.sign)
-      ~&  >  "New game state: {<new-state>}"
+      =/  new-state=poker-game-state  
+        !<(poker-game-state q.cage.sign)
+      =/  my-hand-eval
+        :: TODO clean this up
+        =/  full-hand  (weld my-hand.new-state board.new-state)
+        ~&  >>>  (lent full-hand)
+        ?:  =((lent full-hand) 5)
+          ~&  >>>  (eval-5-cards full-hand)
+          (eval-5-cards full-hand)
+        ?:  =((lent full-hand) 6)
+          ~&  >>>  (eval-6-cards full-hand)
+          (eval-6-cards full-hand)
+        ?:  =((lent full-hand) 7)
+          ~&  >>>  -:(evaluate-hand full-hand)
+          -:(evaluate-hand full-hand)
+        ~
+      ~&  >>  "New game state: {<new-state>}" 
+      ~&  >  "My hand strength: {<my-hand-eval>}"
       =.  game.state
         new-state
       :_  this
@@ -277,10 +293,10 @@
     ==
     %subscribe
   ?>  (team:title [our src]:bowl)
-  :: if we're already in a game, we need to leave it
-  ?:  =(in-game.state %.y)
-    :_  state
-      ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
+  :: TODO if we're already in a game, we need to leave it?
+  :: ?:  =(in-game.state %.y)
+  ::   :_  state
+  ::     ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
   =.  in-game.state  %.y
   :_  state
     :~  :*  %pass  /game-updates/(scot %da game-id.client-action)

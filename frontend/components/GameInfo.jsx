@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Card } from '../components';
 
 class GameInfo extends Component {
 
@@ -6,10 +7,6 @@ class GameInfo extends Component {
     super(props);
   }
 
-  rawCardToVal(n) {
-    const valArray = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
-    return valArray[n]
-  }
 
   calcFullPot(pot) {
     const playerChips = this.props.game.chips;
@@ -28,14 +25,18 @@ class GameInfo extends Component {
       <p>SB/BB: ${game.min_bet / 2}/${game.min_bet}</p>
       <br />
       <br />
-      <p>Current board:</p>
-      {game.board.map(card => (
-        <li key={card.val+card.suit}>{this.rawCardToVal(card.val)} of {card.suit}</li>
-        ))}
+      <p>Board:</p>
+      <div className="board">
+        {game.board.map(card => (
+          <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
+          ))}
+      </div>
       <p>Hand:</p>
-      {game.hand.map(card => (
-        <li key={card.val+card.suit}>{this.rawCardToVal(card.val)} of {card.suit}</li>
-        ))}
+      <div className="hand">
+        {game.hand.map(card => (
+          <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
+          ))}
+      </div>
       <p>Pot: ${this.calcFullPot(game.pot)}</p>
       <br />
       <p>Chip counts:</p>

@@ -3,6 +3,6 @@
 =,  pokur
 :-  %say
 |=  [[* eny=@uv *] *]
-=/  hand  ~[[%ace %spades] [%2 %spades] [%3 %spades] [%4 %hearts] [%5 %clubs] [%6 %spades] [%7 %hearts]]
+=/  hand  ~[[%5 %hearts] [%jack %clubs] [%8 %spades] [%jack %spades] [%9 %spades] [%7 %spades]]
 :-  %noun
-(evaluate-hand hand)
+(eval-6-cards hand)

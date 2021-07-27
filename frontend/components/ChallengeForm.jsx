@@ -70,10 +70,10 @@ class ChallengeForm extends Component {
       <p>Send a challenge poke</p>
       <form onSubmit={this.handleSubmit}>
         {Object.entries(this.state.toInputs).map(([i, data]) => ( 
-          <label>
+          <label key={i}>
             <br />
             To: 
-            <input name="to" id={i} key={i} type="text" value={data} onChange={this.handleChange} />
+            <input name="to" id={i} type="text" value={data} onChange={this.handleChange} />
         </label>
         ))}
         <button onClick={() => this.addToInput()}>

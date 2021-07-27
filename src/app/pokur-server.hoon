@@ -173,6 +173,7 @@
       pot=0
       current-bet=0
       min-bet=min-bet.challenge.server-action
+      last-bet=0
       board=~
       my-hand=~
       whose-turn=(snag 1 players.challenge.server-action)

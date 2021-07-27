@@ -197,6 +197,7 @@
     =.  pot.game.state          q.new
     =.  chips.game.state        p.new
     =.  current-bet.game.state  0
+    =.  last-bet.game.state     0
     state
 ::  takes blinds from the two players left of dealer
 ::  (big blind is calculated as min-bet, small blind is 1/2 min. could change..)
@@ -230,6 +231,8 @@
       min-bet.game.state
     =.  current-bet.game.state
       min-bet.game.state
+    =.  last-bet.game.state
+      min-bet.game.state
     state
 ::  given a winner, send them the pot. prepare for next hand by
 ::  clearing board, hands and bets, reset fold status, increment hands-played.
@@ -252,6 +255,8 @@
     =.  board.game.state
       ~
     =.  current-bet.game.state
+      0
+    =.  last-bet.game.state
       0
     =.  hands.state
       ~
@@ -319,14 +324,17 @@
       ?.  is-betting-over
         next-player-turn
       next-round
-    ?:  %+  lth 
-          bet-plus-committed 
-        (mul 2 current-bet.game.state)
-      :: error, raise must be 2x current bet
+    ?.  ?&
+          (gte amount.action last-bet.game.state)
+          (gte bet-plus-committed (add last-bet.game.state current-bet.game.state))
+        ==
+      :: error, raise must be >= amount of previous bet/raise
       !!
     :: process raise 
     =.  current-bet.game.state
       bet-plus-committed
+    =.  last-bet.game.state
+      amount.action
     =.  state
       (commit-chips who amount.action)
     =.  state
@@ -478,20 +486,21 @@
     3
   ?:  |(=(histogram ~[2 2 1 1]) =(histogram ~[2 2 2]))
     2
+  =/  is-pair  =(histogram ~[2 1 1 1 1])
   :: at this point, must sort hand
   =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   :: check for flush
   =/  is-flush  (check-6-hand-flush raw-hand)
   :: check for straight
   =/  is-straight  (check-6-hand-straight raw-hand)
-  ?:  &(is-straight is-flush)
+  ?:  &(is-straight is-flush !is-pair)
     8
   ?:  is-flush
     5
-  ?:  is-straight
+  ?:  &(is-straight !is-pair)
     4
-  :: check down here cause this can possibly contain flush too
-  ?:  =(histogram ~[2 1 1 1 1])
+  :: check down here cause this can possibly contain flush
+  ?:  is-pair
     1
   0
 ++  eval-5-cards

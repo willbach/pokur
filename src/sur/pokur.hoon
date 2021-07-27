@@ -48,6 +48,7 @@
     pot=@ud
     current-bet=@ud
     min-bet=@ud
+    last-bet=@ud
     board=poker-deck
     my-hand=poker-deck
     whose-turn=ship

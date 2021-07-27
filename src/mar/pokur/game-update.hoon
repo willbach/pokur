@@ -35,6 +35,7 @@
           ['pot' (numb:enjs pot.game.upd)]
           ['current_bet' (numb:enjs current-bet.game.upd)]
           ['min_bet' (numb:enjs min-bet.game.upd)]
+          ['last_bet' (numb:enjs last-bet.game.upd)]
           :-  'board'
           :-  %a
           %+  turn
