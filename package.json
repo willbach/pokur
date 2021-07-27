@@ -4,16 +4,23 @@
   "private": true,
   "description": "Play poker on Urbit",
   "author": "~hodzod-walrus",
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
+  },
   "scripts": {
     "build": "webpack"
   },
   "dependencies": {
-    "@babel/preset-env": "^7.10.4",
-    "@babel/preset-react": "^7.10.4",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.8",
+    "@babel/preset-react": "^7.14.5",
     "@types/react": "^17.0.1",
     "@types/react-dom": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.14.2",
