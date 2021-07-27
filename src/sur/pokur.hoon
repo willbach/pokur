@@ -67,6 +67,8 @@
     players=(list ship)
     accepted=(list [ship ?])
     host=ship :: address of poker-server used for game
+    min-bet=@ud
+    starting-stack=@ud
     type=poker-game-type
   ==
 +$  pokur-challenge-update
@@ -79,7 +81,7 @@
 ::
 +$  client-action
   $%
-    [%issue-challenge to=(list ship) host=ship type=poker-game-type]
+    [%issue-challenge to=(list ship) host=ship min-bet=@ud starting-stack=@ud type=poker-game-type]
     [%accept-challenge from=ship id=@da]
     [%receive-challenge challenge=pokur-challenge]
     [%challenge-accepted by=ship id=@da]

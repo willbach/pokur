@@ -17,6 +17,8 @@
           ['challenger' [%s (scot %p challenger.challenge.upd)]]
           ['players' [%a (turn players.challenge.upd ship:enjs)]]
           ['host' [%s (scot %p host.challenge.upd)]]
+          ['min_bet' (numb:enjs min-bet.challenge.upd)]
+          ['starting_stack' (numb:enjs starting-stack.challenge.upd)]
           ['type' [%s type.challenge.upd]]
       ==
       %close-challenge

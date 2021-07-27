@@ -19,6 +19,8 @@
       %-  ot:dejs
       :~  [%to (ar:dejs (se:dejs %p))]
           [%host (se:dejs %p)]
+          [%min-bet ni:dejs]
+          [%starting-stack ni:dejs]
           [%type so:dejs]
       ==
     ++  accept

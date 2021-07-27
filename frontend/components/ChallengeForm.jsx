@@ -10,6 +10,8 @@ class ChallengeForm extends Component {
         0: '',
       },
       host: '',
+      minBet: 40,
+      stackSize: 1000,
       type: 'cash',
     }
 
@@ -51,7 +53,9 @@ class ChallengeForm extends Component {
         'issue-challenge': {
           'to': to,
           'host': this.state.host,
-          'type': this.state.type
+          'type': this.state.type,
+          'min-bet': parseInt(this.state.minBet),
+          'starting-stack': parseInt(this.state.stackSize),
         }
       },
       () => {},
@@ -68,7 +72,7 @@ class ChallengeForm extends Component {
         {Object.entries(this.state.toInputs).map(([i, data]) => ( 
           <label>
             <br />
-            To:
+            To: 
             <input name="to" id={i} key={i} type="text" value={data} onChange={this.handleChange} />
         </label>
         ))}
@@ -77,12 +81,22 @@ class ChallengeForm extends Component {
         </button>
         <br />
         <label>
-          Host ship:
+          Host ship: 
           <input name="host" type="text" value={this.state.host} onChange={this.handleChange} />
         </label>
         <br />
         <label>
-          Game type:
+          Min. bet / big blind size: $
+          <input name="minBet" type="number" value={this.state.value} onChange={this.handleChange} />
+        </label>
+        <br />
+        <label>
+          Starting stack size: $
+          <input name="stackSize" type="number" value={this.state.value} onChange={this.handleChange} />
+        </label>
+        <br />
+        <label>
+          Game type: 
           <select name="type" value={this.state.type} onChange={this.handleChange}>
             <option value="cash">Cash</option>
             <option value="tournament">Tournament (not yet functional)</option>

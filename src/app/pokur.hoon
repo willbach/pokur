@@ -175,6 +175,8 @@
       players=player-list
       accepted=accepted-list
       host=host.client-action
+      min-bet=min-bet.client-action
+      starting-stack=starting-stack.client-action
       type=type.client-action
     ]
   =.  challenges-sent.state  

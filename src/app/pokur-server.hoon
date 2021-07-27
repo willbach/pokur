@@ -169,10 +169,10 @@
       players=players.challenge.server-action
       paused=%.n
       hands-played=0
-      chips=(turn players.challenge.server-action |=(a=ship [a 1.000 0 %.n %.n %.n]))
+      chips=(turn players.challenge.server-action |=(a=ship [a starting-stack.challenge.server-action 0 %.n %.n %.n]))
       pot=0
       current-bet=0
-      min-bet=40
+      min-bet=min-bet.challenge.server-action
       board=~
       my-hand=~
       whose-turn=(snag 1 players.challenge.server-action)
