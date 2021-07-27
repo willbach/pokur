@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import ChallengeForm from './components/ChallengeForm.jsx'
-import ChallengeList from './components/ChallengeList.jsx'
-import Game from './components/Game.jsx'
+import { ChallengeForm, ChallengeList, Game } from './components';
 
 class App extends Component {
   constructor(props) {

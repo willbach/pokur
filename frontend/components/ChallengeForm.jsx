@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 
-
 class ChallengeForm extends Component {
 
   constructor(props) {
