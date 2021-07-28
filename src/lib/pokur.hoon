@@ -234,11 +234,11 @@
     =.  last-bet.game.state
       min-bet.game.state
     state
-::  given a winner, send them the pot. prepare for next hand by
+::  given [winner [rank hand]], send them the pot. prepare for next hand by
 ::  clearing board, hands and bets, reset fold status, increment hands-played.
 ::  TODO in future, should manage raising of blinds and other things...
   ++  process-win
-    |=  winner=ship
+    |=  [winner=ship [rank=@ud hand=poker-deck]]
     ^-  server-game-state
     :: sends any extra committed chips to pot
     =.  state
@@ -273,8 +273,15 @@
       players.game.state
     :: set hand to over to trigger next hand on server
     =.  hand-is-over.state
+      ~&  >>>  "the hand is over yo000"
       %.y
+    :: update game message to inform clients
+    =.  update-message.game.state
+      ?:  =(rank 10)
+        "{<winner>} wins hand"
+      "{<winner>} wins hand with {<(hierarchy-to-rank rank)>}"
     :: TODO: BLINDS UP/DOWN etc should be here?
+    ~&  >>>  "the hand is over yo"
     state
 ::  given a player and a poker-action, handles the action.
 ::  currently checks for being given the wrong player (not their turn),
@@ -334,7 +341,7 @@
     =.  current-bet.game.state
       bet-plus-committed
     =.  last-bet.game.state
-      amount.action
+      (sub amount.action last-bet.game.state)
     =.  state
       (commit-chips who amount.action)
     =.  state
@@ -357,14 +364,15 @@
       |=  [s=ship @ud @ud ? ? ?]
         s
     ?:  =((lent players-left) 1)
-      %-  process-win  -.players-left
+      %-  process-win
+      [-.players-left [10 ~]]
     :: otherwise continue game
     ?.  is-betting-over
       next-player-turn
     next-round
     ==
   ++  determine-winner
-    ^-  ship
+    ^-  [ship [@ud poker-deck]]
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
       =/  hand  
@@ -384,8 +392,8 @@
           |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
           ^-  ?
           (break-ties +.a +.b)
-      -:(head player-ranks)
-    -:(head player-ranks)
+      (head player-ranks)
+    (head player-ranks)
   ++  remove-player
     |=  who=ship
     ^-  server-game-state
@@ -658,7 +666,7 @@
       top-card-2
     %.y
   %.n
-::  is there a better way to perform this mapping -- a map, perhaps?
+::  not actually using this anywhere
 ++  rank-to-hierarchy
   |=  rank=poker-hand-rank
   ^-  @ud
@@ -676,18 +684,18 @@
   ==
 ++  hierarchy-to-rank
   |=  h=@ud
-  ^-  poker-hand-rank
-  ?+  h  !!
-    %9  %royal-flush      
-    %8  %straight-flush   
-    %7  %four-of-a-kind   
-    %6  %full-house       
-    %5  %flush            
-    %4  %straight         
-    %3  %three-of-a-kind  
-    %2  %two-pair         
-    %1  %pair             
-    %0  %high-card        
+  ^-  tape
+  ?+  h  "-"
+    %9  "Royal Flush"  
+    %8  "Straight Flush"   
+    %7  "Four of a Lind"   
+    %6  "Full House"  
+    %5  "Flush"      
+    %4  "Straight"         
+    %3  "Three of a Kind"  
+    %2  "Two Pair"         
+    %1  "Pair"             
+    %0  "High Card"        
   ==
 ++  card-to-raw
   |=  c=poker-card

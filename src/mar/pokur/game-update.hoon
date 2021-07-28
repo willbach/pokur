@@ -18,6 +18,8 @@
           ['type' [%s type.game.upd]]
           ['players' [%a (turn players.game.upd ship:enjs)]]
           ['paused' [%b paused.game.upd]]
+          ['update_message' (tape:enjs update-message.game.upd)]
+          ['my_hand_rank' (tape:enjs my-hand-rank.upd)]
           ['hands_played' (numb:enjs hands-played.game.upd)]
           :-  'chips' 
           %-  pairs:enjs 

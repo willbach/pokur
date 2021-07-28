@@ -123,7 +123,7 @@
   ^-  (list card)
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
-  :: initialize new hand
+  :: initialize new hand, update message to clients
   ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
 ++  handle-game-action
   |=  action=game-action:pokur
@@ -168,6 +168,7 @@
       type=type.challenge.server-action
       players=players.challenge.server-action
       paused=%.n
+      update-message="Pokur game started, dealt by {<our.bowl>}"
       hands-played=0
       chips=(turn players.challenge.server-action |=(a=ship [a starting-stack.challenge.server-action 0 %.n %.n %.n]))
       pot=0

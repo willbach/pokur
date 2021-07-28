@@ -43,6 +43,7 @@
     type=poker-game-type
     players=(list ship)
     paused=?
+    update-message=tape
     hands-played=@ud
     chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
     pot=@ud
@@ -57,7 +58,7 @@
     big-blind=ship
   == 
 +$  pokur-game-update
-  $%  [%update game=poker-game-state]
+  $%  [%update game=poker-game-state my-hand-rank=tape]
       [%left-game t=?]
   ==
 ::

@@ -92,7 +92,7 @@
     [%game ~]
     ?:  in-game.state
       :_  this
-        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update game.state])]]]
+        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update game.state "-"])]]]
     `this
   ==
 ++  on-leave  on-leave:def
@@ -103,7 +103,7 @@
   ?+    wire  (on-agent:def wire sign)
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
-        %fact
+      %fact
       =/  new-state=poker-game-state  
         !<(poker-game-state q.cage.sign)
       =/  my-hand-eval
@@ -119,13 +119,11 @@
         ?:  =((lent full-hand) 7)
           ~&  >>>  -:(evaluate-hand full-hand)
           -:(evaluate-hand full-hand)
-        ~
-      ~&  >>  "New game state: {<new-state>}" 
-      ~&  >  "My hand strength: {<my-hand-eval>}"
+        10 :: bad
       =.  game.state
         new-state
       :_  this
-        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state])]]]
+        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==
   ==
 ++  on-arvo

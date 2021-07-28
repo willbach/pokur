@@ -25,6 +25,7 @@ class GameInfo extends Component {
       <p>SB/BB: ${game.min_bet / 2}/${game.min_bet}</p>
       <br />
       <br />
+      <h2>{game.update_message}</h2>
       <p>Board:</p>
       <div className="board">
         {game.board.map(card => (
@@ -37,6 +38,7 @@ class GameInfo extends Component {
           <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
           ))}
       </div>
+      <p>Your hand: {game.my_hand_rank}</p>
       <p>Pot: ${this.calcFullPot(game.pot)}</p>
       <br />
       <p>Chip counts:</p>
