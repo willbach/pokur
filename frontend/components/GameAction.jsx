@@ -4,28 +4,10 @@ class GameAction extends Component {
 
   constructor(props) {
     super(props);
-
-    if (this.props.game.current_bet > 0) {
-      this.state = {
-        // raise logic
-        myBet: this.props.game.current_bet + this.props.game.last_bet,
-      }
-    } else {
-      this.state = {
-        myBet: this.props.game.min_bet,
-      }
-    }
-
-    this.handleBetChange = this.handleBetChange.bind(this);
-  }
-
-  handleBetChange(event) {
-    this.setState({
-      myBet: event.target.value,
-    });
   }
 
   handleBet(amount) {
+    const lessCommitted = amount - this.props.game.chips['~' + window.ship].committed;
     window.urb.poke(
       window.ship,
       'pokur',
@@ -33,7 +15,23 @@ class GameAction extends Component {
       {
         'bet': {
           'game-id': this.props.game.id,
-          'amount': parseInt(amount),
+          'amount': lessCommitted,
+        }
+      },
+      () => {},
+      (err) => { console.log(err) }
+    );
+  }
+
+  handleCall(amount) {
+    window.urb.poke(
+      window.ship,
+      'pokur',
+      'pokur-game-action',
+      {
+        'bet': {
+          'game-id': this.props.game.id,
+          'amount': amount,
         }
       },
       () => {},
@@ -74,13 +72,14 @@ class GameAction extends Component {
   render() {
     const game = this.props.game;
     const betToMatch = game.current_bet - game.chips['~' + window.ship].committed;
+    const myBet = this.props.myBet;
     return <div id="game-info">
       <input name="bet"
            type="range" 
            min={game.last_bet} 
            max={game.chips['~' + window.ship].stack} 
-           value={this.state.myBet} 
-           onChange={this.handleBetChange} />
+           value={myBet} 
+           onChange={this.props.handleBetChange} />
       <br />
       <label>
         $
@@ -88,14 +87,14 @@ class GameAction extends Component {
                type="number" 
                min={game.last_bet} 
                max={game.chips['~' + window.ship].stack} 
-               value={this.state.myBet} 
-               onChange={this.handleBetChange} />
+               value={myBet} 
+               onChange={this.props.handleBetChange} />
       </label>
-      <button onClick={() => this.handleBet(this.state.myBet)}>
-        {game.current_bet > 0 ? <span>Raise to ${this.state.myBet}</span> : <span>Bet ${this.state.myBet}</span>}
+      <button onClick={() => this.handleBet(myBet)}>
+        {game.current_bet > 0 ? <span>Raise to ${myBet}</span> : <span>Bet ${myBet}</span>}
       </button>
       {betToMatch > 0 
-      ? <button onClick={() => this.handleBet(betToMatch)}>
+      ? <button onClick={() => this.handleCall(betToMatch)}>
           Call ${betToMatch}
         </button>
       : <button onClick={() => this.handleCheck()}>

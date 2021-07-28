@@ -109,17 +109,14 @@
       =/  my-hand-eval
         :: TODO clean this up
         =/  full-hand  (weld my-hand.new-state board.new-state)
-        ~&  >>>  (lent full-hand)
-        ?:  =((lent full-hand) 5)
-          ~&  >>>  (eval-5-cards full-hand)
-          (eval-5-cards full-hand)
-        ?:  =((lent full-hand) 6)
-          ~&  >>>  (eval-6-cards full-hand)
-          (eval-6-cards full-hand)
-        ?:  =((lent full-hand) 7)
-          ~&  >>>  -:(evaluate-hand full-hand)
-          -:(evaluate-hand full-hand)
-        10 :: bad
+        ?+  (lent full-hand)  10
+          %5
+        (eval-5-cards full-hand)  
+          %6
+        (eval-6-cards full-hand)  
+          %7
+        -:(evaluate-hand full-hand)
+        ==
       =.  game.state
         new-state
       :_  this

@@ -22,8 +22,20 @@ class Game extends Component {
     );
   }
 
+  handleBetChange = event => {
+    this.setState({
+      myBet: event.target.value,
+    });
+  }
+
   render() {
     const game = this.props.game;
+
+    // raise logic 
+    const myBet = this.props.game.current_bet > 0 
+                    ? this.props.game.current_bet + this.props.game.last_bet
+                    : this.props.game.min_bet;
+
     return <div className="game-wrapper">
       <h2>Pokur Game</h2>
       <GameInfo game={game} />
@@ -32,7 +44,7 @@ class Game extends Component {
        ? <p>Waiting for {game.whose_turn} to play</p>
        : <div>
            <p>It's your turn!</p>
-           <GameAction game={game} />
+           <GameAction game={game} myBet={myBet} handleBetChange={this.handleBetChange} />
          </div>}
       <br />
       <button onClick={() => this.leaveGame()}>

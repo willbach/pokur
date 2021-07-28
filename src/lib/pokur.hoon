@@ -273,7 +273,6 @@
       players.game.state
     :: set hand to over to trigger next hand on server
     =.  hand-is-over.state
-      ~&  >>>  "the hand is over yo000"
       %.y
     :: update game message to inform clients
     =.  update-message.game.state
@@ -281,7 +280,6 @@
         "{<winner>} wins hand"
       "{<winner>} wins hand with {<(hierarchy-to-rank rank)>}"
     :: TODO: BLINDS UP/DOWN etc should be here?
-    ~&  >>>  "the hand is over yo"
     state
 ::  given a player and a poker-action, handles the action.
 ::  currently checks for being given the wrong player (not their turn),
@@ -338,10 +336,10 @@
       :: error, raise must be >= amount of previous bet/raise
       !!
     :: process raise 
+    =.  last-bet.game.state
+      (sub bet-plus-committed current-bet.game.state)
     =.  current-bet.game.state
       bet-plus-committed
-    =.  last-bet.game.state
-      (sub amount.action last-bet.game.state)
     =.  state
       (commit-chips who amount.action)
     =.  state
@@ -590,6 +588,10 @@
 ++  break-ties
   |=  [hand1=[r=@ud h=poker-deck] hand2=[r=@ud h=poker-deck]]
   ^-  ?
+  ::  if ranks are strictly better, just return that
+  ::  otherwise break equally-ranked hands
+  ?.  =(r.hand1 r.hand2)
+    (gth r.hand1 r.hand2)
   ::  sort whole hands to start
   =/  sorter
    |=  [a=poker-card b=poker-card]
@@ -688,7 +690,7 @@
   ?+  h  "-"
     %9  "Royal Flush"  
     %8  "Straight Flush"   
-    %7  "Four of a Lind"   
+    %7  "Four of a Kind"   
     %6  "Full House"  
     %5  "Flush"      
     %4  "Straight"         
