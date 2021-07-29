@@ -116,15 +116,18 @@
 ++  get-game-by-id
   |=  game-id=@da
   ^-  server-game-state
-  ::  obviously add error handling to this
+  ::  TODO obviously add error handling to this
   (~(got by active-games.state) game-id)
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
-  :: initialize new hand, update message to clients
-  ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
+  ?.  =(0 (lent players.game.game))
+    :: initialize new hand, update message to clients
+    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
+  :: if no players in game, TODO we want to delete game from server here
+  ~
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)

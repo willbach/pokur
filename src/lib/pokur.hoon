@@ -120,29 +120,12 @@
       dealer.game.state 
     next-player-turn
 ::  sets whose-turn to next player in list **who hasn't folded**
+::  if all players are folded, this means that everyone left..
   ++  next-player-turn
     ^-  server-game-state 
-    =/  unfolded-players
-      %+  turn
-        %+  skip
-          chips.game.state
-        |=  [s=ship @ud @ud ? folded=? ?]
-          folded
-      |=  [s=ship @ud @ud ? ? ?]
-        s
-    =/  whose-turn  whose-turn.game.state   
-    |-
-    =/  next-player
-      %+  get-next-player 
-        whose-turn 
-      players.game.state
-    :: if next hasn't folded, set turn to them and return
-    ?^  (find [next-player]~ unfolded-players)
-      =.  whose-turn.game.state
-        next-player
-      state
-    :: otherwise recurse to find next unfolded player
-    $(whose-turn next-player)
+    =.  whose-turn.game.state
+      (get-next-unfolded-player whose-turn.game.state players.game.state)
+    state
   ++  get-next-unfolded-player
     |=  [player=ship players=(list ship)]
     ^-  ship
@@ -154,7 +137,10 @@
           folded
       |=  [s=ship @ud @ud ? ? ?]
         s
-    =/  whose-turn  whose-turn.game.state   
+    ?~  unfolded-players
+      :: everyone left, just return something so server can delete
+      player
+    =/  whose-turn  player 
     |-
     =/  next-player
       %+  get-next-player 
@@ -243,7 +229,6 @@
 ::  require a check to see if game is in heads up)
   ++  assign-blinds
     ^-  server-game-state
-    ::  TODO THIS CHANGES WHEN HEADS-UP
     =.  small-blind.game.state  
       ?:  =((lent players.game.state) 2)
         dealer.game.state
