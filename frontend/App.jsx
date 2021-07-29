@@ -8,6 +8,7 @@ class App extends Component {
     this.state = {
       inGame: false,
       gameData: null,
+      myBet: 0,
     }
 
     this.updateGameState = this.updateGameState.bind(this);
@@ -27,6 +28,10 @@ class App extends Component {
       this.setState({
         inGame: true,
         gameData: newGameState,
+        myBet: newGameState.current_bet > 0 
+              ? newGameState.current_bet + newGameState.last_bet
+
+              : newGameState.min_bet
       });
     } else {
       this.setState({
@@ -34,13 +39,20 @@ class App extends Component {
         gameData: null,
       });
     }
-    
+  }
+
+  handleBetChange = event => {
+    this.setState({
+      myBet: event.target.value,
+    });
   }
 
   render() {
     return <>
       
-      {this.state.inGame ? <Game game={this.state.gameData} />
+      {this.state.inGame ? <Game game={this.state.gameData} 
+                                 myBet={this.state.myBet} 
+                                 handleBetChange={this.handleBetChange} />
               : <div><ChallengeForm />
                 <ChallengeList /></div>}
     </>

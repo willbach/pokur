@@ -119,6 +119,7 @@
         ==
       =.  game.state
         new-state
+      ~&  >  "New game state: {<new-state>}"
       :_  this
         ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==

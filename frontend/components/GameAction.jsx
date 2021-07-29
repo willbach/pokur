@@ -71,31 +71,37 @@ class GameAction extends Component {
 
   render() {
     const game = this.props.game;
-    const betToMatch = game.current_bet - game.chips['~' + window.ship].committed;
-    const myBet = this.props.myBet;
+    const myChips = game.chips['~' + window.ship]
+    const betToMatch = game.current_bet - myChips.committed;
     return <div id="game-info">
       <input name="bet"
            type="range" 
-           min={game.last_bet} 
-           max={game.chips['~' + window.ship].stack} 
-           value={myBet} 
+           min={game.current_bet > 0 
+                 ? game.current_bet + game.last_bet
+                 : game.min_bet}
+           max={myChips.stack + myChips.committed} 
+           value={this.props.myBet} 
            onChange={this.props.handleBetChange} />
       <br />
       <label>
         $
         <input name="bet"
                type="number" 
-               min={game.last_bet} 
-               max={game.chips['~' + window.ship].stack} 
-               value={myBet} 
+               min={betToMatch} 
+               max={myChips.stack + myChips.committed} 
+               value={this.props.myBet} 
                onChange={this.props.handleBetChange} />
       </label>
-      <button onClick={() => this.handleBet(myBet)}>
-        {game.current_bet > 0 ? <span>Raise to ${myBet}</span> : <span>Bet ${myBet}</span>}
+      <button onClick={() => this.handleBet(this.props.myBet)}>
+        {this.props.myBet > myChips.stack + myChips.committed
+          ? <span>All-in</span>
+          : game.current_bet > 0
+            ? <span>Raise to ${this.props.myBet}</span> 
+            : <span>Bet ${this.props.myBet}</span>}
       </button>
       {betToMatch > 0 
       ? <button onClick={() => this.handleCall(betToMatch)}>
-          Call ${betToMatch}
+          Call ${betToMatch + myChips.committed}
         </button>
       : <button onClick={() => this.handleCheck()}>
           Check
