@@ -1,3 +1,4 @@
 node_modules
 .vscode
 src/app/pokur/js/index.js
+src/install.sh
