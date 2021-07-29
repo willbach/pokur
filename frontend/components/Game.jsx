@@ -14,7 +14,7 @@ class Game extends Component {
       'pokur-client-action',
       {
         'leave-game': {
-          'game-id': this.props.game.id,
+          'id': this.props.game.id,
         }
       },
       () => {},

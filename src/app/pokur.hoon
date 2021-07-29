@@ -301,36 +301,43 @@
     %subscribe
   ?>  (team:title [our src]:bowl)
   :: TODO if we're already in a game, we need to leave it?
-  :: ?:  =(in-game.state %.y)
-  ::   :_  state
-  ::     ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
-  :_  state
-    :~  :*  %pass  /game-updates/(scot %da id.client-action)
-            %agent  [host.client-action %pokur-server]
-            %watch  /game/(scot %da id.client-action)/(scot %p our.bowl)
+  ?~  game.state
+    :_  state
+      :~  :*  %pass  /game-updates/(scot %da id.client-action)
+              %agent  [host.client-action %pokur-server]
+              %watch  /game/(scot %da id.client-action)/(scot %p our.bowl)
+            ==
+          :*  %give  %fact  
+              ~[/challenge-updates]
+              [%pokur-challenge-update !>([%close-challenge id.client-action])]
           ==
-        :*  %give  %fact  
-            ~[/challenge-updates]
-            [%pokur-challenge-update !>([%close-challenge id.client-action])]
-        ==
-    ==
+      ==
+  :_  state
+    ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
     ::
     %leave-game
   ?>  (team:title [our src]:bowl)
-  ?~  game.state
-    :_  state
-      ~[[%give %poke-ack `~[leaf+"Error: can't leave game, not in game yet."]]]
+  :: TODO fix this.
+  :: can't set game.state to ~ after using ?~
+  :: how to do?
+  :: ?~  game.state
+  ::   :_  state
+  ::     ~[[%give %poke-ack `~[leaf+"Error: can't leave game, not in game yet."]]]
+  =/  old-game     (need game.state)
+  =/  old-host     host.old-game
+  =/  old-game-id  game-id.old-game
+  =.  game.state   ~
   :_  state    
     :~  :: unsub from game's path
         :*  %pass  /game-updates/(scot %da id.client-action)
-            %agent  [host.u.game.state %pokur-server]
+            %agent  [old-host %pokur-server]
             %leave  ~
         ==
         :: tell server we're leaving game
         :*  %pass  /poke-wire  %agent 
-            [host.u.game.state %pokur-server] 
+            [old-host %pokur-server] 
             %poke  %pokur-server-action
-            !>([%leave-game id=game-id.u.game.state])
+            !>([%leave-game old-game-id])
         ==
         :: tell frontend we left a game
         :*  %give  %fact
