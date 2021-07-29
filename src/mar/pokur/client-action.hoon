@@ -14,6 +14,7 @@
       :~  [%issue-challenge parse-challenge]
           [%accept-challenge accept]
           [%leave-game leave]
+          [%cancel-challenge cancel]
       ==
     ++  parse-challenge
       %-  ot:dejs
@@ -26,12 +27,16 @@
     ++  accept
       %-  ot:dejs
       :~  [%from (se:dejs %p)]
-          [%game-id (se:dejs %da)]
+          [%id (se:dejs %da)]
       ==
     ++  leave
       %-  ot:dejs
-      :~  [%game-id (se:dejs %da)]
+      :~  [%id (se:dejs %da)]
       == 
+    ++  cancel
+      %-  ot:dejs
+      :~  [%id (se:dejs %da)]
+      ==
     --
   --
 ++  grow

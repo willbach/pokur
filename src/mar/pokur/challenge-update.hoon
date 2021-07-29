@@ -13,7 +13,7 @@
       %open-challenge
       %-  pairs:enjs
       :~  ['update' [%s 'open']]
-          ['id' [%s (scot %da game-id.challenge.upd)]]
+          ['id' [%s (scot %da id.challenge.upd)]]
           ['challenger' [%s (scot %p challenger.challenge.upd)]]
           ['players' [%a (turn players.challenge.upd ship:enjs)]]
           ['host' [%s (scot %p host.challenge.upd)]]

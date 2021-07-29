@@ -5,8 +5,7 @@
     $%  state-zero
     ==
 +$  state-zero
-    $:  in-game=?
-        game=poker-game-state
+    $:  game=(unit poker-game-state)
         challenges-sent=(map @da pokur-challenge)
         challenges-received=(map @da pokur-challenge)
     ==
@@ -28,7 +27,7 @@
   ~&  >  '%pokur initialized successfully'
   =/  launchapp  [%launch-action !>([%add %pokur [[%basic 'pokur' '/~pokur/img/tile.png' '/~pokur'] %.y]])]
   =/  filea  [%file-server-action !>([%serve-dir /'~pokur' /app/pokur %.n %.n])]
-  =.  in-game.state  %.n
+  =.  game.state  ~
   :_  this
   :~  [%pass /srv %agent [our.bowl %file-server] %poke filea]
       [%pass /pokur %agent [our.bowl %launch] %poke launchapp]
@@ -90,10 +89,10 @@
     [cards this]
     ::
     [%game ~]
-    ?:  in-game.state
-      :_  this
-        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update game.state "-"])]]]
-    `this
+    ?~  game.state
+      `this
+    :_  this
+      ~[[%give %fact ~[/game] [%pokur-game-update !>([%update u.game.state "-"])]]]
   ==
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
@@ -107,18 +106,14 @@
       =/  new-state=poker-game-state  
         !<(poker-game-state q.cage.sign)
       =/  my-hand-eval
-        :: TODO clean this up
         =/  full-hand  (weld my-hand.new-state board.new-state)
-        ?+  (lent full-hand)  10
-          %5
-        (eval-5-cards full-hand)  
-          %6
-        (eval-6-cards full-hand)  
-          %7
-        -:(evaluate-hand full-hand)
+        ?+  (lent full-hand)  100 :: fake rank number to induce "-"
+          %5  (eval-5-cards full-hand)  
+          %6  (eval-6-cards full-hand)  
+          %7  -:(evaluate-hand full-hand)
         ==
       =.  game.state
-        new-state
+        [~ new-state]
       ~&  >  "New game state: {<new-state>}"
       :_  this
         ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
@@ -139,29 +134,32 @@
   |=  action=game-action:pokur
   ^-  (quip card _state)
   ?>  (team:title [our src]:bowl)
+  ?~  game.state
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"Error: can't process action, not in game yet."]]]
   ?-  -.action
     %check
   :_  state
     :~  :*  %pass  /poke-wire  %agent 
-            [host.game.state %pokur-server] 
+            [host.u.game.state %pokur-server] 
             %poke  %pokur-game-action 
-            !>([%check game-id=game-id.game.state])
+            !>([%check game-id=game-id.u.game.state])
         ==
     ==
     %bet
   :_  state
     :~  :*  %pass  /poke-wire  %agent 
-            [host.game.state %pokur-server]
+            [host.u.game.state %pokur-server]
             %poke  %pokur-game-action
-            !>([%bet game-id=game-id.game.state amount=amount.action])
+            !>([%bet game-id=game-id.u.game.state amount=amount.action])
         ==
     ==
     %fold
   :_  state
     :~  :*  %pass  /poke-wire  %agent
-            [host.game.state %pokur-server]
+            [host.u.game.state %pokur-server]
             %poke  %pokur-game-action
-            !>([%fold game-id=game-id.game.state])
+            !>([%fold game-id=game-id.u.game.state])
         ==
     ==
   ==
@@ -169,8 +167,6 @@
   |=  =client-action:pokur
   ^-  (quip card _state)
   ?-  -.client-action
-    :: :pokur &pokur-client-action [%issue-challenge ~bus 1 ~zod %cash]
-    ::
     %issue-challenge
   ?>  (team:title [our src]:bowl)
   =/  player-list  
@@ -182,7 +178,7 @@
     [s %.n]
   =/  challenge
     [
-      game-id=now.bowl
+      id=now.bowl
       challenger=our.bowl
       players=player-list
       accepted=accepted-list
@@ -192,7 +188,7 @@
       type=type.client-action
     ]
   =.  challenges-sent.state  
-    (~(put by challenges-sent.state) [game-id.challenge challenge])
+    (~(put by challenges-sent.state) [id.challenge challenge])
   :_  state
     %+  welp 
       :~  :*  %give  %fact  
@@ -207,9 +203,24 @@
         %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
     ==
     ::
+    %cancel-challenge
+  =/  to-cancel
+    (~(get by challenges-sent.state) id.client-action)
+  ?~  to-cancel
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: no challenge with ID {<id.client-action>} to cancel"]]]
+  =.  challenges-sent.state
+    (~(del by challenges-sent.state) id.client-action)
+  :_  state
+    :~  :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge-update !>([%close-challenge id.client-action])]
+        ==
+    ==
+    ::
     %receive-challenge
   =.  challenges-received.state  
-    (~(put by challenges-received.state) [game-id.challenge.client-action challenge.client-action])
+    (~(put by challenges-received.state) [id.challenge.client-action challenge.client-action])
   :_  state
     :~  :*  %give  %fact  
             ~[/challenge-updates]
@@ -239,7 +250,7 @@
     (~(get by challenges-sent.state) id.client-action)
   ?~  challenge
     :_  state
-      ~[[%give %poke-ack `~[leaf+"error: no challenge from {<by.client-action>} exists"]]]
+      ~[[%give %poke-ack `~[leaf+"No challenge exist: likely canceled by challenger."]]]
   =.  accepted.u.challenge
     %+  turn
       accepted.u.challenge
@@ -268,7 +279,7 @@
         ==
         :*  :: subscribe to path which game will be served from
           %pass  /poke-wire  %agent  [our.bowl %pokur]
-          %poke  %pokur-client-action  !>([%subscribe game-id=game-id.u.challenge host=host.u.challenge])
+          %poke  %pokur-client-action  !>([%subscribe game-id=id.u.challenge host=host.u.challenge])
         ==
       ==
     %+  turn
@@ -284,7 +295,7 @@
     :~  :*  :: subscribe to path which game will be served from
           %pass  /poke-wire  %agent  [our.bowl %pokur]
           %poke  %pokur-client-action  
-          !>([%subscribe game-id=game-id.challenge.client-action host=host.challenge.client-action])
+          !>([%subscribe id=id.challenge.client-action host=host.challenge.client-action])
         ==
     ==
     %subscribe
@@ -293,37 +304,38 @@
   :: ?:  =(in-game.state %.y)
   ::   :_  state
   ::     ~[[%give %poke-ack `~[leaf+"error: leave current game before joining new one"]]]
-  =.  in-game.state  %.y
   :_  state
-    :~  :*  %pass  /game-updates/(scot %da game-id.client-action)
+    :~  :*  %pass  /game-updates/(scot %da id.client-action)
             %agent  [host.client-action %pokur-server]
-            %watch  /game/(scot %da game-id.client-action)/(scot %p our.bowl)
+            %watch  /game/(scot %da id.client-action)/(scot %p our.bowl)
           ==
         :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%close-challenge game-id.client-action])]
+            [%pokur-challenge-update !>([%close-challenge id.client-action])]
         ==
     ==
     ::
     %leave-game
   ?>  (team:title [our src]:bowl)
-  =.  in-game.state  %.n
+  ?~  game.state
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"Error: can't leave game, not in game yet."]]]
   :_  state    
     :~  :: unsub from game's path
-        :*  %pass  /game-updates/(scot %da game-id.client-action)
-            %agent  [host.game.state %pokur-server]
+        :*  %pass  /game-updates/(scot %da id.client-action)
+            %agent  [host.u.game.state %pokur-server]
             %leave  ~
         ==
         :: tell server we're leaving game
         :*  %pass  /poke-wire  %agent 
-            [host.game.state %pokur-server] 
+            [host.u.game.state %pokur-server] 
             %poke  %pokur-server-action
-            !>([%leave-game game-id=game-id.game.state])
+            !>([%leave-game id=game-id.u.game.state])
         ==
         :: tell frontend we left a game
         :*  %give  %fact
             ~[/game]  
-            %pokur-game-update  !>([%left-game in-game.state])
+            %pokur-game-update  !>([%left-game %.n])
         ==
     ==
   ==

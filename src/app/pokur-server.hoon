@@ -166,7 +166,7 @@
   ~&  >>  "Game initiated with server {<our.bowl>}."
   =/  new-game-state
     [
-      game-id=game-id.challenge.server-action  
+      game-id=id.challenge.server-action  
       host=host.challenge.server-action
       type=type.challenge.server-action
       players=players.challenge.server-action
@@ -193,13 +193,13 @@
       hand-is-over=%.y
     ]
   =.  active-games.state
-    (~(put by active-games.state) [game-id.challenge.server-action new-server-state])
+    (~(put by active-games.state) [id.challenge.server-action new-server-state])
   :_  state
     :: init first hand here
     :~  :*  %pass  /poke-wire  %agent 
             [our.bowl %pokur-server] 
             %poke  %pokur-server-action 
-            !>([%initialize-hand game-id.challenge.server-action])
+            !>([%initialize-hand id.challenge.server-action])
         ==
     ==
     ::

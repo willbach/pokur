@@ -64,7 +64,7 @@
 ::
 +$  pokur-challenge
   $:
-    game-id=@da
+    id=@da
     challenger=ship :: person who issued challenge
     players=(list ship)
     accepted=(list [ship ?])
@@ -87,9 +87,10 @@
     [%accept-challenge from=ship id=@da]
     [%receive-challenge challenge=pokur-challenge]
     [%challenge-accepted by=ship id=@da]
+    [%cancel-challenge id=@da]
     [%game-registered challenge=pokur-challenge]
-    [%subscribe game-id=@da host=ship]
-    [%leave-game game-id=@da]
+    [%subscribe id=@da host=ship]
+    [%leave-game id=@da]
   ==
 +$  game-action
   $%

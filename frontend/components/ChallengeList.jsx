@@ -33,7 +33,22 @@ class ChallengeList extends Component {
         {
           'accept-challenge': {
             'from': from,
-            'game-id': id,
+            'id': id,
+          }
+        },
+        () => {},
+        (err) => { console.log(err) }
+      );
+  }
+
+  cancelChallenge(id, from) {
+    window.urb.poke(
+        window.ship,
+        'pokur',
+        'pokur-client-action',
+        {
+          'cancel-challenge': {
+            'id': id,
           }
         },
         () => {},
@@ -81,7 +96,9 @@ class ChallengeList extends Component {
                 <td>{data.host}</td>
                 <td>{data.type}</td>
                 <td>{data.challenger == '~'+window.ship 
-                 ? <span></span> 
+                 ? <button onClick={() => this.cancelChallenge(id, data.challenger)}>
+                     Cancel
+                   </button>
                  : <button onClick={() => this.acceptChallenge(id, data.challenger)}>
                      {this.state.acceptButtonText[id]}
                    </button>}</td>
