@@ -93,6 +93,7 @@ class GameAction extends Component {
           ))}
       </div>
       <div className="bet-input">
+        <p>Your stack: {myChips.stack} Bet: {myChips.committed}</p>
         <p>Your hand: {game.my_hand_rank}</p>
         <input name="bet"
              type="range" 

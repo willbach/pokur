@@ -106,6 +106,7 @@ header a:visited {
 .game-table {
     display:flex;
     flex-direction: column;
+    justify-content: space-between;
     margin: 0 auto;
     min-width: 800px;
     min-height: 300px;
