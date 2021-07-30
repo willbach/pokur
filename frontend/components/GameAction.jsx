@@ -77,12 +77,14 @@ class GameAction extends Component {
     const betToMatch = game.current_bet - myChips.committed;
     return <div className="player-info">
       <div className="profile">
-        {sigil({
-          patp: window.ship,
-          renderer: reactRenderer,
-          size: 100,
-          colors: ['black', 'white'],
-        })}
+        {window.ship.length <= 13
+         ? sigil({
+            patp: window.ship,
+            renderer: reactRenderer,
+            size: 100,
+            colors: ['black', 'white'],
+          })
+         : <span>[no sigil for moon/comet]</span>}
         <p>{"~" + window.ship}</p>
       </div>
       <div className="hand">
