@@ -1,6 +1,6 @@
 {
   "name": "pokur",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Play poker on Urbit",
   "author": "~hodzod-walrus",
@@ -14,6 +14,7 @@
     "build": "webpack"
   },
   "dependencies": {
+    "@tlon/sigil-js": "^1.4.3",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
@@ -21,7 +22,7 @@
     "@babel/core": "^7.14.8",
     "@babel/preset-env": "^7.14.8",
     "@babel/preset-react": "^7.14.5",
-    "@types/react": "^17.0.1",
+    "@types/react": "^17.0.15",
     "@types/react-dom": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.14.2",
     "@typescript-eslint/parser": "^4.14.2",

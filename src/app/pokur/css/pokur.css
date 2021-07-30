@@ -1,3 +1,61 @@
+/* CSS Reset */
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/* End CSS Reset */
+
+:root {
+    --bg: #F2E6D0;
+    --red: #BF0404;
+    --dark-red: #592525;
+    --dark-green: #0E4015;
+    --light-green: #215918;
+}
+
 .challenge-list {
     border: 1px solid black;
 }
@@ -7,15 +65,91 @@ tr, td {
 }
 
 body {
-    background-color: #FFE5B4;
+    background-color: var(--bg);
 }
+
+header {
+    display: flex;
+    justify-content: space-around;
+    top: 0px;
+    height: 20px;
+    width: 100%;
+    background-color: #000;
+    color: #fff;
+    margin-bottom: 25px;
+}
+
+header a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+header a:visited {
+    color: #fff;
+}
+
+.game-wrapper {
+    width: 80%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.game-info {
+    text-align: center;
+    /* border: 1px solid black; */
+}
+
+.game-info p {
+    font-size: 12px;
+}
+
+.game-table {
+    display:flex;
+    flex-direction: column;
+    margin: 0 auto;
+    min-width: 800px;
+    min-height: 300px;
+    text-align: center;
+    border: 2px solid black;
+    border-radius: 125px;
+    background-color: var(--dark-red);
+    color: #fff;
+}
+
+.game-table h3 {
+    font-size: 24px;
+}
+
+.player-info {
+    border: 1px solid black;
+    margin: 0 auto;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    align-content: stretch;
+    padding: 2px;
+}
+
+.player-info .profile {
+    /* border: 1px solid black; */
+}
+
+.player-info .bet-input {
+    /* border: 1px solid black; */
+    flex-grow: 3;
+}
+
+/*  card rendering stuff */
 
 .hand, .board {
     display: flex;
     flex-flow: row wrap;
 }
 
-/*  card rendering stuff */
+.board {
+    justify-content: center;
+}
+
 .card {
     display: flex;
     width: 72px;
@@ -23,7 +157,7 @@ body {
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid black;
-    margin: 16px;
+    margin: 4px;
     padding: 4px;
 }
   

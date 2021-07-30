@@ -30,7 +30,6 @@ class App extends Component {
         gameData: newGameState,
         myBet: newGameState.current_bet > 0 
               ? newGameState.current_bet + newGameState.last_bet
-
               : newGameState.min_bet
       });
     } else {
@@ -49,7 +48,10 @@ class App extends Component {
 
   render() {
     return <>
-      
+      <header>
+        <p>Pokur -- play Texas hold 'em on Urbit</p>
+        <a href="/">Return to Landscape</a> 
+      </header>
       {this.state.inGame ? <Game game={this.state.gameData} 
                                  myBet={this.state.myBet} 
                                  handleBetChange={this.handleBetChange} />

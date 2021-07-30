@@ -171,7 +171,7 @@
       type=type.challenge.server-action
       players=players.challenge.server-action
       paused=%.n
-      update-message="Pokur game started, dealt by {<our.bowl>}"
+      update-message="Pokur game started, served by {<our.bowl>}"
       hands-played=0
       chips=(turn players.challenge.server-action |=(a=ship [a starting-stack.challenge.server-action 0 %.n %.n %.n]))
       pot=0
