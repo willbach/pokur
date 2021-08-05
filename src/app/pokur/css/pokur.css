@@ -169,6 +169,14 @@ header a:visited {
 .red {
     color: red;
 }
+
+.green {
+    color: green;
+}
+  
+.blue {
+    color: blue;
+}
   
 .card-value {
     font-size: 24px;

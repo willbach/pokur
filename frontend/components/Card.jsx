@@ -9,8 +9,8 @@ class Card extends Component {
       suits: {
         spades: ["♠︎", "black"], 
         hearts: ["♥︎", "red"], 
-        clubs: ["♣︎", "black"], 
-        diamonds: ["♦︎", "red"]
+        clubs: ["♣︎", "green"], 
+        diamonds: ["♦︎", "blue"]
       },
     }
   }
