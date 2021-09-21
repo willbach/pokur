@@ -19,7 +19,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.jsx']
+    extensions: ['.tsx', '.ts', '.js', '.jsx'],
+    fallback: {
+      "http": require.resolve("stream-http"),
+      "url": require.resolve("url")
+    }
   },
   output: {
     filename: 'index.js',

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
 class GameInfo extends Component {
@@ -29,19 +30,58 @@ class GameInfo extends Component {
           <h3>{game.update_message}</h3>
         </div>
       <div className="game-table">
-        <p>Chip counts:</p>
         {Object.entries(game.chips).map(([player, data]) => (
             player == "~" + window.ship
             ? <span key={player}></span>
-            : <li key={player}><span>{player}: ${data.stack} &nbsp;</span> 
-                {data.committed > 0 
-                ? <span>bet: ${data.committed} &nbsp;</span> 
-                : <span></span>}     
-                {data.left 
-                ? <span>(left game)</span> 
-                : data.folded ? <span>(folded) &nbsp;</span> 
-                              : <span></span>}</li>
+            : <div key={player} className={`player-seat ${game.whose_turn == player ? `their-turn` : ``}`}>
+                <div className="name-display">
+                  <p>{player}</p>
+                </div>
+                <div className="player-cards">
+                  <div className="small-card hidden" />
+                  <div className="small-card hidden" />
+                </div>
+                <p>${data.stack} 
+                   {data.committed > 0 
+                   ? <span>bet: ${data.committed} &nbsp;</span> 
+                   : <span></span>}     
+                   {data.left 
+                   ? <span>(left game)</span> 
+                   : data.folded ? <span>(folded) &nbsp;</span> 
+                                 : <span></span>}
+                </p>
+              </div>
         ))}
+        <div className="player-seat">
+          <div className="player-cards">
+          <div className="small-card hidden" />
+          <div className="small-card hidden" />
+          </div>
+        </div>
+        <div className="player-seat">
+          <div className="player-cards">
+          <div className="small-card hidden" />
+          <div className="small-card hidden" />
+          </div>
+        </div>
+        <div className="player-seat">
+          <div className="player-cards">
+          <div className="small-card hidden" />
+          <div className="small-card hidden" />
+          </div>
+        </div>
+        <div className="player-seat">
+          <div className="player-cards">
+          <div className="small-card hidden" />
+          <div className="small-card hidden" />
+          </div>
+        </div>
+        <div className="player-seat">
+          <div className="player-cards">
+          <div className="small-card hidden" />
+          <div className="small-card hidden" />
+          </div>
+        </div>
         <div className="board">
           {game.board.map(card => (
             <Card key={card.val+card.suit} val={card.val} suit={card.suit} />

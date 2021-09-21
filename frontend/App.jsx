@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import { ChallengeForm, ChallengeList, Game } from './components';
+import UrbitInterface from '@urbit/http-api';
+const api = useApi();
+
 
 class App extends Component {
   constructor(props) {
@@ -13,14 +16,15 @@ class App extends Component {
 
     this.updateGameState = this.updateGameState.bind(this);
 
-    window.urb.subscribe(
-      window.ship,
-      'pokur',
-      '/game',
-      (err) => console.log(err),
-      (data) => this.updateGameState(data),
-      () => console.log("Sub Quit")
-    );
+    // window.urb.subscribe(
+    //   window.ship,
+    //   'pokur',
+    //   '/game',
+    //   (err) => console.log(err),
+    //   (data) => this.updateGameState(data),
+    //   () => console.log("Sub Quit")
+    // );
+    api.subscribe('pokur', '/game');
   }
 
   updateGameState(newGameState) {

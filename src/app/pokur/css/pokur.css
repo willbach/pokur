@@ -104,17 +104,92 @@ header a:visited {
 }
 
 .game-table {
-    display:flex;
-    flex-direction: column;
-    justify-content: space-between;
+    position: relative;
     margin: 0 auto;
+    margin-top: 75px;
+    margin-bottom: 75px;
+    padding-top: 75px;
     min-width: 800px;
     min-height: 300px;
     text-align: center;
     border: 2px solid black;
-    border-radius: 125px;
+    border-radius: 200px;
     background-color: var(--dark-red);
     color: #fff;
+}
+
+/* seating arrangements */
+
+.player-seat {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    padding: 6px;
+    left: 100px;
+    bottom: 0;
+    background-color: rgba(30, 30, 30, 0.8);
+    border-radius: 20px;
+    transform: translate(-50%, 50%);
+    font-size: 18px;
+}
+
+.player-seat .name-display {
+    width: 100%;
+    height: 25px;
+    margin-bottom: 3px;
+}
+
+.player-seat .name-display .sigil-small {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+.player-seat .name-display p {
+    display: inline;
+}
+
+.player-seat.their-turn {
+    -webkit-box-shadow:inset 0px 0px 0px 3px #fff;
+    -moz-box-shadow:inset 0px 0px 0px 3px #fff;
+    box-shadow:inset 0px 0px 0px 3px #fff;
+}
+
+.player-seat:nth-of-type(2) {
+    left: 0;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.player-seat:nth-of-type(3) {
+    left: 25%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player-seat:nth-of-type(4) {
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player-seat:nth-of-type(5) {
+    left: 75%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player-seat:nth-of-type(6) {
+    right: 0;
+    left: auto;
+    top: 50%;
+    transform: translate(50%, -50%);
+}
+
+.player-seat:nth-of-type(7) {
+    right: 100px;
+    left: auto;
+    bottom: 0;
+    transform: translate(50%, 50%);
 }
 
 .game-table h3 {
@@ -129,6 +204,7 @@ header a:visited {
     justify-content: space-between;
     align-content: stretch;
     padding: 2px;
+    width: 600px;
 }
 
 .player-info .profile {
@@ -141,6 +217,14 @@ header a:visited {
 }
 
 /*  card rendering stuff */
+
+
+.player-cards {
+    display: flex;
+    flex-flow: row wrap;
+    min-width: 64px;
+    justify-content: center;
+}
 
 .hand, .board {
     display: flex;
@@ -160,6 +244,29 @@ header a:visited {
     border: 1px solid black;
     margin: 4px;
     padding: 4px;
+}
+
+.small-card {
+    display: flex;
+    width: 40px;
+    height: 60px;
+    border: 2px solid black;
+}
+
+.small-card:nth-of-type(1) {
+    transform: translate(10px);
+}
+
+.small-card:nth-of-type(2) {
+    transform: translate(-10px);
+}
+
+/* pattern sourced from https://www.magicpattern.design/tools/css-backgrounds */
+.small-card.hidden {
+    background-color: #c8c8c8;
+    background-image:  linear-gradient(30deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(150deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(30deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(150deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(60deg, #cf000077 25%, transparent 25.5%, transparent 75%, #cf000077 75%, #cf000077), linear-gradient(60deg, #cf000077 25%, transparent 25.5%, transparent 75%, #cf000077 75%, #cf000077);
+    background-size: 8px 14px;
+    background-position: 0 0, 0 0, 4px 7px, 4px 7px, 0 0, 4px 7px;
 }
   
 .black {

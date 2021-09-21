@@ -84,7 +84,12 @@ class GameAction extends Component {
             size: 100,
             colors: ['black', 'white'],
           })
-         : <span>[no sigil for moon/comet]</span>}
+         : sigil({
+          patp: "zod",
+          renderer: reactRenderer,
+          size: 100,
+          colors: ['black', 'white'],
+        })}
         <p>{"~" + window.ship}</p>
       </div>
       <div className="hand">

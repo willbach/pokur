@@ -6,7 +6,7 @@
     ==
 +$  state-zero
     $:  game=(unit poker-game-state)
-        challenges-sent=(map @da pokur-challenge)
+        challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
         challenges-received=(map @da pokur-challenge)
     ==
 ::
@@ -80,7 +80,7 @@
       %+  turn
         %+  weld  
           ~(tap by challenges-received.state)
-        ~(tap by challenges-sent.state)
+        (drop challenge-sent.state)
       |=  item=[id=@da c=pokur-challenge]
       :^    %give
           %fact
@@ -187,8 +187,8 @@
       starting-stack=starting-stack.client-action
       type=type.client-action
     ]
-  =.  challenges-sent.state  
-    (~(put by challenges-sent.state) [id.challenge challenge])
+  =.  challenge-sent.state  
+    [~ u=challenge]
   :_  state
     %+  welp 
       :~  :*  %give  %fact  
@@ -204,13 +204,9 @@
     ==
     ::
     %cancel-challenge
-  =/  to-cancel
-    (~(get by challenges-sent.state) id.client-action)
-  ?~  to-cancel
+  ?~  challenge-sent.state
     :_  state
       ~[[%give %poke-ack `~[leaf+"error: no challenge with ID {<id.client-action>} to cancel"]]]
-  =.  challenges-sent.state
-    (~(del by challenges-sent.state) id.client-action)
   :_  state
     :~  :*  %give  %fact  
             ~[/challenge-updates]
@@ -246,48 +242,44 @@
     ==
     ::
     %challenge-accepted
-  =/  challenge  
-    (~(get by challenges-sent.state) id.client-action)
-  ?~  challenge
+  ?~  challenge-sent.state
     :_  state
       ~[[%give %poke-ack `~[leaf+"No challenge exist: likely canceled by challenger."]]]
-  =.  accepted.u.challenge
+  =.  accepted.u.challenge-sent.state
     %+  turn
-      accepted.u.challenge
+      accepted.u.challenge-sent.state
     |=  [s=ship has=?]
     ?:  =(by.client-action s)
       [s %.y]
     [s has]
   ?.  %+  levy
-        accepted.u.challenge
+        accepted.u.challenge-sent.state
       |=  [s=ship has=?]
       has
     :: if not all have accepted, just wait and update stored challenge-sent
-    =.  challenges-sent.state  
-      (~(put by challenges-sent.state) [id.client-action u.challenge])
     :_  state
       ~
   :: otherwise, init game
-  =.  challenges-sent.state
-    (~(del by challenges-sent.state) id.client-action)
+  =/  challenge             u.challenge-sent.state
+  =.  challenge-sent.state  ~
   :_  state
     %+  welp
       :~
         :*  :: register game with server
-          %pass  /poke-wire  %agent  [host.u.challenge %pokur-server]
-          %poke  %pokur-server-action  !>([%register-game challenge=u.challenge])
+          %pass  /poke-wire  %agent  [host.challenge %pokur-server]
+          %poke  %pokur-server-action  !>([%register-game challenge=challenge])
         ==
         :*  :: subscribe to path which game will be served from
           %pass  /poke-wire  %agent  [our.bowl %pokur]
-          %poke  %pokur-client-action  !>([%subscribe game-id=id.u.challenge host=host.u.challenge])
+          %poke  %pokur-client-action  !>([%subscribe game-id=id.challenge host=host.challenge])
         ==
       ==
     %+  turn
-      players.u.challenge
+      players.challenge
     |=  player=ship
       :*  :: notify all players that the game is registered
         %pass  /poke-wire  %agent  [player %pokur]
-        %poke  %pokur-client-action  !>([%game-registered challenge=u.challenge])
+        %poke  %pokur-client-action  !>([%game-registered challenge=challenge])
       ==
     ::
     %game-registered

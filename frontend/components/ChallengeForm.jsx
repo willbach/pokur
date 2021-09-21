@@ -13,6 +13,7 @@ class ChallengeForm extends Component {
       minBet: 40,
       stackSize: 1000,
       type: 'cash',
+      addPlayerButtonText: "Invite another ship",
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -38,9 +39,15 @@ class ChallengeForm extends Component {
 
   addToInput() {
     var n = Object.keys(this.state.toInputs).length;
-    this.setState({
-      toInputs: {...this.state.toInputs, [n]: '' },
-    });
+    if (n >= 7) {
+      this.setState({
+        addPlayerButtonText: "8 player maximum for cash games",
+      });
+    } else {
+      this.setState({
+        toInputs: {...this.state.toInputs, [n]: '' },
+      });
+    }
   }
 
   handleSubmit(event) {
@@ -77,7 +84,7 @@ class ChallengeForm extends Component {
         </label>
         ))}
         <button onClick={() => this.addToInput()}>
-          Invite another ship
+          {this.state.addPlayerButtonText}
         </button>
         <br />
         <label>

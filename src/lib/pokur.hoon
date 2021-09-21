@@ -225,8 +225,7 @@
     state
 ::  takes blinds from the two unfolded players left of dealer
 ::  (big blind is calculated as min-bet, small blind is 1/2 min. could change..)
-::  (in heads up, dealer is small blind and this is done for now. future will
-::  require a check to see if game is in heads up)
+::  (in heads up, dealer is small blind)
   ++  assign-blinds
     ^-  server-game-state
     =.  small-blind.game.state  
