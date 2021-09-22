@@ -113,9 +113,9 @@ const App = () => {
         <br />
         <input type="submit" value="Login" />
       </form></div> }
-      {inGame ? `we are loachin'  <Game game={gameData} 
+      {inGame ? <Game game={gameData} 
                       myBet={myBet} 
-        handleBetChange={setMyBet} /> `
+        handleBetChange={setMyBet} />
               : <div>
                   <ChallengeForm 
                     urb={urb} 

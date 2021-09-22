@@ -1,81 +1,65 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
-class GameAction extends Component {
+const GameAction = (urb, game, myBet, handleBetChange) => {
 
-  constructor(props) {
-    super(props);
-  }
-
-  handleBet(amount) {
-    const lessCommitted = amount - this.props.game.chips['~' + window.ship].committed;
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-game-action',
-      {
+  const handleBet = (amount) => {
+    const lessCommitted = amount - game.chips['~' + window.ship].committed;
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-game-action',
+      json: {
         'bet': {
-          'game-id': this.props.game.id,
+          'game-id': game.id,
           'amount': lessCommitted,
         }
       },
-      () => {},
-      (err) => { console.log(err) }
-    );
+    });
   }
 
-  handleCall(amount) {
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-game-action',
-      {
+  const handleCall = (amount) => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-game-action',
+      json: {
         'bet': {
-          'game-id': this.props.game.id,
+          'game-id': game.id,
           'amount': amount,
         }
       },
-      () => {},
-      (err) => { console.log(err) }
-    );
+    });
   }
 
-  handleCheck() {
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-game-action',
-      {
+  const handleCheck = () => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-game-action',
+      json: {
         'check': {
-          'game-id': this.props.game.id,
+          'game-id': game.id,
         }
       },
-      () => {},
-      (err) => { console.log(err) }
-    );
+    });
   }
 
-  handleFold() {
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-game-action',
-      {
+  const handleFold = () => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-game-action',
+      json: {
         'fold': {
-          'game-id': this.props.game.id,
+          'game-id': game.id,
         }
       },
-      () => {},
-      (err) => { console.log(err) }
-    );
+    });
   }
 
-  render() {
-    const game = this.props.game;
-    const myChips = game.chips['~' + window.ship]
-    const betToMatch = game.current_bet - myChips.committed;
-    return <div className="player-info">
+  const myChips = game.chips['~' + window.ship]
+  const betToMatch = game.current_bet - myChips.committed;
+
+  return (
+    <div className="player-info">
       <div className="profile">
         {window.ship.length <= 13
          ? sigil({
@@ -106,8 +90,8 @@ class GameAction extends Component {
                    ? game.current_bet + game.last_bet
                    : game.min_bet}
              max={myChips.stack + myChips.committed} 
-             value={this.props.myBet} 
-             onChange={this.props.handleBetChange} />
+             value={myBet} 
+             onChange={handleBetChange} />
         <br />
         <label>
           $
@@ -115,33 +99,33 @@ class GameAction extends Component {
                  type="number" 
                  min={betToMatch} 
                  max={myChips.stack + myChips.committed} 
-                 value={this.props.myBet} 
-                 onChange={this.props.handleBetChange} />
+                 value={myBet} 
+                 onChange={handleBetChange} />
         </label>
         {game.whose_turn != window.ship
          ? <p>Waiting for {"~"+game.whose_turn} to play</p>
          : <div className="action-buttons">
-             <button onClick={() => this.handleBet(this.props.myBet)}>
-               {this.props.myBet > myChips.stack + myChips.committed
+             <button onClick={() => handleBet(myBet)}>
+               {myBet > myChips.stack + myChips.committed
                  ? <span>All-in</span>
                  : game.current_bet > 0
-                   ? <span>Raise to ${this.props.myBet}</span> 
-                   : <span>Bet ${this.props.myBet}</span>}
+                   ? <span>Raise to ${myBet}</span> 
+                   : <span>Bet ${myBet}</span>}
              </button>
              {betToMatch > 0 
-             ? <button onClick={() => this.handleCall(betToMatch)}>
+             ? <button onClick={() => handleCall(betToMatch)}>
                  Call ${betToMatch + myChips.committed}
                </button>
-             : <button onClick={() => this.handleCheck()}>
+             : <button onClick={() => handleCheck()}>
                  Check
                </button>}
-             <button onClick={() => this.handleFold()}>
+             <button onClick={() => handleFold()}>
                Fold
              </button>
            </div>}
       </div>
     </div>
-  }
+  );
 }
 
 export default GameAction;

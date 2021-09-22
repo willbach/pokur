@@ -1,42 +1,35 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Card extends Component {
+const Card = (suit, val) => {
 
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      suits: {
-        spades: ["♠︎", "black"], 
-        hearts: ["♥︎", "red"], 
-        clubs: ["♣︎", "green"], 
-        diamonds: ["♦︎", "blue"]
-      },
-    }
-  }
+  const suits = {
+          spades: ["♠︎", "black"], 
+          hearts: ["♥︎", "red"], 
+          clubs: ["♣︎", "green"], 
+          diamonds: ["♦︎", "blue"]
+        };
   
-  rawCardToVal(n) {
+  const rawCardToVal = (n) => {
     const valArray = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     return valArray[n]
   }
 
-  render() {
-    const color = this.state.suits[this.props.suit][1];
-    const val = this.rawCardToVal(this.props.val);
-    const suit = this.state.suits[this.props.suit][0];
-    return (
+  const color = suits[suit][1];
+  const value = rawCardToVal(val);
+  const suitIcon = suits[suit][0];
+
+  return (
       <div className={`card ${color}`}>
         <div className="card-top">
-          <div className="card-value">{val}</div>
-          <div className="card-suit">{suit}</div>
+          <div className="card-value">{value}</div>
+          <div className="card-suit">{suitIcon}</div>
         </div>
         <div className="card-bot">
-          <div className="card-value">{val}</div>
-          <div className="card-suit">{suit}</div>
+          <div className="card-value">{value}</div>
+          <div className="card-suit">{suitIcon}</div>
         </div>
       </div>
-    )
-  }
+  );
 }
 
 export default Card;

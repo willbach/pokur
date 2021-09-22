@@ -1,43 +1,34 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { GameInfo, GameAction } from '../components';
 
-class Game extends Component {
-
-  constructor(props) {
-    super(props);
-  }
+const Game = (urb, game, myBet, handleBetChange) => {
   
-  leaveGame() {
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-client-action',
-      {
+  const leaveGame = () => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-client-action',
+      json: {
         'leave-game': {
-          'id': this.props.game.id,
+          'id': game.id,
         }
       },
-      () => {},
-      (err) => { console.log(err) }
-    );
+    });
   }
 
-  render() {
-    const game = this.props.game;
-
-    return <div className="game-wrapper">
+  return( 
+    <div className="game-wrapper">
       <GameInfo game={game} />
       <br />
       {game.whose_turn != window.ship
        ? <span></span>
        : <p>It's your turn!</p>}
-      <GameAction game={game} myBet={this.props.myBet} handleBetChange={this.props.handleBetChange} />
+      <GameAction urb={urb} game={game} myBet={myBet} handleBetChange={handleBetChange} />
       <br />
-      <button onClick={() => this.leaveGame()}>
+      <button onClick={() => leaveGame()}>
         Leave Game
       </button>
     </div>
-  };
+  );
 }
 
 export default Game;

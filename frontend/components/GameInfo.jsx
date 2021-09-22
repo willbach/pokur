@@ -1,25 +1,19 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
-class GameInfo extends Component {
+const GameInfo = (game) => {
 
-  constructor(props) {
-    super(props);
-  }
-
-
-  calcFullPot(pot) {
-    const playerChips = this.props.game.chips;
+  const calcFullPot = (pot) => {
+    const playerChips = game.chips;
     for (const [_, data] of Object.entries(playerChips)) {
         pot = pot + data.committed;
     }
     return pot
   }
 
-  render() {
-    const game = this.props.game;
-    return <>
+  return (
+    <>
       <div className="game-info">
         <p>Game ID: {game.id}</p>
         <p>Host: {"~" + game.host}</p>
@@ -87,10 +81,10 @@ class GameInfo extends Component {
             <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
             ))}
         </div>
-        <h3>Pot: ${this.calcFullPot(game.pot)}</h3>
+        <h3>Pot: ${calcFullPot(game.pot)}</h3>
       </div>
     </>
-  }
+  );
 }
 
 export default GameInfo;
