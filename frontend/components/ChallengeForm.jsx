@@ -16,7 +16,7 @@ const ChallengeForm = (urb) => {
     } else {
       setSendToList({...sendToList, [n]: '' });
     }
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ const ChallengeForm = (urb) => {
         }
       }
     });
-  }
+  };
 
   return (
     <div>
@@ -78,6 +78,6 @@ const ChallengeForm = (urb) => {
       </form>
     </div>
   );
-}
+};
 
 export default ChallengeForm;

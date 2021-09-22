@@ -35,7 +35,7 @@ const ChallengeList = (urb) => {
       delete newList[data["id"]];
       setChallenges(newList);
     }
-  }
+  };
 
   const acceptChallenge = (id, from) => {
     urb.urb.poke({
@@ -48,7 +48,7 @@ const ChallengeList = (urb) => {
         }
       },
     });
-  }
+  };
 
   const cancelChallenge = (id, from) => {
     urb.urb.poke({
@@ -60,7 +60,7 @@ const ChallengeList = (urb) => {
         }
       },
     });
-  }
+  };
 
   return (
     <div>
@@ -94,6 +94,6 @@ const ChallengeList = (urb) => {
       </table>
     </div>
   );
-}
+};
 
 export default ChallengeList;

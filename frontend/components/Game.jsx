@@ -13,7 +13,7 @@ const Game = (urb, game, myBet, handleBetChange) => {
         }
       },
     });
-  }
+  };
 
   return( 
     <div className="game-wrapper">
@@ -29,6 +29,6 @@ const Game = (urb, game, myBet, handleBetChange) => {
       </button>
     </div>
   );
-}
+};
 
 export default Game;

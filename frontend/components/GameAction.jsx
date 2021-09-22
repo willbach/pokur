@@ -16,7 +16,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
         }
       },
     });
-  }
+  };
 
   const handleCall = (amount) => {
     urb.urb.poke({
@@ -29,7 +29,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
         }
       },
     });
-  }
+  };
 
   const handleCheck = () => {
     urb.urb.poke({
@@ -41,7 +41,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
         }
       },
     });
-  }
+  };
 
   const handleFold = () => {
     urb.urb.poke({
@@ -53,9 +53,9 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
         }
       },
     });
-  }
+  };
 
-  const myChips = game.chips['~' + window.ship]
+  const myChips = game.chips['~' + window.ship];
   const betToMatch = game.current_bet - myChips.committed;
 
   return (
@@ -126,6 +126,6 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
       </div>
     </div>
   );
-}
+};
 
 export default GameAction;

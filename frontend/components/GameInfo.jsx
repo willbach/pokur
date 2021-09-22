@@ -10,7 +10,7 @@ const GameInfo = (game) => {
         pot = pot + data.committed;
     }
     return pot
-  }
+  };
 
   return (
     <>
@@ -85,6 +85,6 @@ const GameInfo = (game) => {
       </div>
     </>
   );
-}
+};
 
 export default GameInfo;

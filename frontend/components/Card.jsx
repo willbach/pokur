@@ -12,7 +12,7 @@ const Card = (suit, val) => {
   const rawCardToVal = (n) => {
     const valArray = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     return valArray[n]
-  }
+  };
 
   const color = suits[suit][1];
   const value = rawCardToVal(val);
@@ -30,6 +30,6 @@ const Card = (suit, val) => {
         </div>
       </div>
   );
-}
+};
 
 export default Card;
