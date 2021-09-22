@@ -84,7 +84,9 @@ const App = () => {
         <p>Pokur -- play Texas hold 'em on Urbit</p>
         <a href="/">Return to Landscape</a> 
       </header>
-      <pre>Login:</pre>
+      {loggedIn 
+      ? <span></span>
+      : <div id="login"><pre>Login:</pre>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -110,7 +112,7 @@ const App = () => {
         />
         <br />
         <input type="submit" value="Login" />
-      </form>
+      </form></div> }
       {inGame ? `we are loachin'  <Game game={gameData} 
                       myBet={myBet} 
         handleBetChange={setMyBet} /> `
