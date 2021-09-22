@@ -79,13 +79,13 @@
     =/  cards
       %+  turn
         %+  weld  
-          ~(tap by challenges-received.state)
+          ~(val by challenges-received.state)
         (drop challenge-sent.state)
-      |=  item=[id=@da c=pokur-challenge]
+      |=  item=pokur-challenge
       :^    %give
           %fact
         ~[/challenge-updates]
-      [%pokur-challenge-update !>([%open-challenge c.item])]
+      [%pokur-challenge-update !>([%open-challenge item])]
     [cards this]
     ::
     [%game ~]
@@ -261,7 +261,7 @@
       ~
   :: otherwise, init game
   =/  challenge             u.challenge-sent.state
-  =.  challenge-sent.state  ~
+  :: =.  challenge-sent.state  ~
   :_  state
     %+  welp
       :~
@@ -318,7 +318,10 @@
   =/  old-game     (need game.state)
   =/  old-host     host.old-game
   =/  old-game-id  game-id.old-game
-  =.  game.state   ~
+  =:  
+      game.state            ~
+      challenge-sent.state  ~
+    ==
   :_  state    
     :~  :: unsub from game's path
         :*  %pass  /game-updates/(scot %da id.client-action)

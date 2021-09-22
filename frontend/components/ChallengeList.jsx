@@ -1,84 +1,69 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 
-class ChallengeList extends Component {
+const ChallengeList = (urb) => {
+  const [challenges, setChallenges] = useState({});
+  const [sub, setSub] = useState();
 
-  constructor(props) {
-    super(props);
+  // subscribe to /challenge-updates
+  useEffect(() => {
+    if (!urb.urb || sub) return;
+    urb.urb
+      .subscribe({
+        app: "pokur",
+        path: "/challenge-updates",
+        event: processChallengeUpdate,
+        err: console.log,
+        quit: console.log,
+      })
+      .then((subscriptionId) => {
+        setSub(subscriptionId);
+      });
+  }, [urb, sub]);
 
-    this.state = {
-      challenges: {},
-      acceptButtonText: {},
-    }
-
-    this.acceptChallenge = this.acceptChallenge.bind(this);
-
-    window.urb.subscribe(
-      window.ship,
-      'pokur',
-      '/challenge-updates',
-      (err) => console.log(err),
-      (data) => this.processChallengeUpdate(data),
-      () => console.log("Sub Quit")
-    );
-  }
-
-  acceptChallenge(id, from) {
-    this.setState({
-      acceptButtonText: { ...this.state.acceptButtonText, [id]: 'Accepted...'},
-    })
-    window.urb.poke(
-        window.ship,
-        'pokur',
-        'pokur-client-action',
-        {
-          'accept-challenge': {
-            'from': from,
-            'id': id,
-          }
-        },
-        () => {},
-        (err) => { console.log(err) }
-      );
-  }
-
-  cancelChallenge(id, from) {
-    window.urb.poke(
-        window.ship,
-        'pokur',
-        'pokur-client-action',
-        {
-          'cancel-challenge': {
-            'id': id,
-          }
-        },
-        () => {},
-        (err) => { console.log(err) }
-      );
-  }
-
-  processChallengeUpdate(data) {
-    console.log(data)
+  const processChallengeUpdate = (data) => {
+    console.log(data);
     if (data["update"] == "open") {
       const newChallenge = {
         challenger: data["challenger"],
         host: data["host"],
         type: data["type"],
       }
-      this.setState({
-        challenges: { ...this.state.challenges, [data["id"]]: newChallenge},
-        acceptButtonText: { ...this.state.acceptButtonText, [data["id"]]: "Accept"},
-      });
+      console.log(newChallenge);
+      setChallenges({ ...challenges, [data["id"]]: newChallenge});
     } else if (data["update"] == "close") {
-      var newList = {...this.state.challenges};
+      var newList = {...challenges};
       delete newList[data["id"]];
-      this.setState({
-        challenges: newList,
-      });
+      setChallenges(newList);
     }
   }
 
-  render() {
-    return <div>
+  const acceptChallenge = (id, from) => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-client-action',
+      json: {
+        'accept-challenge': {
+          'from': from,
+          'id': id,
+        }
+      },
+    });
+  }
+
+  const cancelChallenge = (id, from) => {
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-client-action',
+      json: {
+        'cancel-challenge': {
+          'id': id,
+        }
+      },
+    });
+  }
+
+  return (
+    <div>
       <h2>Active Challenges</h2>
       <table className="challenge-list">
         <thead>
@@ -90,17 +75,17 @@ class ChallengeList extends Component {
         </thead>
         <tbody>
           {
-            Object.entries(this.state.challenges).map(([id, data]) => (
+            Object.entries(challenges).map(([id, data]) => (
               <tr key={id}>
                 <td>{data.challenger == '~'+window.ship ? "You" : data.challenger}</td>
                 <td>{data.host}</td>
                 <td>{data.type}</td>
                 <td>{data.challenger == '~'+window.ship 
-                 ? <button onClick={() => this.cancelChallenge(id, data.challenger)}>
+                 ? <button onClick={() => cancelChallenge(id, data.challenger)}>
                      Cancel
                    </button>
-                 : <button onClick={() => this.acceptChallenge(id, data.challenger)}>
-                     {this.state.acceptButtonText[id]}
+                 : <button onClick={() => acceptChallenge(id, data.challenger)}>
+                     Accept
                    </button>}</td>
               </tr>
             ))
@@ -108,7 +93,7 @@ class ChallengeList extends Component {
         </tbody>
       </table>
     </div>
-  };
+  );
 }
 
 export default ChallengeList;

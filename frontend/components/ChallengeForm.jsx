@@ -1,110 +1,74 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 
-class ChallengeForm extends Component {
+const ChallengeForm = (urb) => {
+  const [sendToList, setSendToList] = useState({0:''});
+  const [addPlayerText, setAddPlayerText] = useState("Add Player");
 
-  constructor(props) {
-    super(props);
+  const handleChange = (target) => {
+    const id = target.id;
+    setSendToList({...sendToList, [id]: target.value });
+  };
 
-    this.state = {
-      toInputs: {
-        0: '',
-      },
-      host: '',
-      minBet: 40,
-      stackSize: 1000,
-      type: 'cash',
-      addPlayerButtonText: "Invite another ship",
-    }
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleChange(event) {
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
-    
-    if (name == "to") {
-      const id = target.id;
-      this.setState({
-        toInputs: {...this.state.toInputs, [id]: value },
-      });
-    } else {
-      this.setState({
-        [name]: value,
-      });
-    }
-  }
-
-  addToInput() {
-    var n = Object.keys(this.state.toInputs).length;
+  const addToInput = () => {
+    var n = Object.keys(sendToList).length;
     if (n >= 7) {
-      this.setState({
-        addPlayerButtonText: "8 player maximum for cash games",
-      });
+      setAddPlayerText("8 player maximum for cash games");
     } else {
-      this.setState({
-        toInputs: {...this.state.toInputs, [n]: '' },
-      });
+      setSendToList({...sendToList, [n]: '' });
     }
   }
 
-  handleSubmit(event) {
-    const to = Object.values(this.state.toInputs);
-    window.urb.poke(
-      window.ship,
-      'pokur',
-      'pokur-client-action',
-      {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const to = Object.values(sendToList);
+    urb.urb.poke({
+      app: 'pokur',
+      mark: 'pokur-client-action',
+      json: {
         'issue-challenge': {
           'to': to,
-          'host': this.state.host,
-          'type': this.state.type,
-          'min-bet': parseInt(this.state.minBet),
-          'starting-stack': parseInt(this.state.stackSize),
+          'host': e.target.host.value,
+          'type': e.target.gameType.value,
+          'min-bet': parseInt(e.target.minBet.value),
+          'starting-stack': parseInt(e.target.stackSize.value),
         }
-      },
-      () => {},
-      (err) => { console.log(err) }
-    );
-
-    event.preventDefault();
+      }
+    });
   }
 
-  render() {
-    return <div>
+  return (
+    <div>
       <p>Send a challenge poke</p>
-      <form onSubmit={this.handleSubmit}>
-        {Object.entries(this.state.toInputs).map(([i, data]) => ( 
+      <form onSubmit={e => handleSubmit(e)}>
+        {Object.entries(sendToList).map(([i, data]) => ( 
           <label key={i}>
             <br />
             To: 
-            <input name="to" id={i} type="text" value={data} onChange={this.handleChange} />
+            <input name="to" id={i} type="text" value={data} onChange={e => handleChange(e.target)} />
         </label>
         ))}
-        <button onClick={() => this.addToInput()}>
-          {this.state.addPlayerButtonText}
+        <button onClick={() => addToInput()}>
+          {addPlayerText}
         </button>
         <br />
         <label>
           Host ship: 
-          <input name="host" type="text" value={this.state.host} onChange={this.handleChange} />
+          <input name="host" type="text"/>
         </label>
         <br />
         <label>
           Min. bet / big blind size: $
-          <input name="minBet" type="number" value={this.state.value} onChange={this.handleChange} />
+          <input name="minBet" type="number"/>
         </label>
         <br />
         <label>
           Starting stack size: $
-          <input name="stackSize" type="number" value={this.state.value} onChange={this.handleChange} />
+          <input name="stackSize" type="number"/>
         </label>
         <br />
         <label>
           Game type: 
-          <select name="type" value={this.state.type} onChange={this.handleChange}>
+          <select name="gameType">
             <option value="cash">Cash</option>
             <option value="tournament">Tournament (not yet functional)</option>
           </select>
@@ -113,7 +77,7 @@ class ChallengeForm extends Component {
         <input type="submit" value="Submit" />
       </form>
     </div>
-  };
+  );
 }
 
 export default ChallengeForm;

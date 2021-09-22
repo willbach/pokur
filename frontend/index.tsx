@@ -1,23 +1,10 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import App from './App.jsx'
-import { Channel } from './js/channel.js'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
 
-declare global {
-  interface Window {
-    urb: Channel,
-    ship: string
-  }
-}
-
-function render (): void {
-  ReactDOM.render((
-    <>
-      <App />
-    </>
-  ), document.querySelectorAll('#root')[0])
-}
-
-window.urb = new Channel()
-
-render()
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
