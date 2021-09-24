@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const ChallengeList = (urb) => {
+const ChallengeList = ({ urb }) => {
   const [challenges, setChallenges] = useState({});
   const [sub, setSub] = useState();
 
   // subscribe to /challenge-updates
   useEffect(() => {
-    if (!urb.urb || sub) return;
-    urb.urb
+    if (!urb || sub) return;
+    urb
       .subscribe({
         app: "pokur",
         path: "/challenge-updates",
@@ -21,14 +21,12 @@ const ChallengeList = (urb) => {
   }, [urb, sub]);
 
   const processChallengeUpdate = (data) => {
-    console.log(data);
     if (data["update"] == "open") {
       const newChallenge = {
         challenger: data["challenger"],
         host: data["host"],
         type: data["type"],
       }
-      console.log(newChallenge);
       setChallenges({ ...challenges, [data["id"]]: newChallenge});
     } else if (data["update"] == "close") {
       var newList = {...challenges};
@@ -38,7 +36,7 @@ const ChallengeList = (urb) => {
   };
 
   const acceptChallenge = (id, from) => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-client-action',
       json: {
@@ -51,7 +49,7 @@ const ChallengeList = (urb) => {
   };
 
   const cancelChallenge = (id, from) => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-client-action',
       json: {

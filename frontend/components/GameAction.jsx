@@ -2,11 +2,11 @@ import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
-const GameAction = (urb, game, myBet, handleBetChange) => {
+const GameAction = ({ urb, game, myBet, handleBetChange }) => {
 
   const handleBet = (amount) => {
     const lessCommitted = amount - game.chips['~' + window.ship].committed;
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-game-action',
       json: {
@@ -19,7 +19,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
   };
 
   const handleCall = (amount) => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-game-action',
       json: {
@@ -32,7 +32,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
   };
 
   const handleCheck = () => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-game-action',
       json: {
@@ -44,7 +44,7 @@ const GameAction = (urb, game, myBet, handleBetChange) => {
   };
 
   const handleFold = () => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-game-action',
       json: {

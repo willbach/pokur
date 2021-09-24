@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction } from '../components';
 
-const Game = (urb, game, myBet, handleBetChange) => {
-  
+const Game = ({ urb, game, myBet, handleBetChange }) => {
+
   const leaveGame = () => {
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-client-action',
       json: {

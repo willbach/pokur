@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ChallengeForm = (urb) => {
+const ChallengeForm = ({ urb }) => {
   const [sendToList, setSendToList] = useState({0:''});
   const [addPlayerText, setAddPlayerText] = useState("Add Player");
 
@@ -21,7 +21,7 @@ const ChallengeForm = (urb) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const to = Object.values(sendToList);
-    urb.urb.poke({
+    urb.poke({
       app: 'pokur',
       mark: 'pokur-client-action',
       json: {

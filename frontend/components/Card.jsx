@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Card = (suit, val) => {
+const Card = ({ suit, val }) => {
 
   const suits = {
           spades: ["♠︎", "black"], 

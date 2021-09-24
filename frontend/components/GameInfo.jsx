@@ -2,7 +2,7 @@ import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
-const GameInfo = (game) => {
+const GameInfo = ({ game }) => {
 
   const calcFullPot = (pot) => {
     const playerChips = game.chips;
