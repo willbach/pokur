@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction } from '../components';
 
-const Game = ({ urb, game, myBet, handleBetChange }) => {
+const Game = ({ urb, game, myBet, setMyBet }) => {
 
   const leaveGame = () => {
     urb.poke({
@@ -22,7 +22,7 @@ const Game = ({ urb, game, myBet, handleBetChange }) => {
       {game.whose_turn != window.ship
        ? <span></span>
        : <p>It's your turn!</p>}
-      <GameAction urb={urb} game={game} myBet={myBet} handleBetChange={handleBetChange} />
+      <GameAction urb={urb} game={game} myBet={myBet} setMyBet={setMyBet} />
       <br />
       <button onClick={() => leaveGame()}>
         Leave Game

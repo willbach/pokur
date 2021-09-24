@@ -2,58 +2,27 @@ import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card } from '../components';
 
-const GameAction = ({ urb, game, myBet, handleBetChange }) => {
+const GameAction = ({ urb, game, myBet, setMyBet }) => {
 
-  const handleBet = (amount) => {
-    const lessCommitted = amount - game.chips['~' + window.ship].committed;
-    urb.poke({
-      app: 'pokur',
-      mark: 'pokur-game-action',
+  const handleAction = (action, amount) => {
+    var pokeObject = {
+      app: "pokur",
+      mark: "pokur-game-action",
       json: {
-        'bet': {
-          'game-id': game.id,
-          'amount': lessCommitted,
+        [action]: {
+          "game-id": game.id,
         }
       },
-    });
-  };
+    };
+    if (action == "bet") {
+      const lessCommitted = amount - game.chips['~' + window.ship].committed;
+      pokeObject["json"]["bet"]["amount"] = lessCommitted;
+    } else if (action == "call") {
+      pokeObject["json"]["bet"]["amount"] = amount;
+    }
 
-  const handleCall = (amount) => {
-    urb.poke({
-      app: 'pokur',
-      mark: 'pokur-game-action',
-      json: {
-        'bet': {
-          'game-id': game.id,
-          'amount': amount,
-        }
-      },
-    });
-  };
-
-  const handleCheck = () => {
-    urb.poke({
-      app: 'pokur',
-      mark: 'pokur-game-action',
-      json: {
-        'check': {
-          'game-id': game.id,
-        }
-      },
-    });
-  };
-
-  const handleFold = () => {
-    urb.poke({
-      app: 'pokur',
-      mark: 'pokur-game-action',
-      json: {
-        'fold': {
-          'game-id': game.id,
-        }
-      },
-    });
-  };
+    urb.poke(pokeObject);
+  }
 
   const myChips = game.chips['~' + window.ship];
   const betToMatch = game.current_bet - myChips.committed;
@@ -91,7 +60,7 @@ const GameAction = ({ urb, game, myBet, handleBetChange }) => {
                    : game.min_bet}
              max={myChips.stack + myChips.committed} 
              value={myBet} 
-             onChange={handleBetChange} />
+             onChange={(e) => setMyBet(e.target.value)} />
         <br />
         <label>
           $
@@ -100,12 +69,12 @@ const GameAction = ({ urb, game, myBet, handleBetChange }) => {
                  min={betToMatch} 
                  max={myChips.stack + myChips.committed} 
                  value={myBet} 
-                 onChange={handleBetChange} />
+                 onChange={(e) => setMyBet(e.target.value)} />
         </label>
         {game.whose_turn != window.ship
          ? <p>Waiting for {"~"+game.whose_turn} to play</p>
          : <div className="action-buttons">
-             <button onClick={() => handleBet(myBet)}>
+             <button onClick={() => handleAction("bet", myBet)}>
                {myBet > myChips.stack + myChips.committed
                  ? <span>All-in</span>
                  : game.current_bet > 0
@@ -113,13 +82,13 @@ const GameAction = ({ urb, game, myBet, handleBetChange }) => {
                    : <span>Bet ${myBet}</span>}
              </button>
              {betToMatch > 0 
-             ? <button onClick={() => handleCall(betToMatch)}>
+             ? <button onClick={() => handleAction("bet", betToMatch)}>
                  Call ${betToMatch + myChips.committed}
                </button>
-             : <button onClick={() => handleCheck()}>
+             : <button onClick={() => handleAction("check", 0)}>
                  Check
                </button>}
-             <button onClick={() => handleFold()}>
+             <button onClick={() => handleAction("fold", 0)}>
                Fold
              </button>
            </div>}

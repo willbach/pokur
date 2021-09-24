@@ -66,8 +66,7 @@
   $:
     id=@da
     challenger=ship :: person who issued challenge
-    players=(list ship)
-    accepted=(list [ship ?])
+    players=(list [player=ship accepted=? declined=?])
     host=ship :: address of poker-server used for game
     min-bet=@ud
     starting-stack=@ud
@@ -77,6 +76,7 @@
   $%
     [%open-challenge challenge=pokur-challenge]
     [%close-challenge id=@da]
+    [%challenge-update challenge=pokur-challenge]
   ==
 ::
 :: client actions
@@ -84,10 +84,14 @@
 +$  client-action
   $%
     [%issue-challenge to=(list ship) host=ship min-bet=@ud starting-stack=@ud type=poker-game-type]
-    [%accept-challenge from=ship id=@da]
     [%receive-challenge challenge=pokur-challenge]
-    [%challenge-accepted by=ship id=@da]
+    [%challenge-update challenge=pokur-challenge]
+    [%accept-challenge id=@da]
+    [%decline-challenge id=@da]
+    [%challenge-accepted id=@da]
+    [%challenge-declined id=@da]
     [%cancel-challenge id=@da]
+    [%challenge-cancelled id=@da]
     [%game-registered challenge=pokur-challenge]
     [%subscribe id=@da host=ship]
     [%leave-game id=@da]

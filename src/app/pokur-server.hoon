@@ -164,26 +164,36 @@
   ?-  -.server-action
     %register-game
   ~&  >>  "Game initiated with server {<our.bowl>}."
+  =/  players
+    %+  turn
+      players.challenge.server-action
+    |=  [player=ship ? ?]
+    player
+  =/  chips
+    %+  turn 
+      players
+    |=  player=ship
+    [player starting-stack.challenge.server-action 0 %.n %.n %.n]
   =/  new-game-state
     [
       game-id=id.challenge.server-action  
       host=host.challenge.server-action
       type=type.challenge.server-action
-      players=players.challenge.server-action
+      players=players
       paused=%.n
       update-message="Pokur game started, served by {<our.bowl>}"
       hands-played=0
-      chips=(turn players.challenge.server-action |=(a=ship [a starting-stack.challenge.server-action 0 %.n %.n %.n]))
+      chips=chips
       pot=0
       current-bet=0
       min-bet=min-bet.challenge.server-action
       last-bet=0
       board=~
       my-hand=~
-      whose-turn=(snag 1 players.challenge.server-action)
-      dealer=(snag 1 players.challenge.server-action)  :: TODO this should be random?
-      small-blind=~zod :: these get re-assigned in hand initialization
-      big-blind=~zod
+      whose-turn=(snag 1 players)
+      dealer=(snag 1 players)  :: TODO this should be random perhaps?
+      small-blind=~zod :: these get re-assigned in hand initialization,
+      big-blind=~zod   :: ~zod is placeholder.
     ]
   =/  new-server-state
     [

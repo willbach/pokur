@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ChallengeForm = ({ urb }) => {
+const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
   const [sendToList, setSendToList] = useState({0:''});
   const [addPlayerText, setAddPlayerText] = useState("Add Player");
 
@@ -19,21 +19,26 @@ const ChallengeForm = ({ urb }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    const to = Object.values(sendToList);
-    urb.poke({
-      app: 'pokur',
-      mark: 'pokur-client-action',
-      json: {
-        'issue-challenge': {
-          'to': to,
-          'host': e.target.host.value,
-          'type': e.target.gameType.value,
-          'min-bet': parseInt(e.target.minBet.value),
-          'starting-stack': parseInt(e.target.stackSize.value),
+    if (!sentChallenge) {
+      e.preventDefault();
+      const to = Object.values(sendToList);
+      urb.poke({
+        app: 'pokur',
+        mark: 'pokur-client-action',
+        json: {
+          'issue-challenge': {
+            'to': to,
+            'host': e.target.host.value,
+            'type': e.target.gameType.value,
+            'min-bet': parseInt(e.target.minBet.value),
+            'starting-stack': parseInt(e.target.stackSize.value),
+          }
         }
-      }
-    });
+      });
+      setSentChallenge(true);
+    } else {
+      console.log("error: already have a sent challenge");
+    }
   };
 
   return (

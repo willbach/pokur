@@ -12,9 +12,10 @@
     ++  client-action
       %-  of:dejs
       :~  [%issue-challenge parse-challenge]
-          [%accept-challenge accept]
-          [%leave-game leave]
-          [%cancel-challenge cancel]
+          [%accept-challenge parse-id]
+          [%decline-challenge parse-id]
+          [%leave-game parse-id]
+          [%cancel-challenge parse-id]
       ==
     ++  parse-challenge
       %-  ot:dejs
@@ -24,16 +25,7 @@
           [%starting-stack ni:dejs]
           [%type so:dejs]
       ==
-    ++  accept
-      %-  ot:dejs
-      :~  [%from (se:dejs %p)]
-          [%id (se:dejs %da)]
-      ==
-    ++  leave
-      %-  ot:dejs
-      :~  [%id (se:dejs %da)]
-      == 
-    ++  cancel
+    ++  parse-id
       %-  ot:dejs
       :~  [%id (se:dejs %da)]
       ==

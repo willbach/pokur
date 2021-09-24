@@ -19,60 +19,12 @@ const createApi = (host, code) =>
   );
 
 const App = () => {
-  const gameStateTemplate = {
-    "hands_played": 0,
-    "players": [
-        "bus",
-        "zod"
-    ],
-    "big_blind": "zod",
-    "update_message": "Pokur game started, served by ~zod",
-    "current_bet": 0,
-    "board": [],
-    "chips": {
-        "~zod": {
-            "acted": false,
-            "folded": false,
-            "stack": 0,
-            "committed": 0,
-            "left": false
-        },
-        "~bus": {
-            "acted": false,
-            "folded": false,
-            "stack": 0,
-            "committed": 0,
-            "left": false
-        }
-    },
-    "my_hand_rank": "-",
-    "id": "~2021.9.23..22.59.04..12ea",
-    "last_bet": 0,
-    "small_blind": "bus",
-    "host": "zod",
-    "paused": false,
-    "min_bet": 0,
-    "type": "cash",
-    "hand": [
-        {
-            "val": 4,
-            "suit": "clubs"
-        },
-        {
-            "val": 11,
-            "suit": "hearts"
-        }
-    ],
-    "pot": 0,
-    "in_game": false,
-    "whose_turn": "bus",
-    "dealer": "bus"
-  };
   const [loggedIn, setLoggedIn] = useState();
   const [urb, setUrb] = useState();
   const [sub, setSub] = useState();
+  const [sentChallenge, setSentChallenge] = useState(false);
   const [inGame, setInGame] = useState(false);
-  const [gameState, setGameState] = useState(gameStateTemplate);
+  const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
 
   useEffect(() => {
@@ -102,7 +54,7 @@ const App = () => {
       .then((subscriptionId) => {
         setSub(subscriptionId);
       });
-  }, [urb, sub]);
+  }, [urb]);
 
   const login = (host, code) => {
     localStorage.setItem("host", host);
@@ -166,16 +118,26 @@ const App = () => {
                   urb={urb}
                   game={gameState} 
                   myBet={myBet} 
-                  handleBetChange={setMyBet}
+                  setMyBet={setMyBet}
                 />
-              : <div>
-                  <ChallengeForm 
-                    urb={urb} 
-                  />
-                  <ChallengeList 
-                    urb={urb}  
-                  />
-                </div>}
+              : !sentChallenge 
+                 ? <div>
+                     <ChallengeForm 
+                       urb={urb}
+                       sentChallenge={sentChallenge}
+                       setSentChallenge={setSentChallenge} 
+                     />
+                     <ChallengeList 
+                       urb={urb}
+                       setSentChallenge={setSentChallenge} 
+                     />
+                   </div>
+                 : <div>
+                    <ChallengeList 
+                       urb={urb}
+                       setSentChallenge={setSentChallenge}  
+                     />
+                   </div>}
     </>
   );
 };

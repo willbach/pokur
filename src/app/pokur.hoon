@@ -56,6 +56,12 @@
       ::
         %print-subs
       ~&  >>  &2.bowl  `this
+      ::
+        %print-challenge
+      ~&  >>  challenge-sent.state  `this
+      ::
+        %print-challenges-received
+      ~&  >>  challenges-received.state  `this
     ==
     ::
     %pokur-client-action
@@ -96,6 +102,8 @@
   ==
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
+:: Receives responses from pokes or subscriptions to other Gall agents
+:: This is where updates are handled from the pokur-server to which we've subscribed.
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
@@ -113,7 +121,7 @@
           %7  -:(evaluate-hand full-hand)
         ==
       =.  game.state
-        [~ new-state]
+        %-  some  new-state
       ~&  >  "New game state: {<new-state>}"
       :_  this
         ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
@@ -127,7 +135,7 @@
   [~ this]
 ++  on-fail   on-fail:def
 --
-::  start helper core
+::  start helper cores
 ::
 |_  bowl=bowl:gall
 ++  handle-game-action
@@ -167,124 +175,271 @@
   |=  =client-action:pokur
   ^-  (quip card _state)
   ?-  -.client-action
+  ::
+  ::  Send challenges from our ship to others
     %issue-challenge
   ?>  (team:title [our src]:bowl)
-  =/  player-list  
-    (weld to.client-action ~[our.bowl])
-  =/  accepted-list
+  =/  player-list
     %+  turn 
-      to.client-action
+      %+  weld 
+        to.client-action 
+      ~[our.bowl]
     |=  s=ship
-    [s %.n]
+    ?:  =(s our.bowl)
+      :: [@p / accepted? / declined?]
+      [s %.y %.n]
+    [s %.n %.n]
   =/  challenge
     [
       id=now.bowl
       challenger=our.bowl
       players=player-list
-      accepted=accepted-list
       host=host.client-action
       min-bet=min-bet.client-action
       starting-stack=starting-stack.client-action
       type=type.client-action
     ]
   =.  challenge-sent.state  
-    [~ u=challenge]
+    %-  some  challenge
   :_  state
+    ::  tell our frontend that we've opened a challenge
     %+  welp 
       :~  :*  %give  %fact  
               ~[/challenge-updates]
               [%pokur-challenge-update !>([%open-challenge challenge])]
           ==
       ==
+    :: poke every ship invited with the challenge
     %+  turn
       to.client-action
     |=  player=ship
     :*  %pass  /poke-wire  %agent  [player %pokur] 
         %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
     ==
-    ::
+  ::
+  ::  Cancel a challenge that we initiated
     %cancel-challenge
-  ?~  challenge-sent.state
+  ?>  (team:title [our src]:bowl)
+  ?:  =(~ challenge-sent.state)
     :_  state
-      ~[[%give %poke-ack `~[leaf+"error: no challenge with ID {<id.client-action>} to cancel"]]]
+      ~[[%give %poke-ack `~[leaf+"error: you haven't issued a challenge yet."]]]
+  =/  challenge  
+    (need challenge-sent.state)
+  ?.  =(id.challenge id.client-action)
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: no challenge found with ID {<id.client-action>} to cancel."]]]
+  =.  challenge-sent.state  ~
   :_  state
+    :: tell our frontend we're closing a challenge
+    %+  welp
+      :~  :*  %give  %fact  
+              ~[/challenge-updates]
+              [%pokur-challenge-update !>([%close-challenge id.challenge])]
+          ==
+      ==
+    :: poke every invited ship with an alert that the challenge has been closed
+    :: unless they've already declined.
+    %+  turn
+      %+  skip
+        players.challenge
+      |=  [player=ship accepted=? declined=?]
+      ?|  =(player our.bowl)
+          declined
+        ==
+    |=  [player=ship accepted=? declined=?]
+    :*  %pass  /poke-wire  %agent  [player %pokur] 
+        %poke  %pokur-client-action  !>([%challenge-cancelled id=id.challenge])
+    ==
+  ::
+  ::  Challenge cancelled: a ship that previously challenged us is cancelling it
+    %challenge-cancelled
+  ?.  (~(has by challenges-received.state) id.client-action)
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: got a cancellation for a challenge from {<src.bowl>} that does not exist"]]]
+  =.  challenges-received.state
+    (~(del by challenges-received.state) id.client-action)
+  :_  state
+    :: alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
             [%pokur-challenge-update !>([%close-challenge id.client-action])]
         ==
     ==
-    ::
+  ::
+  ::  We've received a challenge from another ship
     %receive-challenge
   =.  challenges-received.state  
     (~(put by challenges-received.state) [id.challenge.client-action challenge.client-action])
   :_  state
+    :: alert the frontend of the new challenge
     :~  :*  %give  %fact  
             ~[/challenge-updates]
             [%pokur-challenge-update !>([%open-challenge challenge.client-action])]
         ==
     ==
-    :: :pokur &pokur-client-action [%accept-challenge ~zod]
-    ::
+  ::  We've received a challenge UPDATE regarding a challenge
+  ::  that we had previously received but not yet declined.
+    %challenge-update
+  ?.  (~(has by challenges-received.state) id.challenge.client-action)
+    ?~  challenge-sent.state
+      :_  state
+        ~[[%give %poke-ack `~[leaf+"error: got an update for a challenge from {<src.bowl>} that you don't have."]]]
+    ?.  =(id.challenge.client-action id.u.challenge-sent.state)
+      :_  state
+        ~[[%give %poke-ack `~[leaf+"error: got an update for a non-existent challenge that you didn't make."]]]
+    =.  challenge-sent.state
+      (some challenge.client-action)
+    :_  state
+    :: alert the frontend of the update
+    :~  :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge-update !>([%challenge-update challenge.client-action])]
+        ==
+    ==  
+  :: just need to replace our stored version of the challenge with this update
+  =.  challenges-received.state
+    (~(put by challenges-received.state) [id.challenge.client-action challenge.client-action])
+  :_  state
+    :: alert the frontend of the update
+    :~  :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge-update !>([%challenge-update challenge.client-action])]
+        ==
+    ==
+  ::
+  ::  Accept a specific challenge that we've received
     %accept-challenge
   ?>  (team:title [our src]:bowl)
   =/  challenge  
     (~(get by challenges-received.state) id.client-action)
   ?~  challenge
     :_  state
-      ~[[%give %poke-ack `~[leaf+"error: no challenge from {<from.client-action>} exists"]]]
+      ~[[%give %poke-ack `~[leaf+"error: no challenge with that ID exists"]]]
   =.  challenges-received.state
     (~(del by challenges-received.state) id.client-action)
   :_  state
-    :~  :*  :: notify challenger that we've accepted
-          %pass  /poke-wire  %agent  [from.client-action %pokur]
-          %poke  %pokur-client-action  !>([%challenge-accepted by=our.bowl id=id.client-action])
+    :: notify challenger that we've accepted
+    :: they'll notify the other ships in the lobby of this
+    :~  :*  
+          %pass  /poke-wire  %agent  [challenger.u.challenge %pokur]
+          %poke  %pokur-client-action  !>([%challenge-accepted id=id.client-action])
         ==
     ==
-    ::
+  ::
+  ::  Decline a specific challenge that we've received
+    %decline-challenge
+  ?>  (team:title [our src]:bowl)
+  =/  challenge  
+    (~(get by challenges-received.state) id.client-action)
+  ?~  challenge
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: no challenge with that ID exists"]]]
+  =.  challenges-received.state
+    (~(del by challenges-received.state) id.client-action)
+  :_  state
+    :: notify challenger that we've declined
+    :: they'll notify the other ships in the lobby of this
+    :~  :*  
+          %pass  /poke-wire  %agent  [challenger.u.challenge %pokur]
+          %poke  %pokur-client-action  !>([%challenge-declined id=id.client-action])
+        ==
+    ==
+  ::
+  ::  Poke from a ship we've challenged, notifying us that they've DECLINED
+    %challenge-declined
+  ?~  challenge-sent.state
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: someone declined an invite to a challenge you didn't send."]]]
+  =/  challenge  u.challenge-sent.state
+  =.  players.challenge
+    %+  turn
+      players.challenge
+    |=  [s=ship accepted=? declined=?]
+    ?:  =(src.bowl s)
+      [s %.n %.y]
+    [s accepted declined]
+  :_  state
+      :: poke every non-declined ship with update
+      %+  turn
+        %+  skip
+          players.challenge
+        |=  [ship ? declined=?]
+          declined
+      |=  [player=ship ? ?]
+      :*  %pass  /poke-wire  %agent  [player %pokur]
+          %poke  %pokur-client-action  !>([%challenge-update challenge])
+      ==
+  ::
+  ::  Poke from a ship we've challenged, notifying us that they've ACCEPTED
     %challenge-accepted
   ?~  challenge-sent.state
     :_  state
-      ~[[%give %poke-ack `~[leaf+"No challenge exist: likely canceled by challenger."]]]
-  =.  accepted.u.challenge-sent.state
+      ~[[%give %poke-ack `~[leaf+"error: someone accepted an invite to a challenge you didn't send."]]]
+  =/  challenge  u.challenge-sent.state
+  =.  players.challenge
     %+  turn
-      accepted.u.challenge-sent.state
-    |=  [s=ship has=?]
-    ?:  =(by.client-action s)
-      [s %.y]
-    [s has]
+      players.challenge
+    |=  [s=ship accepted=? declined=?]
+    ?:  =(src.bowl s)
+      [s %.y declined]
+    [s accepted declined]
+  :: if not all have either accepted or declined, don't start game
+  :: also, notify others in the challenge that peer has accepted
   ?.  %+  levy
-        accepted.u.challenge-sent.state
-      |=  [s=ship has=?]
-      has
-    :: if not all have accepted, just wait and update stored challenge-sent
+        players.challenge
+      |=  [s=ship accepted=? declined=?]
+      |(accepted declined)
     :_  state
-      ~
-  :: otherwise, init game
-  =/  challenge             u.challenge-sent.state
-  :: =.  challenge-sent.state  ~
+      :: poke every non-declined ship with update
+      %+  turn
+        %+  skip
+          players.challenge
+        |=  [player=ship accepted=? declined=?]
+        ?|  =(player our.bowl)
+            declined
+          ==
+      |=  [player=ship accepted=? declined=?]
+      :*  %pass  /poke-wire  %agent  [player %pokur]
+          %poke  %pokur-client-action  !>([%challenge-update challenge])
+      ==
+  :: if all players have responded, automatically initialize game
+  :: give server the list of players which accepted and will be playing
+  =.  players.challenge
+    %+  skim
+        players.challenge
+      |=  [ship accepted=? ?]
+      accepted
   :_  state
     %+  welp
+      :: register game with server
       :~
-        :*  :: register game with server
+        :*  
           %pass  /poke-wire  %agent  [host.challenge %pokur-server]
           %poke  %pokur-server-action  !>([%register-game challenge=challenge])
         ==
-        :*  :: subscribe to path which game will be served from
+      :: subscribe to path which game will be served from
+        :*  
           %pass  /poke-wire  %agent  [our.bowl %pokur]
           %poke  %pokur-client-action  !>([%subscribe game-id=id.challenge host=host.challenge])
         ==
       ==
+    :: notify all players that the game is registered
     %+  turn
-      players.challenge
-    |=  player=ship
-      :*  :: notify all players that the game is registered
+      %+  skip
+        players.challenge
+      |=  [ship ? declined=?]
+      declined
+    |=  [player=ship ? ?]
+      :*
         %pass  /poke-wire  %agent  [player %pokur]
         %poke  %pokur-client-action  !>([%game-registered challenge=challenge])
       ==
-    ::
+  ::
+  ::
     %game-registered
   :_  state
-    :~  :*  :: subscribe to path which game will be served from
+    :: subscribe to path which game will be served from
+    :~  :*
           %pass  /poke-wire  %agent  [our.bowl %pokur]
           %poke  %pokur-client-action  
           !>([%subscribe id=id.challenge.client-action host=host.challenge.client-action])
