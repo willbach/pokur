@@ -24,7 +24,6 @@
 ++  on-init
   ^-  (quip card _this)
   ~&  >  '%pokur-server initialized successfully'
-  ::  =.  state  [%0 
   `this
 ++  on-save
   ^-  vase
@@ -108,7 +107,31 @@
   `this
 ++  on-peek   on-peek:def
 ++  on-agent  on-agent:def
-++  on-arvo   on-arvo:def
+++  on-arvo
+  |=  [=wire =sign-arvo]
+  ^-  (quip card _this)
+  ?+  wire  (on-arvo:def wire sign-arvo)
+    [%timer @ta ~]
+  :: the timer ran out.. a player didn't make a move in time
+  =/  game-id  `(unit @da)`(slaw %da i.t.wire)
+  ?~  game-id
+    ~&  >>>  "weird error: turn timeout on non-existent game."
+    :_  this  ~
+  ~&  >>>  "Player timed out on game {<game-id>}"
+  :: find active player in that game
+  =/  game
+    (get-game-by-id u.game-id)
+  :: reset that game's turn timer
+  =.  turn-timer.game
+    ~
+  =/  player-to-fold
+    whose-turn.game.game
+  ~&  >>>  "server thinks it is {<player-to-fold>}'s turn"
+  :: =^  cards  state
+  :: (perform-move player-to-fold u.game-id %fold 0)
+  :: [cards this]
+  :-  ~  this
+  ==
 ++  on-fail   on-fail:def
 --
 ::  start helper core
@@ -117,10 +140,12 @@
   |=  game-id=@da
   ^-  server-game-state
   ::  TODO obviously add error handling to this
+  ::  actually just get rid of this and error handle at all 3 places this gets used.
   (~(got by active-games.state) game-id)
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
+  ~&  >>  "IT IS {<whose-turn.game.game>}'s TURN"
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
   ?.  =(0 (lent players.game.game))
@@ -128,35 +153,52 @@
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
   :: if no players in game, TODO we want to delete game from server here
   ~
+++  perform-move
+  |=  [who=ship game-id=@da move-type=@tas amount=@ud]
+  ^-  (quip card _state)
+  ~&  >>  "performing move for {<who>}"
+  =/  game  (get-game-by-id game-id)
+  :: validate that move is from right player
+  ?.  =(whose-turn.game.game who)
+    :_  state
+    ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
+  ::  set new turn timer
+  =/  new-timer
+    `@da`(add now.bowl ~s5)
+  =/  timer-cards
+    ::  if we had an active one, cancel old turn timer while setting new one
+    ?.  =(turn-timer.game ~)
+      :~
+        [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait `@da`turn-timer.game]
+        [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]
+      == 
+    ~[[%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]]
+  ~&  >>  "timer cards: {<timer-cards>}"
+  ::  hold current timer-time in game state
+  =.  turn-timer.game  new-timer
+  =.  game 
+  :: this is lame, i am lame
+  ?:  =(move-type %bet)
+    (~(process-player-action modify-state game) who [%bet game-id amount])
+  ?:  =(move-type %check)
+    (~(process-player-action modify-state game) who [%check game-id])
+  (~(process-player-action modify-state game) who [%fold game-id])
+  =.  active-games.state
+  (~(put by active-games.state) [game-id game])
+  :_  state
+    %+  weld
+      timer-cards
+    (generate-update-cards game)
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
-  :: state changes will throw an error if a player who's not in a game
-  :: or playing out-of-turn tries to register a move, but let's check here
-  :: anyways that the person poking us is a member of the game they are poking...
   ?-  -.action
-  :: TODO: how do i avoid repeating all this code?
       %check
-    =/  game  (get-game-by-id game-id.action)
-    =.  game  (~(process-player-action modify-state game) src.bowl [%check game-id=game-id.action])
-    =.  active-games.state
-      (~(put by active-games.state) [game-id.action game])
-    :_  state
-      (generate-update-cards game)  
+    (perform-move src.bowl game-id.action %check 0)
       %bet
-    =/  game  (get-game-by-id game-id.action)
-    =.  game  (~(process-player-action modify-state game) src.bowl [%bet game-id=game-id.action amount=amount.action])
-    =.  active-games.state
-      (~(put by active-games.state) [game-id.action game])
-    :_  state
-      (generate-update-cards game)  
+    (perform-move src.bowl game-id.action %bet amount.action)
       %fold
-    =/  game  (get-game-by-id game-id.action)
-    =.  game  (~(process-player-action modify-state game) src.bowl [%fold game-id=game-id.action])
-    =.  active-games.state
-      (~(put by active-games.state) [game-id.action game])
-    :_  state
-      (generate-update-cards game)
+    (perform-move src.bowl game-id.action %fold 0)
   ==
 ++  handle-server-action
   |=  =server-action:pokur
@@ -201,6 +243,7 @@
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       hand-is-over=%.y
+      turn-timer=~
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.challenge.server-action new-server-state])
@@ -232,7 +275,10 @@
   =/  game
     (~(initialize-hand modify-state game) dealer.game.game)
   =/  cards
-    (turn hands.game |=(hand=[ship poker-deck] (~(make-player-cards modify-state game) hand)))
+    %+  turn 
+        hands.game 
+      |=  hand=[ship poker-deck]
+      (~(make-player-cards modify-state game) hand) 
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state
@@ -242,7 +288,10 @@
     %send-game-updates
   ?>  (team:title [our src]:bowl)
   =/  cards
-    (turn hands.game.server-action |=(hand=[ship poker-deck] (~(make-player-cards modify-state game.server-action) hand)))
+    %+  turn 
+        hands.game.server-action 
+      |=  hand=[ship poker-deck]
+      (~(make-player-cards modify-state game.server-action) hand)  
   :_  state
     cards
     ::

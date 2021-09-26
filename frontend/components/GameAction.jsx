@@ -82,7 +82,7 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
                    : <span>Bet ${myBet}</span>}
              </button>
              {betToMatch > 0 
-             ? <button onClick={() => handleAction("bet", betToMatch)}>
+             ? <button onClick={() => handleAction("bet", betToMatch + myChips.committed)}>
                  Call ${betToMatch + myChips.committed}
                </button>
              : <button onClick={() => handleAction("check", 0)}>

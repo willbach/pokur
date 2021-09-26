@@ -33,6 +33,7 @@
       hands=(list [ship poker-deck])
       deck=poker-deck
       hand-is-over=?
+      turn-timer=?(~ @da)
   ==
 ::
 ::  This is the data a poker-client holds for a given game
