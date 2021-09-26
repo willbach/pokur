@@ -111,8 +111,8 @@
     [%register-game challenge=pokur-challenge]
     [%kick paths=(list path) subscriber=ship]
     [%initialize-hand game-id=@da]
-    :: [%request-hand-initialization game-id=@da]
     [%send-game-updates game=server-game-state]
+    [%end-game game-id=@da]
     [%wipe-all-games game-id=@da]
   ==
 ::

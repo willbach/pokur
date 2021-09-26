@@ -113,24 +113,26 @@
   ?+  wire  (on-arvo:def wire sign-arvo)
     [%timer @ta ~]
   :: the timer ran out.. a player didn't make a move in time
-  =/  game-id  `(unit @da)`(slaw %da i.t.wire)
-  ?~  game-id
-    ~&  >>>  "weird error: turn timeout on non-existent game."
-    :_  this  ~
+  =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
   ~&  >>>  "Player timed out on game {<game-id>}"
   :: find active player in that game
   =/  game
-    (get-game-by-id u.game-id)
+    (~(get by active-games.state) game-id)
+  ?~  game
+    ~&  >>>  "error: turn timeout on non-existent game."
+    ~&  >>>  "this is fine if a game just ended and its last timer is expiring."
+    :_  this  ~
+  ~&  >>>  "current time: {<now.bowl>}"
   :: reset that game's turn timer
-  =.  turn-timer.game
-    ~
+  =.  turn-timer.u.game  ~
+  =.  active-games.state
+  (~(put by active-games.state) [game-id u.game])
   =/  player-to-fold
-    whose-turn.game.game
-  ~&  >>>  "server thinks it is {<player-to-fold>}'s turn"
-  :: =^  cards  state
-  :: (perform-move player-to-fold u.game-id %fold 0)
-  :: [cards this]
-  :-  ~  this
+    whose-turn.game.u.game
+  =/  current-time  now.bowl
+  =^  cards  state
+  (perform-move current-time player-to-fold game-id %fold 0)
+  [cards this]
   ==
 ++  on-fail   on-fail:def
 --
@@ -145,18 +147,15 @@
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
-  ~&  >>  "IT IS {<whose-turn.game.game>}'s TURN"
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
   ?.  =(0 (lent players.game.game))
     :: initialize new hand, update message to clients
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
-  :: if no players in game, TODO we want to delete game from server here
-  ~
+  ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%end-game game-id.game.game])]]
 ++  perform-move
-  |=  [who=ship game-id=@da move-type=@tas amount=@ud]
+  |=  [time=@da who=ship game-id=@da move-type=@tas amount=@ud]
   ^-  (quip card _state)
-  ~&  >>  "performing move for {<who>}"
   =/  game  (get-game-by-id game-id)
   :: validate that move is from right player
   ?.  =(whose-turn.game.game who)
@@ -164,14 +163,14 @@
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   ::  set new turn timer
   =/  new-timer
-    `@da`(add now.bowl ~s5)
+    `@da`(add time ~s15)
   =/  timer-cards
-    ::  if we had an active one, cancel old turn timer while setting new one
-    ?.  =(turn-timer.game ~)
-      :~
-        [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait `@da`turn-timer.game]
-        [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]
-      == 
+  ::  if we had an active one, cancel old turn timer while setting new one
+  ?.  =(turn-timer.game ~)
+    :~
+      [%pass /timer/(scot %da game-id.game.game) %arvo %b %rest `@da`turn-timer.game]
+      [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]
+    == 
     ~[[%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]]
   ~&  >>  "timer cards: {<timer-cards>}"
   ::  hold current timer-time in game state
@@ -192,13 +191,14 @@
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
+  ~&  >  "recieving action at {<now.bowl>}"
   ?-  -.action
       %check
-    (perform-move src.bowl game-id.action %check 0)
+    (perform-move now.bowl src.bowl game-id.action %check 0)
       %bet
-    (perform-move src.bowl game-id.action %bet amount.action)
+    (perform-move now.bowl src.bowl game-id.action %bet amount.action)
       %fold
-    (perform-move src.bowl game-id.action %fold 0)
+    (perform-move now.bowl src.bowl game-id.action %fold 0)
   ==
 ++  handle-server-action
   |=  =server-action:pokur
@@ -300,6 +300,15 @@
   ?>  (team:title [our src]:bowl)
   :_  state
     ~[[%give %kick paths.server-action `subscriber.server-action]]  
+    ::
+    ::
+    %end-game
+  ?>  (team:title [our src]:bowl)
+  ~&  "a game has ended: {<game-id.server-action>}"
+  =.  active-games.state
+  (~(del by active-games.state) game-id.server-action)
+  :_  state
+    ~
     ::
     ::
     %wipe-all-games :: for debugging, mostly

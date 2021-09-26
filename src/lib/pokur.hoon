@@ -125,7 +125,6 @@
     ^-  server-game-state
     =.  whose-turn.game.state
       (get-next-unfolded-player whose-turn.game.state players.game.state)
-    ~&  "going to next turn. setting whose-turn to {<whose-turn.game.state>}" 
     state
   ++  get-next-unfolded-player
     |=  [player=ship players=(list ship)]
