@@ -28,6 +28,7 @@
           ['host' [%s (scot %p host.challenge.upd)]]
           ['min_bet' (numb:enjs min-bet.challenge.upd)]
           ['starting_stack' (numb:enjs starting-stack.challenge.upd)]
+          ['turn_time_limit' (tape:enjs (scow %dr turn-time-limit.challenge.upd))]
           ['type' [%s type.challenge.upd]]
       ==
       %close-challenge
@@ -53,6 +54,7 @@
           ['host' [%s (scot %p host.challenge.upd)]]
           ['min_bet' (numb:enjs min-bet.challenge.upd)]
           ['starting_stack' (numb:enjs starting-stack.challenge.upd)]
+          ['turn_time_limit' (tape:enjs (scow %dr turn-time-limit.challenge.upd))]
           ['type' [%s type.challenge.upd]]
       ==
     ==

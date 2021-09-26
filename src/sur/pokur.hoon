@@ -42,6 +42,7 @@
     game-id=@da
     host=ship
     type=poker-game-type
+    turn-time-limit=@dr
     players=(list ship)
     paused=?
     update-message=tape
@@ -72,6 +73,7 @@
     min-bet=@ud
     starting-stack=@ud
     type=poker-game-type
+    turn-time-limit=@dr
   ==
 +$  pokur-challenge-update
   $%
@@ -84,7 +86,15 @@
 ::
 +$  client-action
   $%
-    [%issue-challenge to=(list ship) host=ship min-bet=@ud starting-stack=@ud type=poker-game-type]
+    $:  
+      %issue-challenge
+      to=(list ship) 
+      host=ship
+      min-bet=@ud
+      starting-stack=@ud
+      type=poker-game-type
+      turn-time-limit=@t :: client converts this to @dr
+    ==
     [%receive-challenge challenge=pokur-challenge]
     [%challenge-update challenge=pokur-challenge]
     [%accept-challenge id=@da]
@@ -113,7 +123,9 @@
     [%initialize-hand game-id=@da]
     [%send-game-updates game=server-game-state]
     [%end-game game-id=@da]
-    [%wipe-all-games game-id=@da]
+    [%set-timer game-id=@da time=@da]
+    [%cancel-timer game-id=@da time=@da]
+    [%wipe-all-games ~]
   ==
 ::
 --

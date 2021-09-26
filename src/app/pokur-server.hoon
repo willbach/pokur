@@ -114,21 +114,38 @@
     [%timer @ta ~]
   :: the timer ran out.. a player didn't make a move in time
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
-  ~&  >>>  "Player timed out on game {<game-id>}"
+  ~&  >>>  "Player timed out on game {<game-id>} at {<now.bowl>}"
   :: find active player in that game
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
     ~&  >>>  "error: turn timeout on non-existent game."
-    ~&  >>>  "this is fine if a game just ended and its last timer is expiring."
     :_  this  ~
-  ~&  >>>  "current time: {<now.bowl>}"
+  =/  game  u.game
+  :: if no players left in game, poke ourselves to end it
+  =/  no-active-players
+    %+  levy
+      chips.game.game
+      |=  [ship @ud @ud ? ? left=?]
+      left
+  ?:  no-active-players
+    :_  this
+    :~
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%end-game game-id.game.game])
+      ==
+    ==
   :: reset that game's turn timer
-  =.  turn-timer.u.game  ~
+  =.  turn-timer.game  ~
   =.  active-games.state
-  (~(put by active-games.state) [game-id u.game])
+  (~(put by active-games.state) [game-id game])
   =/  player-to-fold
-    whose-turn.game.u.game
+    whose-turn.game.game
   =/  current-time  now.bowl
   =^  cards  state
   (perform-move current-time player-to-fold game-id %fold 0)
@@ -138,42 +155,62 @@
 --
 ::  start helper core
 |_  bowl=bowl:gall
-++  get-game-by-id
-  |=  game-id=@da
-  ^-  server-game-state
-  ::  TODO obviously add error handling to this
-  ::  actually just get rid of this and error handle at all 3 places this gets used.
-  (~(got by active-games.state) game-id)
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
-  ?.  =(0 (lent players.game.game))
-    :: initialize new hand, update message to clients
-    ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
-  ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%end-game game-id.game.game])]]
+  :: initialize new hand, update message to clients
+  ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%initialize-hand game-id.game.game])]]
 ++  perform-move
   |=  [time=@da who=ship game-id=@da move-type=@tas amount=@ud]
   ^-  (quip card _state)
-  =/  game  (get-game-by-id game-id)
+  =/  game  (~(get by active-games.state) game-id)
+  ?~  game
+    :_  state
+    ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
+  =/  game  u.game
   :: validate that move is from right player
   ?.  =(whose-turn.game.game who)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
-  ::  set new turn timer
+  :: poke ourself to set a turn timer
   =/  new-timer
-    `@da`(add time ~s15)
+  :: pad the timer with 2 seconds to account for transit?
+  :: can workshop this depending on real world effect
+  `@da`(add time turn-time-limit.game.game)
   =/  timer-cards
-  ::  if we had an active one, cancel old turn timer while setting new one
-  ?.  =(turn-timer.game ~)
+    ?.  =(turn-timer.game ~)
+      :: there's an ongoing turn timer, cancel it and set fresh one
+      :~
+        :*  %pass
+            /poke-wire
+            %agent
+            [our.bowl %pokur-server]
+            %poke
+            %pokur-server-action
+            !>([%cancel-timer game-id `@da`turn-timer.game])
+        ==
+        :*  %pass
+            /poke-wire
+            %agent
+            [our.bowl %pokur-server]
+            %poke
+            %pokur-server-action
+            !>([%set-timer game-id new-timer])
+        ==
+      ==
+    :: there's no ongoing timer to cancel, just set new
     :~
-      [%pass /timer/(scot %da game-id.game.game) %arvo %b %rest `@da`turn-timer.game]
-      [%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]
-    == 
-    ~[[%pass /timer/(scot %da game-id.game.game) %arvo %b %wait new-timer]]
-  ~&  >>  "timer cards: {<timer-cards>}"
-  ::  hold current timer-time in game state
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%set-timer game-id new-timer])
+      ==
+    ==
   =.  turn-timer.game  new-timer
   =.  game 
   :: this is lame, i am lame
@@ -204,6 +241,32 @@
   |=  =server-action:pokur
   ^-  (quip card _state)
   ?-  -.server-action
+    %set-timer
+  ?>  (team:title [our src]:bowl)
+  :_  state
+    :~
+      :*  %pass
+          /timer/(scot %da game-id.server-action)
+          %arvo
+          %b
+          %wait
+          time.server-action
+      ==
+    ==
+    ::
+    %cancel-timer
+  ?>  (team:title [our src]:bowl)
+  :_  state
+    :~
+      :*  %pass
+          /timer/(scot %da game-id.server-action)
+          %arvo
+          %b
+          %rest
+          time.server-action
+      ==
+    ==
+    ::
     %register-game
   ~&  >>  "Game initiated with server {<our.bowl>}."
   =/  players
@@ -211,6 +274,7 @@
       players.challenge.server-action
     |=  [player=ship ? ?]
     player
+  =/  c-data  challenge.server-action  
   =/  chips
     %+  turn 
       players
@@ -218,9 +282,10 @@
     [player starting-stack.challenge.server-action 0 %.n %.n %.n]
   =/  new-game-state
     [
-      game-id=id.challenge.server-action  
-      host=host.challenge.server-action
-      type=type.challenge.server-action
+      game-id=id.c-data
+      host=host.c-data
+      type=type.c-data
+      turn-time-limit=turn-time-limit.c-data
       players=players
       paused=%.n
       update-message="Pokur game started, served by {<our.bowl>}"
@@ -228,7 +293,7 @@
       chips=chips
       pot=0
       current-bet=0
-      min-bet=min-bet.challenge.server-action
+      min-bet=min-bet.c-data
       last-bet=0
       board=~
       my-hand=~
@@ -246,18 +311,26 @@
       turn-timer=~
     ]
   =.  active-games.state
-    (~(put by active-games.state) [id.challenge.server-action new-server-state])
+    (~(put by active-games.state) [id.c-data new-server-state])
   :_  state
     :: init first hand here
-    :~  :*  %pass  /poke-wire  %agent 
-            [our.bowl %pokur-server] 
-            %poke  %pokur-server-action 
-            !>([%initialize-hand id.challenge.server-action])
-        ==
+    :~  
+      :*  %pass
+          /poke-wire
+          %agent 
+          [our.bowl %pokur-server] 
+          %poke
+          %pokur-server-action 
+          !>([%initialize-hand id.challenge.server-action])
+      ==
     ==
     ::
     %leave-game
-  =/  game  (get-game-by-id game-id.server-action)
+  =/  game  (~(get by active-games.state) game-id.server-action)
+  ?~  game
+    :_  state
+    ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
+  =/  game  u.game
   :: remove sender from their game
   =/  game
     (~(remove-player modify-state game) src.bowl)
@@ -268,17 +341,40 @@
     ::
     %initialize-hand
   ?>  (team:title [our src]:bowl)
-  =/  game  (get-game-by-id game-id.server-action)
-    :: first, shuffle
+  =/  game  (~(get by active-games.state) game-id.server-action)
+  ?~  game
+    :_  state
+    ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
+  =/  game  u.game
+  :: first, shuffle
   =.  deck.game
-    (shuffle-deck deck.game eny.bowl)
+  (shuffle-deck deck.game eny.bowl)
   =/  game
-    (~(initialize-hand modify-state game) dealer.game.game)
+  (~(initialize-hand modify-state game) dealer.game.game)
+  :: make cards to show players game state,
+  :: IF hands-played is 0, set the very first turn timer.
+  =/  hand-cards
+  %+  turn 
+    hands.game 
+  |=  hand=[ship poker-deck]
+  (~(make-player-cards modify-state game) hand) 
   =/  cards
-    %+  turn 
-        hands.game 
-      |=  hand=[ship poker-deck]
-      (~(make-player-cards modify-state game) hand) 
+  ?.  =(hands-played.game.game 0)
+    hand-cards
+  =/  first-timer
+  `@da`(add now.bowl turn-time-limit.game.game)
+  %+  welp
+    hand-cards
+  :~
+    :*  %pass
+        /poke-wire
+        %agent 
+        [our.bowl %pokur-server]
+        %poke
+        %pokur-server-action
+        !>([%set-timer game-id.server-action first-timer])
+    ==
+  ==
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state

@@ -23,7 +23,8 @@
           [%host (se:dejs %p)]
           [%min-bet ni:dejs]
           [%starting-stack ni:dejs]
-          [%type so:dejs]
+          [%type (se:dejs %tas)]
+          [%turn-time-limit so:dejs]
       ==
     ++  parse-id
       %-  ot:dejs

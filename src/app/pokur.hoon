@@ -180,15 +180,17 @@
     %issue-challenge
   ?>  (team:title [our src]:bowl)
   =/  player-list
-    %+  turn 
-      %+  weld 
-        to.client-action 
-      ~[our.bowl]
-    |=  s=ship
-    ?:  =(s our.bowl)
-      :: [@p / accepted? / declined?]
-      [s %.y %.n]
-    [s %.n %.n]
+  %+  turn 
+    %+  weld 
+      to.client-action 
+    ~[our.bowl]
+  |=  s=ship
+  ?:  =(s our.bowl)
+    :: [@p / accepted? / declined?]
+    [s %.y %.n]
+  [s %.n %.n]
+  =/  turn-time-limit
+  `@dr`+:(scan (trip turn-time-limit.client-action) crub:so)
   =/  challenge
     [
       id=now.bowl
@@ -198,6 +200,7 @@
       min-bet=min-bet.client-action
       starting-stack=starting-stack.client-action
       type=type.client-action
+      turn-time-limit=turn-time-limit
     ]
   =.  challenge-sent.state  
     %-  some  challenge

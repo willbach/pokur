@@ -32,6 +32,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             'type': e.target.gameType.value,
             'min-bet': parseInt(e.target.minBet.value),
             'starting-stack': parseInt(e.target.stackSize.value),
+            'turn-time-limit': "s" + parseInt(e.target.turnTimer.value),
           }
         }
       });
@@ -77,6 +78,10 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             <option value="cash">Cash</option>
             <option value="tournament">Tournament (not yet functional)</option>
           </select>
+        </label>
+        <label>
+          Turn time limit (in seconds):
+          <input name="turnTimer" type="number"/>
         </label>
         <br />
         <input type="submit" value="Submit" />
