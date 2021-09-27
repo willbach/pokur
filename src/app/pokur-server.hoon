@@ -181,6 +181,7 @@
   :: pad the timer with 2 seconds to account for transit?
   :: can workshop this depending on real world effect
   `@da`(add time turn-time-limit.game.game)
+  ~&  >>  "SERVER: existing turn timer: {<turn-timer.game>}"
   =/  timer-cards
     ?.  =(turn-timer.game ~)
       :: there's an ongoing turn timer, cancel it and set fresh one
@@ -369,6 +370,7 @@
   =/  first-timer
   `@da`(add now.bowl turn-time-limit.game.game)
   =.  turn-timer.game  first-timer
+  ~&  >>  "SERVER: first game timer set to {<turn-timer.game>}"
   %+  welp
     hand-cards
   :~
