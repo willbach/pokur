@@ -368,6 +368,7 @@
     hand-cards
   =/  first-timer
   `@da`(add now.bowl turn-time-limit.game.game)
+  =.  turn-timer.game  first-timer
   %+  welp
     hand-cards
   :~
