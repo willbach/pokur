@@ -364,19 +364,6 @@
     hands.game 
   |=  hand=[ship poker-deck]
   (~(make-player-cards modify-state game) hand) 
-  ~&  >>  "SERVER: first game timer set to {<turn-timer.game>}"
-  %+  welp
-    cards
-  :~
-    :*  %pass
-        /poke-wire
-        %agent 
-        [our.bowl %pokur-server]
-        %poke
-        %pokur-server-action
-        !>([%set-timer game-id.server-action first-timer])
-    ==
-  ==
   ~&  >>  "{<game>}"
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
