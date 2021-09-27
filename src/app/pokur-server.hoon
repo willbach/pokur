@@ -383,6 +383,7 @@
         !>([%set-timer game-id.server-action first-timer])
     ==
   ==
+  ~&  >>  "game"
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state
