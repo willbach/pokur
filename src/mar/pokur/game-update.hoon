@@ -16,6 +16,7 @@
           ['id' [%s (scot %da game-id.game.upd)]]
           ['host' (ship:enjs host.game.upd)]
           ['type' [%s type.game.upd]]
+          ['time_limit_seconds' (numb:enjs time-limit-seconds.game.upd)]
           ['players' [%a (turn players.game.upd ship:enjs)]]
           ['paused' [%b paused.game.upd]]
           ['update_message' (tape:enjs update-message.game.upd)]

@@ -1,6 +1,6 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
-import { Card } from '../components';
+import { Card, TurnTimer } from '../components';
 
 const GameAction = ({ urb, game, myBet, setMyBet }) => {
 
@@ -91,6 +91,7 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
              <button onClick={() => handleAction("fold", 0)}>
                Fold
              </button>
+             <TurnTimer countdown={game.time_limit_seconds} />
            </div>}
       </div>
     </div>

@@ -43,6 +43,7 @@
     host=ship
     type=poker-game-type
     turn-time-limit=@dr
+    time-limit-seconds=@ud :: for frontend parsing only
     players=(list ship)
     paused=?
     update-message=tape
@@ -74,6 +75,7 @@
     starting-stack=@ud
     type=poker-game-type
     turn-time-limit=@dr
+    time-limit-seconds=@ud :: for frontend parsing only
   ==
 +$  pokur-challenge-update
   $%
@@ -94,6 +96,7 @@
       starting-stack=@ud
       type=poker-game-type
       turn-time-limit=@t :: client converts this to @dr
+      time-limit-seconds=@ud :: we store the seconds as @ud for frontend app
     ==
     [%receive-challenge challenge=pokur-challenge]
     [%challenge-update challenge=pokur-challenge]

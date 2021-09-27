@@ -25,6 +25,7 @@
           [%starting-stack ni:dejs]
           [%type (se:dejs %tas)]
           [%turn-time-limit so:dejs]
+          [%time-limit-seconds ni:dejs]
       ==
     ++  parse-id
       %-  ot:dejs

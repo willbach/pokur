@@ -33,6 +33,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             'min-bet': parseInt(e.target.minBet.value),
             'starting-stack': parseInt(e.target.stackSize.value),
             'turn-time-limit': "s" + parseInt(e.target.turnTimer.value),
+            'time-limit-seconds': parseInt(e.target.turnTimer.value),
           }
         }
       });

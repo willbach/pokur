@@ -201,6 +201,7 @@
       starting-stack=starting-stack.client-action
       type=type.client-action
       turn-time-limit=turn-time-limit
+      time-limit-seconds=time-limit-seconds.client-action
     ]
   =.  challenge-sent.state  
     %-  some  challenge

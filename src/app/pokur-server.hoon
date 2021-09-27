@@ -286,6 +286,7 @@
       host=host.c-data
       type=type.c-data
       turn-time-limit=turn-time-limit.c-data
+      time-limit-seconds=time-limit-seconds.c-data
       players=players
       paused=%.n
       update-message="Pokur game started, served by {<our.bowl>}"
