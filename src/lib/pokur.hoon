@@ -253,17 +253,18 @@
   ++  process-win
     |=  [winner=ship [rank=@ud hand=poker-deck]]
     ^-  server-game-state
-    =/  f
-      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
-      ?:  =(p winner) 
-        [p (add n (add c pot.game.state)) 0 %.n %.n left]
-      [p n 0 %.n %.n left] 
     :: sends any extra committed chips to pot
-    =.  state                    committed-chips-to-pot
-    :: give pot to winner 
-    =.  chips.game.state         (turn chips.game.state f)
+    =.  state  committed-chips-to-pot
+    :: give pot to winner
+    =.  chips.game.state
+    %+  turn 
+      chips.game.state
+    |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+    ?:  =(p winner)
+      [p (add n (add c pot.game.state)) 0 %.n %.n left]
+    [p n 0 %.n %.n left] 
+    :: take hands away, clear board, clear bet, clear pot
     =.  pot.game.state           0
-    :: take hands away, clear board, clear bet
     =.  board.game.state         ~
     =.  current-bet.game.state   0
     =.  last-bet.game.state      0
