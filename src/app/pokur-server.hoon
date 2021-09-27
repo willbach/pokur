@@ -90,6 +90,7 @@
   ?>  =(src.bowl u.player)
     :: give a good subscriber their game state
     :: find their hand
+    ~&  >>  "SERVER: sending subscriber their game state"
     =.  my-hand.game.u.game
       +.-:(skim hands.u.game |=([s=ship h=poker-deck] =(s u.player)))
     :_  this
@@ -114,12 +115,12 @@
     [%timer @ta ~]
   :: the timer ran out.. a player didn't make a move in time
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
-  ~&  >>>  "Player timed out on game {<game-id>} at {<now.bowl>}"
+  ~&  >>>  "SERVER: Player timed out on game {<game-id>} at {<now.bowl>}"
   :: find active player in that game
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
-    ~&  >>>  "error: turn timeout on non-existent game."
+    ~&  >>>  "server error: turn timeout on non-existent game."
     :_  this  ~
   =/  game  u.game
   :: if no players left in game, poke ourselves to end it
@@ -158,6 +159,7 @@
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
+  ~&  >>  "SERVER: sending update cards"
   ?.  hand-is-over.game
     ~[[%pass /poke-wire %agent [our.bowl %pokur-server] %poke %pokur-server-action !>([%send-game-updates game])]]
   :: initialize new hand, update message to clients
@@ -228,7 +230,7 @@
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
-  ~&  >  "recieving action at {<now.bowl>}"
+  ~&  >>  "SERVER: recieving action at {<now.bowl>}"
   ?-  -.action
       %check
     (perform-move now.bowl src.bowl game-id.action %check 0)
@@ -243,6 +245,7 @@
   ?-  -.server-action
     %set-timer
   ?>  (team:title [our src]:bowl)
+  ~&  >>>  "SERVER: setting turn timer"
   :_  state
     :~
       :*  %pass
@@ -256,6 +259,7 @@
     ::
     %cancel-timer
   ?>  (team:title [our src]:bowl)
+  ~&  >>>  "SERVER: canceling turn timer"
   :_  state
     :~
       :*  %pass

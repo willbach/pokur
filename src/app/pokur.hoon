@@ -97,6 +97,7 @@
     [%game ~]
     ?~  game.state
       `this
+    ~&  >  "CLIENT: sending current game state to subscriber"
     :_  this
       ~[[%give %fact ~[/game] [%pokur-game-update !>([%update u.game.state "-"])]]]
   ==
@@ -122,7 +123,7 @@
         ==
       =.  game.state
         %-  some  new-state
-      ~&  >  "New game state: {<new-state>}"
+      ~&  >  "CLIENT: receiving updated game state"
       :_  this
         ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==
@@ -421,11 +422,11 @@
           %pass  /poke-wire  %agent  [host.challenge %pokur-server]
           %poke  %pokur-server-action  !>([%register-game challenge=challenge])
         ==
-      :: subscribe to path which game will be served from
-        :*  
-          %pass  /poke-wire  %agent  [our.bowl %pokur]
-          %poke  %pokur-client-action  !>([%subscribe game-id=id.challenge host=host.challenge])
-        ==
+      :: already doing this
+      :: :*  
+      ::   %pass  /poke-wire  %agent  [our.bowl %pokur]
+      ::   %poke  %pokur-client-action  !>([%subscribe game-id=id.challenge host=host.challenge])
+      :: ==
       ==
     :: notify all players that the game is registered
     %+  turn
@@ -453,6 +454,7 @@
   ?>  (team:title [our src]:bowl)
   :: TODO if we're already in a game, we need to leave it?
   ?~  game.state
+    ~&  >  "CLIENT: subcribing to new game"
     :_  state
       :~  :*  %pass  /game-updates/(scot %da id.client-action)
               %agent  [host.client-action %pokur-server]
