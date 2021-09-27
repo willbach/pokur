@@ -309,12 +309,13 @@
       big-blind=~zod   :: ~zod is placeholder.
     ]
   =/  new-server-state
+    :: this is where very first game timer is set
     [
       game=new-game-state
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       hand-is-over=%.y
-      turn-timer=~
+      turn-timer=`@da`(add now.bowl turn-time-limit.c-data)
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])
@@ -357,22 +358,15 @@
   (shuffle-deck deck.game eny.bowl)
   =/  game
   (~(initialize-hand modify-state game) dealer.game.game)
-  :: make cards to show players game state,
-  :: IF hands-played is 0, set the very first turn timer.
-  =/  hand-cards
+  :: make cards to show players game state
+  =/  cards
   %+  turn 
     hands.game 
   |=  hand=[ship poker-deck]
   (~(make-player-cards modify-state game) hand) 
-  =/  cards
-  ?.  =(hands-played.game.game 0)
-    hand-cards
-  =/  first-timer
-  `@da`(add now.bowl turn-time-limit.game.game)
-  =.  turn-timer.game  first-timer
   ~&  >>  "SERVER: first game timer set to {<turn-timer.game>}"
   %+  welp
-    hand-cards
+    cards
   :~
     :*  %pass
         /poke-wire
@@ -383,7 +377,7 @@
         !>([%set-timer game-id.server-action first-timer])
     ==
   ==
-  ~&  >>  "game"
+  ~&  >>  "{<game>}"
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state
