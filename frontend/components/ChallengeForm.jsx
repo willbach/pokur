@@ -80,6 +80,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             <option value="tournament">Tournament (not yet functional)</option>
           </select>
         </label>
+        <br />
         <label>
           Turn time limit (in seconds):
           <input name="turnTimer" type="number"/>

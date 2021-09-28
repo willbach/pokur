@@ -1,6 +1,6 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
-import { Card } from '../components';
+import { Card, TurnTimer } from '../components';
 
 const GameInfo = ({ game }) => {
 
@@ -27,10 +27,13 @@ const GameInfo = ({ game }) => {
         {Object.entries(game.chips).map(([player, data]) => (
             player == "~" + window.ship
             ? <span key={player}></span>
-            : <div key={player} className={`player-seat ${game.whose_turn == player ? `their-turn` : ``}`}>
+            : <div key={player} className={`player-seat ${"~" + game.whose_turn == player ? `their-turn` : ``}`}>
                 <div className="name-display">
                   <p>{player}</p>
                 </div>
+                {player == "~" + game.whose_turn
+                 ? <TurnTimer countdown={game.time_limit_seconds} />
+                 : <></>}
                 <div className="player-cards">
                   <div className="small-card hidden" />
                   <div className="small-card hidden" />
