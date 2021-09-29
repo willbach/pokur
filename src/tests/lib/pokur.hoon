@@ -2,6 +2,86 @@
 /+  pokur
 =,  pokur
 |%
+++  test-determine-winner-tie-1
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=~2021.7.28..18.17.52..1849
+      host=~zod
+      type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
+      players=~[~zod ~bus]
+      paused=%.n
+      update-message=""
+      hands-played=0
+      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      pot=100
+      current-bet=0
+      min-bet=40
+      last-bet=0
+      board=~[[%10 %spades] [%king %spades] [%ace %spades] [%jack %spades] [%queen %spades]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%jack %clubs] [%jack %hearts]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+      turn-timer=~
+    ]
+  =/  winners
+    ~(determine-winner modify-state state)
+  ?>  =((lent winners) 2)
+  ~
+++  test-determine-winner-tie-2
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=~2021.7.28..18.17.52..1849
+      host=~zod
+      type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
+      players=~[~zod ~bus]
+      paused=%.n
+      update-message=""
+      hands-played=0
+      chips=~[[~zod 500 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      pot=100
+      current-bet=0
+      min-bet=40
+      last-bet=0
+      board=~[[%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%jack %hearts] [%10 %hearts]]] [~bus ~[[%2 %hearts] [%10 %spades]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+      turn-timer=~
+    ]
+  =/  winners
+    ~(determine-winner modify-state state)
+  ::~&  >>  winners
+  =/  new-state 
+    (~(process-win modify-state state) winners)
+  ?>  =((lent winners) 2)
+  ?>  =(pot.game.new-state 0)
+  ?>  =(-.+.-.chips.game.new-state 550)
+  ?>  =(-.+.-.+.chips.game.new-state 1.050)
+  ~
 ++  test-determine-winner-1
   ^-  tang
   =/  test-game-state
@@ -9,6 +89,8 @@
       game-id=~2021.7.28..18.17.52..1849
       host=~zod
       type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
       players=~[~zod ~bus]
       paused=%.n
       update-message=""
@@ -31,10 +113,11 @@
       hands=~[[~zod ~[[%king %spades] [%ace %spades]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      turn-timer=~
     ]
   =/  winner
     ~(determine-winner modify-state state)
-  ?>  =(-.winner ~zod)
+  ?>  =(-.-.winner ~zod)
   ~
 ++  test-determine-winner-2
   ^-  tang
@@ -43,6 +126,8 @@
       game-id=~2021.7.28..18.17.52..1849
       host=~zod
       type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
       players=~[~zod ~bus]
       paused=%.n
       update-message=""
@@ -65,10 +150,11 @@
       hands=~[[~zod ~[[%jack %spades] [%6 %clubs]]] [~bus ~[[%jack %diamonds] [%queen %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      turn-timer=~
     ]
   =/  winner
     ~(determine-winner modify-state state)
-  ?>  =(-.winner ~bus)
+  ?>  =(-.-.winner ~bus)
   ~
 ++  test-determine-winner-3
   ^-  tang
@@ -77,6 +163,8 @@
       game-id=~2021.7.28..18.17.52..1849
       host=~zod
       type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
       players=~[~zod ~bus]
       paused=%.n
       update-message=""
@@ -99,10 +187,11 @@
       hands=~[[~zod ~[[%2 %spades] [%2 %clubs]]] [~bus ~[[%2 %diamonds] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      turn-timer=~
     ]
   =/  winner
     ~(determine-winner modify-state state)
-  ?>  =(-.winner ~bus)
+  ?>  =(-.-.winner ~bus)
   ~
 ++  test-determine-winner-4
   ^-  tang
@@ -111,6 +200,8 @@
       game-id=~2021.7.28..18.17.52..1849
       host=~zod
       type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
       players=~[~zod ~bus ~nec]
       paused=%.n
       update-message=""
@@ -133,10 +224,11 @@
       hands=~[[~zod ~[[%king %spades] [%7 %spades]]] [~bus ~[[%2 %spades] [%4 %spades]]] [~nec ~[[%8 %diamonds] [%3 %clubs]]]]
       deck=generate-deck
       hand-is-over=%.y
+      turn-timer=~
     ]
   =/  winner
     ~(determine-winner modify-state state)
-  ?>  =(-.winner ~nec)
+  ?>  =(-.-.winner ~nec)
   ~
 :: tie breaking tests
 ++  test-tie-break-1
@@ -199,6 +291,7 @@
         ==
   ?>  (break-ties hand1 hand2)
   ~
+:: testing kicker on 1 pair
 ++  test-tie-break-4
   ^-  tang
   =/  hand1
@@ -222,7 +315,7 @@
 ++  test-tie-break-5
   ^-  tang
   =/  hand1
-    :-  1 :: pair
+    :-  4 :: straight with 5 cards
       :~  [%2 %spades] 
           [%3 %spades] 
           [%4 %hearts] 
@@ -230,7 +323,7 @@
           [%6 %spades] 
         ==
   =/  hand2
-    :-  1
+    :-  4
       :~  [%3 %spades] 
           [%4 %hearts] 
           [%5 %clubs] 
@@ -317,6 +410,19 @@
         [%jack %hearts] 
       ==
   ?>  =(5 -:(evaluate-hand hand))
+  ~
+++  test-eval7
+  ^-  tang
+  =/  hand
+  ~[[%jack %hearts] [%10 %hearts] [%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]] 
+  ~&  >>  (evaluate-hand hand)
+  ?>  =(4 -:(evaluate-hand hand))
+  ~
+++  test-eval8
+  ^-  tang
+  =/  hand
+  ~[[%2 %hearts] [%10 %hearts] [%4 %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]] 
+  ?>  =(4 -:(evaluate-hand hand))
   ~
 :: 5-card hand evaluation tests
 ++  test-eval-royal

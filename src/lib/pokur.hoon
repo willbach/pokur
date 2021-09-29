@@ -13,6 +13,7 @@
         %fact 
         ~[/game/(scot %da game-id.game.state)/(scot %p (head hand))]
         [%pokur-game-state !>(game.state)]
+
 ::  checks if all players have acted or folded, and 
 ::  committed the same amount of chips, OR,
 ::  if a player is all-in, i.e. has 0 in stack
@@ -32,6 +33,7 @@
           =(folded %.y)
       ==
     (levy chips.game.state f)
+
 ::  checks cards on table and either initiates flop, 
 ::  turn, river, or determine-winner
   ++  next-round
@@ -42,6 +44,7 @@
     ?:  =(5 n)
       (process-win determine-winner)
     poker-flop
+
 ::  **takes in a shuffled deck**
 ::  assign dealer, assign blinds, assign first action 
 ::  to person left of BB (which is dealer in heads-up)
@@ -75,6 +78,7 @@
     =.  hand-is-over.state  
       %.n
     state
+
 ::  deals 2 cards from deck to each player in game
   ++  deal-hands
     ^-  server-game-state
@@ -91,16 +95,19 @@
       deck.state     rest:new
       dealt-count  (dec dealt-count)
     ==
+
   ++  poker-flop
     ^-  server-game-state
     =.  state
       committed-chips-to-pot
     (deal-to-board 3)
+
   ++  turn-river
     ^-  server-game-state
     =.  state
       committed-chips-to-pot
     (deal-to-board 1)
+
 ::  draws n cards (after burning 1) from deck, 
 ::  appends them to board state, and sets action 
 ::  to the next unfolded player left of dealer
@@ -119,6 +126,7 @@
     =.  whose-turn.game.state
       dealer.game.state 
     next-player-turn
+
 ::  sets whose-turn to next player in list **who hasn't folded**
 ::  if all players are folded, this means that everyone left..
   ++  next-player-turn
@@ -126,6 +134,7 @@
     =.  whose-turn.game.state
       (get-next-unfolded-player whose-turn.game.state players.game.state)
     state
+
   ++  get-next-unfolded-player
     |=  [player=ship players=(list ship)]
     ^-  ship
@@ -151,14 +160,16 @@
       next-player
     :: otherwise recurse to find next unfolded player
     $(whose-turn next-player)
-  ::  returns name of ship that's to the left of given ship
+
+::  returns name of ship that's to the left of given ship
   ++  get-next-player
     |=  [player=ship players=(list ship)]
     ^-  ship
     =/  player-position
       (find [player]~ players)
     (snag (mod +(u.+.player-position) (lent players)) players)
-  ::  given a ship in game, returns their chip count [name stack committed]
+
+::  given a ship in game, returns their chip count [name stack committed]
   ++  get-player-chips
     |=  [who=ship chips=(list [ship in-stack=@ud committed=@ud ? ? ?])]
     ^-  [who=ship in-stack=@ud committed=@ud acted=? folded=? left=?]
@@ -166,6 +177,7 @@
       |=  [p=ship n=@ud c=@ud ? ? ?]
       =(p who)
     (head (skim chips f))
+
 ::  sends chips from player's 'stack' to their 
 ::  'committed' pile. used after a bet, call, raise
 ::  is made. committed chips don't go to pot until 
@@ -180,6 +192,7 @@
       [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
+
   ++  set-player-as-acted
     |=  who=ship
     ^-  server-game-state
@@ -190,6 +203,7 @@
       [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
+
   ++  set-player-as-folded
     |=  who=ship
     ^-  server-game-state
@@ -200,6 +214,7 @@
       [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
+
   ++  set-player-as-left
     |=  who=ship
     ^-  server-game-state
@@ -210,6 +225,7 @@
       [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
+
   ++  committed-chips-to-pot
     ^-  server-game-state 
     =/  f
@@ -223,6 +239,7 @@
     =.  current-bet.game.state  0
     =.  last-bet.game.state     0
     state
+
 ::  takes blinds from the two unfolded players left of dealer
 ::  (big blind is calculated as min-bet, small blind is 1/2 min. could change..)
 ::  (in heads up, dealer is small blind)
@@ -247,22 +264,41 @@
     =.  last-bet.game.state
       min-bet.game.state
     state
-::  given [winner [rank hand]], send them the pot. prepare for next hand by
-::  clearing board, hands and bets, reset fold status, increment hands-played.
-::  TODO in future, should manage raising of blinds and other things...
+
+::  given a list of [winner [rank hand]], send them the pot. prepare for next hand 
+::  by clearing board, hands and bets, reset fold status, increment hands-played.
   ++  process-win
-    |=  [winner=ship [rank=@ud hand=poker-deck]]
+    |=  winners=(list [ship [@ud poker-deck]])
     ^-  server-game-state
+    :: get ship names
+    =/  winning-ships
+    %+  turn
+      winners
+    |=  a=[ship [@ud poker-deck]]
+    -.a
+    =/  winning-rank  -.+:(head winners)
     :: sends any extra committed chips to pot
     =.  state  committed-chips-to-pot
     :: give pot to winner
+    :: in case of multiple winners, split pot evenly between them.
+    :: TODO: address that div rounds up lol
     =.  chips.game.state
-    %+  turn 
-      chips.game.state
-    |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
-    ?:  =(p winner)
-      [p (add n (add c pot.game.state)) 0 %.n %.n left]
-    [p n 0 %.n %.n left] 
+      ?:  =((lent winners) 1)
+        :: one winner, give pot
+        %+  turn 
+          chips.game.state
+        |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+        ?:  =(p -.-.winners)
+          [p (add n (add c pot.game.state)) 0 %.n %.n left]
+        [p n 0 %.n %.n left] 
+      :: many winners, split
+      =/  split-pot  (div pot.game.state (lent winners))
+      %+  turn 
+        chips.game.state
+      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+      ?^  (find [p]~ winning-ships)
+        [p (add n (add c split-pot)) 0 %.n %.n left]
+      [p n 0 %.n %.n left]
     :: take hands away, clear board, clear bet, clear pot
     =.  pot.game.state           0
     =.  board.game.state         ~
@@ -284,21 +320,21 @@
     :: set hand to over to trigger next hand on server
     =.  hand-is-over.state       %.y
     :: update game message to inform clients
+    :: TODO pretty-print this, branching if multiple people tie
     =.  update-message.game.state
-      ?:  =(rank 10)
-        "{<winner>} wins hand"
-      "{<winner>} wins hand with {<(hierarchy-to-rank rank)>}"
+      ?:  =(winning-rank 10)
+        "{<winning-ships>} wins hand"
+      "{<winning-ships>} wins hand with {<(hierarchy-to-rank winning-rank)>}"
     :: TODO: BLINDS UP/DOWN etc should be here?
     state
+
 ::  given a player and a poker-action, handles the action.
 ::  currently checks for being given the wrong player (not their turn),
 ::  bad bet (2x existing bet, >BB, or matches current bet (call)),
 ::  and trying to check when there's a bet to respond to.
 ::  * if betting is complete, go right into flop/turn/river/determine-winner
-::  * folds trigger win for other player (assumes heads-up)
+::  * folds trigger win for last standing player
   ++  process-player-action
-    :: what type should rule violating actions return?
-    :: or can !! be handled by gall app?
     |=  [who=ship action=game-action]
     ^-  server-game-state
     ?.  =(who whose-turn.game.state)
@@ -365,6 +401,7 @@
       ?.  is-betting-over
         next-player-turn
       next-round
+    :: this is a raise attempt
     ?.  ?&
           (gte amount.action last-bet.game.state)
           (gte bet-plus-committed (add last-bet.game.state current-bet.game.state))
@@ -400,14 +437,19 @@
         s
     ?:  =((lent players-left) 1)
       %-  process-win
-      [-.players-left [10 ~]]
+      ~[[-.players-left [10 ~]]]
     :: otherwise continue game
     ?.  is-betting-over
       next-player-turn
     next-round
     ==
+
+:: Uses game state to determine winning hand. This is only called
+:: when the board is full, so it deals with all 7-card hands.
+:: It returns a list of winning ships, which usually contains just
+:: the one, but can have up to n ships all tied. 
   ++  determine-winner
-    ^-  [ship [@ud poker-deck]]
+    ^-  (list [ship [@ud poker-deck]])
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
       =/  hand  
@@ -423,12 +465,24 @@
     :: check for tie(s) and break before returning winner
     ?:  =(-.+.-.player-ranks -.+.+<.player-ranks)
       =/  player-ranks
-        %+  sort  player-ranks
-          |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
-          ^-  ?
-          (break-ties +.a +.b)
-      (head player-ranks)
-    (head player-ranks)
+      %+  sort
+        player-ranks
+      |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
+      ^-  ?
+      (break-ties +.a +.b)
+      :: then check for identical hands, in which case pot must be split.
+      =/  winning-players
+        %+  skim
+          player-ranks
+        |=  a=[p=ship [r=@ud h=poker-deck]]
+        (hands-equal h.a +.+:(head player-ranks))
+      ?:  %+  gth
+            (lent winning-players)
+          1
+        winning-players
+      ~[(head player-ranks)]
+    ~[(head player-ranks)]
+
   ++  remove-player
     |=  who=ship
     ^-  server-game-state
@@ -446,6 +500,7 @@
 ::  Hand evaluation and sorted helper arms
 ::
 :: **returns a cell of [hierarchy-number hand]
+:: where hand is the strongest 5 cards evaluated.
 ++  evaluate-hand
   |=  hand=poker-deck
   ^-  [@ud poker-deck]
@@ -476,6 +531,10 @@
       %-  head
       %+  sort
         possible-6-hands
+      :: break-ties doesn't *really* work for hands that aren't
+      :: pure 5-cards, but since 6-hands can't have two discrete
+      :: straights, full houses or flushes, this shouldn't ever
+      :: discard a superior hand.
       break-ties
     (head possible-6-hands)
   =/  possible-5-hands
@@ -504,6 +563,7 @@
       break-ties
     (head possible-5-hands)
   (head possible-5-hands)
+
 ++  eval-6-cards
   |=  hand=poker-deck
   ^-  @ud
@@ -530,16 +590,17 @@
   =/  is-flush  (check-6-hand-flush raw-hand)
   :: check for straight
   =/  is-straight  (check-6-hand-straight raw-hand)
-  ?:  &(is-straight is-flush !is-pair)
+  ?:  &(is-straight is-flush)
     8
   ?:  is-flush
     5
-  ?:  &(is-straight !is-pair)
+  ?:  is-straight
     4
   :: check down here cause this can possibly contain flush
   ?:  is-pair
     1
   0
+
 ++  eval-5-cards
   |=  hand=poker-deck
   ^-  @ud 
@@ -579,6 +640,8 @@
   ?:  is-straight
     4
   0
+
+::
 ++  check-6-hand-flush
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
@@ -587,6 +650,8 @@
     ::  generate a hand without card c
     [(oust [c 1] h) h]
   (lien (turn p:(spin (gulf 0 5) raw-hand f) check-5-hand-flush) |=(a=? a))
+
+::
 ++  check-5-hand-flush
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
@@ -595,6 +660,7 @@
     |=  c=[@ud @ud]
       =(+.c first-card-suit)
   (levy raw-hand suit-check)
+
 :: **hand must be sorted before using this
 ++  check-6-hand-straight
   |=  raw-hand=(list [@ud @ud])
@@ -604,6 +670,7 @@
     ::  generate a hand without card c
     [(oust [c 1] h) h]
   (lien (turn p:(spin (gulf 0 5) raw-hand f) check-5-hand-straight) |=(a=? a))
+
 :: **hand must be sorted before using this
 ++  check-5-hand-straight
   |=  raw-hand=(list [@ud @ud])
@@ -614,7 +681,9 @@
   ?:  &(=(-.-.raw-hand 12) =(-.+<.raw-hand 3))
     %.y
   %.n
+
 :: given two hands, returns %.y if 1 is better than 2 (like gth)
+:: ONLY WORKS 100% for 5 card hands -- kickers BREAK THIS
 :: use in a sort function to sort hands with more granularity to find true winner
 ++  break-ties
   |=  [hand1=[r=@ud h=poker-deck] hand2=[r=@ud h=poker-deck]]
@@ -635,7 +704,7 @@
           =(r.hand1 4)
           =(r.hand1 0)
         ==
-    (find-high-card-recursive h.hand1 h.hand2)
+    (find-high-card h.hand1 h.hand2)
   ?:  ?|  =(r.hand1 7)
           =(r.hand1 6)
           =(r.hand1 3)
@@ -648,12 +717,14 @@
     =.  h.hand2
       %-  sort-hand-by-frequency 
         h.hand2
-    %+  find-high-card-recursive 
+    %+  find-high-card 
       h.hand1 
     h.hand2
   :: if we get here we were given a wrong hand rank or a royal flush (can't tie those)
   %.n
-:: **this assumes it is getting a rank-sorted hand**
+
+:: Sorts cards in poker-deck by frequency of value
+:: **assumes it is getting a rank-sorted hand**
 ++  sort-hand-by-frequency
   |=  hand=poker-deck
   ^-  poker-deck
@@ -682,23 +753,33 @@
     sorted-cards-with-frequencies
   |=  [c=poker-card f=@ud]
     c
-:: %.y if hand1 has higher card, %.n if hand2 does  
-++  find-high-card-recursive
+
+:: Utility function to check if two 5-card hands are the same.
+++  hands-equal
   |=  [hand1=poker-deck hand2=poker-deck]
   ^-  ?
-  =/  top-card-1
-    (card-val-to-atom -:(head hand1)) 
-  =/  top-card-2
-    (card-val-to-atom -:(head hand2))
-  ?:  =(top-card-1 top-card-2)
+  ?:  .=  (card-val-to-atom -:(head hand1))
+      (card-val-to-atom -:(head hand2))
+    ?:  &(=((lent hand1) 1) =((lent hand2) 1))
+      %.y  
+    $(hand1 (tail hand1), hand2 (tail hand2))
+  %.n
+
+:: %.y if hand1 has higher card, %.n if hand2 does  
+++  find-high-card
+  |=  [hand1=poker-deck hand2=poker-deck]
+  ^-  ?
+  ?:  .=  (card-val-to-atom -:(head hand1))
+      (card-val-to-atom -:(head hand2))
     ?:  &(=((lent hand1) 1) =((lent hand2) 1))
       %.n  
     $(hand1 (tail hand1), hand2 (tail hand2))
   ?:  %+  gth   
-        top-card-1
-      top-card-2
+        (card-val-to-atom -:(head hand1))
+      (card-val-to-atom -:(head hand2))
     %.y
   %.n
+
 ::  not actually using this anywhere
 ++  rank-to-hierarchy
   |=  rank=poker-hand-rank
@@ -715,6 +796,7 @@
     %pair             1
     %high-card        0
   ==
+
 ++  hierarchy-to-rank
   |=  h=@ud
   ^-  tape
@@ -730,10 +812,12 @@
     %1  "Pair"             
     %0  "High Card"        
   ==
+
 ++  card-to-raw
   |=  c=poker-card
   ^-  [@ud @ud]
   [(card-val-to-atom -.c) (suit-to-atom +.c)]
+
 ++  card-val-to-atom
   |=  c=card-val
   ^-  @ud
@@ -752,6 +836,7 @@
     %king   11
     %ace    12
   ==
+
 ++  suit-to-atom
   |=  s=suit
   ^-  @ud
@@ -761,6 +846,7 @@
     %clubs     2
     %diamonds  3
   ==
+
 ++  atom-to-card-val
   |=  n=@ud
   ^-  card-val
@@ -779,6 +865,7 @@
     %11  %king
     %12  %ace
   ==
+
 ++  atom-to-suit
   |=  val=@ud
   ^-  suit
@@ -788,6 +875,7 @@
     %2  %clubs
     %3  %diamonds
   ==
+
 ++  generate-deck
   ^-  poker-deck
   =|  new-deck=poker-deck
@@ -803,6 +891,7 @@
     j         +(j)
     new-deck  [(atom-to-card-val j) (atom-to-suit i)]^new-deck
   ==
+
 ::  given a deck and entropy, return shuffled deck
 ::  TODO: this could be better... not sure it's robust enough for real play
 ++  shuffle-deck
@@ -821,6 +910,7 @@
     remaining     (dec remaining)
     unshuffled    (oust [index 1] unshuffled)
   ==
+
 ::  gives back [hand rest] where hand is n cards from top of deck, rest is rest
 ++  draw
   |=  [n=@ud d=poker-deck]
