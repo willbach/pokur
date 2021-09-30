@@ -335,14 +335,6 @@
           [p (add n (add c split-pot)) 0 %.n %.n left]
         [p n 0 %.n %.n left]
       [pot chips]
-    
-
-
-
-
-
-
-
     :: take hands away, clear board, clear bet, clear pot
     =.  chips.game.state         q.new-chips
     =.  pots.game.state           ~[[0 players.game.state]]
