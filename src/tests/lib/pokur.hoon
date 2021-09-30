@@ -16,7 +16,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      pot=100
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -36,7 +36,7 @@
       turn-timer=~
     ]
   =/  winners
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ?>  =((lent winners) 2)
   ~
 ++  test-determine-winner-tie-2
@@ -53,7 +53,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 500 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      pot=100
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -73,12 +73,12 @@
       turn-timer=~
     ]
   =/  winners
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ::~&  >>  winners
   =/  new-state 
     (~(process-win modify-state state) winners)
   ?>  =((lent winners) 2)
-  ?>  =(pot.game.new-state 0)
+  ?>  =(-.-.pots.game.new-state 0)
   ?>  =(-.+.-.chips.game.new-state 550)
   ?>  =(-.+.-.+.chips.game.new-state 1.050)
   ~
@@ -96,7 +96,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      pot=0
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -116,7 +116,7 @@
       turn-timer=~
     ]
   =/  winner
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ?>  =(-.-.winner ~zod)
   ~
 ++  test-determine-winner-2
@@ -133,7 +133,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      pot=0
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -153,7 +153,7 @@
       turn-timer=~
     ]
   =/  winner
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ?>  =(-.-.winner ~bus)
   ~
 ++  test-determine-winner-3
@@ -170,7 +170,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      pot=0
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -190,7 +190,7 @@
       turn-timer=~
     ]
   =/  winner
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ?>  =(-.-.winner ~bus)
   ~
 ++  test-determine-winner-4
@@ -207,7 +207,7 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n] [~nec 1.000 0 %.n %.n %.n]]
-      pot=0
+      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bet=40
       last-bet=0
@@ -227,7 +227,7 @@
       turn-timer=~
     ]
   =/  winner
-    ~(determine-winner modify-state state)
+    (~(determine-winner modify-state state) hands.state)
   ?>  =(-.-.winner ~nec)
   ~
 :: tie breaking tests
@@ -415,7 +415,6 @@
   ^-  tang
   =/  hand
   ~[[%jack %hearts] [%10 %hearts] [%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]] 
-  ~&  >>  (evaluate-hand hand)
   ?>  =(4 -:(evaluate-hand hand))
   ~
 ++  test-eval8
