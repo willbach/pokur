@@ -35,7 +35,15 @@
                 ['folded' [%b folded]]
                 ['left' [%b left]]
             ==
-          ['pot' (numb:enjs pot.game.upd)]
+          :-  'pots' 
+          :-  %a
+          %+  turn
+            pots.game.upd
+          |=  p=[@ud (list ship)]
+          %-  pairs:enjs 
+          :~  ['val' (numb:enjs -.p)]
+              ['players_in' [%a (turn +.p ship:enjs)]]
+          ==
           ['current_bet' (numb:enjs current-bet.game.upd)]
           ['min_bet' (numb:enjs min-bet.game.upd)]
           ['last_bet' (numb:enjs last-bet.game.upd)]
@@ -45,9 +53,9 @@
             board.game.upd
           |=  c=poker-card:pokur
           %-  pairs:enjs 
-            :~  ['val' (numb:enjs (card-val-to-atom:pokur -.c))]
-                ['suit' [%s +.c]]
-            ==
+          :~  ['val' (numb:enjs (card-val-to-atom:pokur -.c))]
+              ['suit' [%s +.c]]
+          ==
           :-  'hand'
           :-  %a
           %+  turn
