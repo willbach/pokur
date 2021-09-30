@@ -314,7 +314,7 @@
       update-message="Pokur game started, served by {<our.bowl>}"
       hands-played=0
       chips=chips
-      pot=0
+      pots=~[[0 players]]
       current-bet=0
       min-bet=min-bet.c-data
       last-bet=0

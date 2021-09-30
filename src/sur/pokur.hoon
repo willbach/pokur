@@ -49,7 +49,7 @@
     update-message=tape
     hands-played=@ud
     chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
-    pot=@ud
+    pots=(list [@ud (list ship)]) :: usually just one, but side pots are stored here.
     current-bet=@ud
     min-bet=@ud
     last-bet=@ud

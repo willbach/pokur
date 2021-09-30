@@ -42,7 +42,7 @@
     ?:  |(=(3 n) =(4 n))
       turn-river
     ?:  =(5 n)
-      (process-win determine-winner)
+      (process-win (determine-winner hands.state))
     poker-flop
 
 ::  **takes in a shuffled deck**
@@ -233,8 +233,14 @@
         =.  pot  
           (add c pot)
         [[p n 0 %.n folded left] pot]
-    =/  new  (spin chips.game.state pot.game.state f)
-    =.  pot.game.state          q.new
+    :: committed chips will always go to most recent side-pot,
+    :: so we just alter the last pot in the list
+    =/  new  (spin chips.game.state -:(rear pots.game.state) f)
+    =.  pots.game.state
+    %^    snap
+        pots.game.state
+      (sub (lent pots.game.state) 1)
+    [q.new +:(rear pots.game.state)]
     =.  chips.game.state        p.new
     =.  current-bet.game.state  0
     =.  last-bet.game.state     0
@@ -282,25 +288,64 @@
     :: give pot to winner
     :: in case of multiple winners, split pot evenly between them.
     :: TODO: address that div rounds up lol
-    =.  chips.game.state
-      ?:  =((lent winners) 1)
-        :: one winner, give pot
-        %+  turn 
-          chips.game.state
-        |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
-        ?:  =(p -.-.winners)
-          [p (add n (add c pot.game.state)) 0 %.n %.n left]
-        [p n 0 %.n %.n left] 
-      :: many winners, split
-      =/  split-pot  (div pot.game.state (lent winners))
-      %+  turn 
+    :: step backwards through side pots, assigning them to their winner(s)
+    :: the winners we're sent here may NOT be the winners of every pot
+    :: you can only win a pot you participated in.
+    =/  new-chips
+      %^    spin
+          (flop pots.game.state)
         chips.game.state
-      |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
-      ?^  (find [p]~ winning-ships)
-        [p (add n (add c split-pot)) 0 %.n %.n left]
-      [p n 0 %.n %.n left]
+      |=  [pot=[val=@ud players-in=(list ship)] chips=(list [p=ship n=@ud c=@ud acted=? folded=? left=?])]
+      :: if winner is not in pot, call determine-winner on set of ships that are.
+      =/  winners-in-pot
+        %+  skim
+          winning-ships
+        |=  [p=ship]
+        ?^  (find [p]~ players-in.pot)
+          %.y
+        %.n
+      =/  winners-in-pot
+        ?.  =(~ winners-in-pot)
+          winners-in-pot
+        :: no winners in this pot, find the relative winner present (may be multiple!)
+        =/  hands-in-pot
+          %+  skim
+            hands.state
+          |=  [p=ship hand=poker-deck]
+          ?^  (find [p]~ players-in.pot)
+            %.y
+          %.n
+        (determine-winner hands-in-pot)
+      :: now we award chips to winners found for this pot
+      =.  chips
+        ?:  =((lent winners-in-pot) 1)
+          :: one winner, give pot
+          %+  turn
+            chips
+          |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+          ?:  =(p -.-.winners)
+            [p (add n (add c val.pot)) 0 %.n %.n left]
+          [p n 0 %.n %.n left] 
+        :: many winners, split
+        =/  split-pot  (div val.pot (lent winners-in-pot))
+        %+  turn 
+          chips
+        |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
+        ?^  (find [p]~ winning-ships)
+          [p (add n (add c split-pot)) 0 %.n %.n left]
+        [p n 0 %.n %.n left]
+      [pot chips]
+    
+
+
+
+
+
+
+
     :: take hands away, clear board, clear bet, clear pot
-    =.  pot.game.state           0
+    =.  chips.game.state         q.new-chips
+    =.  pots.game.state           ~[[0 players.game.state]]
     =.  board.game.state         ~
     =.  current-bet.game.state   0
     =.  last-bet.game.state      0
@@ -444,18 +489,19 @@
     next-round
     ==
 
-:: Uses game state to determine winning hand. This is only called
+:: takes a list of hands and finds winning hand. This is only called
 :: when the board is full, so it deals with all 7-card hands.
 :: It returns a list of winning ships, which usually contains just
 :: the one, but can have up to n ships all tied. 
   ++  determine-winner
+    |=  hands=(list [ship poker-deck])
     ^-  (list [ship [@ud poker-deck]])
     =/  eval-each-hand
       |=  [who=ship hand=poker-deck]
       =/  hand  
         (weld hand board.game.state)  
       [who (evaluate-hand hand)]
-    =/  hand-ranks  (turn hands.state eval-each-hand)
+    =/  hand-ranks  (turn hands eval-each-hand)
     :: return player with highest hand rank
     =/  player-ranks  
       %+  sort 
