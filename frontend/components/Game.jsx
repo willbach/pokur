@@ -13,6 +13,7 @@ const Game = ({ urb, game, myBet, setMyBet }) => {
         }
       },
     });
+    localStorage.removeItem("gameTimer");
   };
 
   return( 
