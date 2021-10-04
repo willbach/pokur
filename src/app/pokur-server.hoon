@@ -307,7 +307,9 @@
       game-id=id.c-data
       host=host.c-data
       type=type.c-data
-      turn-time-limit=turn-time-limit.c-data
+      :: pad the turn timer 5s to account for latency
+      :: TODO: workshop this once beta starts
+      turn-time-limit=`@dr`(add ~s5 turn-time-limit.c-data)
       time-limit-seconds=time-limit-seconds.c-data
       players=players
       paused=%.n
@@ -332,7 +334,7 @@
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       hand-is-over=%.y
-      turn-timer=`@da`(add now.bowl turn-time-limit.c-data)
+      turn-timer=`@da`(add now.bowl turn-time-limit.new-game-state)
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])

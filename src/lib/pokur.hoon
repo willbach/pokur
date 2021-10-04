@@ -109,7 +109,7 @@
     (deal-to-board 1)
 
 ::  draws n cards (after burning 1) from deck, 
-::  appends them to board state, and sets action 
+::  appends them to end of board, and sets action 
 ::  to the next unfolded player left of dealer
   ++  deal-to-board
     |=  n=@ud
@@ -120,8 +120,8 @@
       rest:turn
     =.  board.game.state
       %+  weld
-        hand:turn
-      board.game.state
+        board.game.state
+      hand:turn
     :: setting who goes first in betting round here
     =.  whose-turn.game.state
       dealer.game.state 
@@ -622,6 +622,7 @@
   ?:  |(=(histogram ~[2 2 1 1]) =(histogram ~[2 2 2]))
     2
   =/  is-pair  =(histogram ~[2 1 1 1 1])
+  ~&  >>  "it's a pair."
   :: at this point, must sort hand
   =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   :: check for flush

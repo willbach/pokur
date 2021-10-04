@@ -49,6 +49,7 @@ const GameInfo = ({ game }) => {
                 </p>
               </div>
         ))}
+        {/*
         <div className="player-seat">
           <div className="player-cards">
           <div className="small-card hidden" />
@@ -78,13 +79,13 @@ const GameInfo = ({ game }) => {
           <div className="small-card hidden" />
           <div className="small-card hidden" />
           </div>
-        </div>
+        </div> */}
         <div className="board">
           {game.board.map(card => (
             <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
             ))}
         </div>
-        <h3>Pot: ${calcFullPot(game.pot)}</h3>
+        <h3>Pot: ${calcFullPot(game.pots[0].val)}</h3>
       </div>
     </>
   );
