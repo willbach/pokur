@@ -44,8 +44,9 @@
           :~  ['val' (numb:enjs -.p)]
               ['players_in' [%a (turn +.p ship:enjs)]]
           ==
+          ['current_round' (numb:enjs current-round.game.upd)]
           ['current_bet' (numb:enjs current-bet.game.upd)]
-          ['min_bet' (numb:enjs min-bet.game.upd)]
+          ['min_bet' (numb:enjs (snag min-bets.game.upd current-round.game.upd))]
           ['last_bet' (numb:enjs last-bet.game.upd)]
           :-  'board'
           :-  %a

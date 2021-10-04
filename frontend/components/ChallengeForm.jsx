@@ -77,7 +77,9 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           Game type: 
           <select name="gameType">
             <option value="cash">Cash</option>
-            <option value="tournament">Tournament (not yet functional)</option>
+            <option value="turbo">Turbo Tournament</option>
+            <option value="fast">Fast Tournament</option>
+            <option value="slow">Slow Tournament</option>
           </select>
         </label>
         <br />

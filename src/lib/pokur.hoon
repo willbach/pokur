@@ -257,18 +257,37 @@
       (get-next-unfolded-player dealer.game.state players.game.state)
     =.  big-blind.game.state   
       (get-next-unfolded-player small-blind.game.state players.game.state)
+    :: if game type is Cash, just use the first item in min-bets
+    :: if Tournament, set blinds based on round we're on
+    =/  new-min-bet
+      %+  snag
+        min-bets.game.state
+      :: this will be 0 in a cash game
+      current-round.game.state
     =.  state
       %+  commit-chips 
         small-blind.game.state 
-      (div min-bet.game.state 2)
+      :: Small blind: 1/2 of big blind
+      (div new-min-bet 2)
     =.  state
       %+  commit-chips
         big-blind.game.state
-      min-bet.game.state
+      :: Big blind: equal to minimum bet
+      new-min-bet
     =.  current-bet.game.state
-      min-bet.game.state
+      new-min-bet
     =.  last-bet.game.state
-      min-bet.game.state
+      new-min-bet
+    state
+
+::  this gets called when a tournament round timer runs out
+::  it increments the round and sets an update message in the game state
+  ++  increment-current-round
+    ^-  server-game-state
+    =.  current-round.game.state
+    (add 1 current-round.game.state)
+    =.  update-message.game.state
+    "Round {<current-round.game.state>} beginning now"
     state
 
 ::  given a list of [winner [rank hand]], send them the pot. prepare for next hand 
@@ -362,7 +381,6 @@
       ?:  =(winning-rank 10)
         "{<winning-ships>} wins hand"
       "{<winning-ships>} wins hand with {<(hierarchy-to-rank winning-rank)>}"
-    :: TODO: BLINDS UP/DOWN etc should be here?
     state
 
 ::  given a player and a poker-action, handles the action.

@@ -24,7 +24,7 @@
 ::
 :: poker game types
 ::
-+$  poker-game-type  ?(%cash %tournament) :: will need to be fleshed out
++$  poker-game-type  ?(%cash %turbo %fast %slow) :: will need to be fleshed out
 ::
 ::  This is the data a poker-server holds for a given game
 ::  Game state pertaining to a player stored in 'game'
@@ -50,8 +50,10 @@
     hands-played=@ud
     chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
     pots=(list [@ud (list ship)]) :: usually just one, but side pots are stored here.
+    current-round=@ud :: set to 0 if cash game
     current-bet=@ud
-    min-bet=@ud
+    min-bets=(list @ud)
+    round-duration=(unit @dr)
     last-bet=@ud
     board=poker-deck
     my-hand=poker-deck
@@ -71,8 +73,8 @@
     challenger=ship :: person who issued challenge
     players=(list [player=ship accepted=? declined=?])
     host=ship :: address of poker-server used for game
-    min-bet=@ud
-    starting-stack=@ud
+    min-bet=@ud :: only for cash games
+    starting-stack=@ud :: only for cash games
     type=poker-game-type
     turn-time-limit=@dr
     time-limit-seconds=@ud :: for frontend parsing only

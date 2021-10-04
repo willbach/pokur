@@ -115,6 +115,8 @@
   ^-  (quip card _this)
   ?+  wire  (on-arvo:def wire sign-arvo)
     [%timer @ta ~]
+  :: TODO: check here if timer is a player timeout or tournament round
+  :: use increment-current-round if it's a round timer, and set a new one
   :: the timer ran out.. a player didn't make a move in time
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
   ~&  >>>  "SERVER: Player timed out on game {<game-id>} at {<now.bowl>}"
@@ -296,12 +298,40 @@
       players.challenge.server-action
     |=  [player=ship ? ?]
     player
-  =/  c-data  challenge.server-action  
+  =/  c-data  challenge.server-action
+  :: TOURNAMENT STRUCTURE STORED HERE
+  :: set values for tournament
+  =/  round-duration
+    ?-  type.c-data
+      %cash
+      ~
+      %turbo
+      ~m5
+      %fast
+      ~m10
+      %slow
+      ~m20
+    ==
+  =/  min-bets-list
+    ?:  =(type.c-data %cash)
+      ~[min-bet.c-data]
+    ~[20 40 60 100 150 200 300 400 600 800 1000 1500 2000 3000]
+  =/  starting-stack
+    ?-  type.c-data
+      %cash
+      starting-stack.c-data
+      %turbo
+      1000
+      %fast
+      1000
+      %slow
+      1000
+    ==
   =/  chips
-    %+  turn 
+    %+  turn
       players
     |=  player=ship
-    [player starting-stack.challenge.server-action 0 %.n %.n %.n]
+    [player starting-stack 0 %.n %.n %.n]
   =/  new-game-state
     [
       game-id=id.c-data
@@ -317,8 +347,10 @@
       hands-played=0
       chips=chips
       pots=~[[0 players]]
+      current-round=0 :: stays at 0 for cash games
       current-bet=0
-      min-bet=min-bet.c-data
+      min-bets=min-bets-list
+      round-duration=round-duration
       last-bet=0
       board=~
       my-hand=~
@@ -358,6 +390,7 @@
           %pokur-server-action
           !>([%set-timer id.c-data turn-timer.new-server-state])
       ==
+      :: TODO init first *round timer*, if in tournament
     ==
     ::
     %leave-game
