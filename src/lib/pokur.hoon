@@ -534,6 +534,7 @@
       next-round
     state
   --
+
 ::
 ::  Hand evaluation and sorted helper arms
 ::
@@ -542,104 +543,86 @@
 ++  evaluate-hand
   |=  hand=poker-deck
   ^-  [@ud poker-deck]
-  =/  get-sub-hand
-    |=  [c=@ud h=poker-deck]
-    ::  generate a hand without card c
-    [(oust [c 1] h) h]
-  =/  possible-6-hands  
-    %+  turn 
-      p:(spin (gulf 0 6) hand get-sub-hand)
-    |=(h=poker-deck [(eval-6-cards h) h])
-  =.  possible-6-hands
-    %+  sort 
-      possible-6-hands 
-    |=  [a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]]
-    (gth r.a r.b)
-  ::  need to break ties between equally-ranked hands here
-  =/  best-6-hand-rank
-    -.-.possible-6-hands
-  =.  possible-6-hands
-    %+  skim
-      possible-6-hands
-    |=  [r=@ud h=poker-deck]
-    ^-  ?
-    =(r best-6-hand-rank)
-  =/  best-6-hand
-    ?:  (gth (lent possible-6-hands) 1) 
-      %-  head
-      %+  sort
-        possible-6-hands
-      :: break-ties doesn't *really* work for hands that aren't
-      :: pure 5-cards, but since 6-hands can't have two discrete
-      :: straights, full houses or flushes, this shouldn't ever
-      :: discard a superior hand.
-      break-ties
-    (head possible-6-hands)
-  =/  possible-5-hands
-    %+  turn
-      p:(spin (gulf 0 5) +.best-6-hand get-sub-hand)
-    |=(h=poker-deck [(eval-5-cards h) h])
-  =.  possible-5-hands
+  =/  removal-pairs
+  :~  [0 1]  [0 2]  [0 3]  [0 4]  [0 5]  [0 6]
+      [1 2]  [1 3]  [1 4]  [1 5]  [1 6]
+      [2 3]  [2 4]  [2 5]  [2 6]
+      [3 4]  [3 5]  [3 6]
+      [4 5]  [4 6]
+      [5 6]
+  ==
+
+  =/  possible-5-card-hands
+  %^    spin
+      `(list [@ud @ud])`removal-pairs
+    hand
+  |=  [r=[@ud @ud] h=poker-deck]
+  ^-  [[@ud poker-deck] poker-deck]
+  =/  new-hand
+  (oust [-.r 1] (oust [+.r 1] h))
+  [[(eval-5-cards new-hand) new-hand] h]
+
+  =/  sorted-5-card-hands
     %+  sort
-      possible-5-hands 
+      p.possible-5-card-hands
     |=  [a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]]
     (gth r.a r.b)
+    
   ::  elimate any hand without a score that matches top hand
   ::  if there are multiple, sort them by break-ties
   =/  best-hand-rank
-    -.-.possible-5-hands
-  =.  possible-5-hands
+    -.-.sorted-5-card-hands
+  =.  sorted-5-card-hands
     %+  skim
-      possible-5-hands
+      sorted-5-card-hands
     |=  [r=@ud h=poker-deck]
     ^-  ?
     =(r best-hand-rank)
-  ?:  (gth (lent possible-5-hands) 1)
-    =.  possible-5-hands
+  :: break any ties
+  ?:  (gth (lent sorted-5-card-hands) 1)
+    =.  sorted-5-card-hands
       %+  sort
-        possible-5-hands
+        sorted-5-card-hands
       break-ties
-    (head possible-5-hands)
-  (head possible-5-hands)
+    (head sorted-5-card-hands)
+  (head sorted-5-card-hands)
 
+:: arm for players to evaluate their hand before the river
+:: this is the same as evaluate-hand, just with 6 cards
 ++  eval-6-cards
   |=  hand=poker-deck
   ^-  @ud
-  :: check for pairs 
-  =/  make-histogram
-    |=  [c=[@ud @ud] h=(list @ud)]
-      =/  new-hist  (snap h -.c (add 1 (snag -.c h)))
-      [c new-hist]
-  =/  r  (spin (turn hand card-to-raw) (reap 13 0) make-histogram) 
-  =/  raw-hand  p.r
-  =/  histogram  (sort (skip q.r |=(x=@ud =(x 0))) gth)
-  ?:  |(=(histogram ~[4 1 1]) =(histogram ~[4 2]))
-    7
-  ?:  |(=(histogram ~[3 2 1]) =(histogram ~[3 3]))
-    6
-  ?:  =(histogram ~[3 1 1 1])
-    3
-  ?:  |(=(histogram ~[2 2 1 1]) =(histogram ~[2 2 2]))
-    2
-  =/  is-pair  =(histogram ~[2 1 1 1 1])
-  ~&  >>  "it's a pair."
-  :: at this point, must sort hand
-  =.  raw-hand  (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
-  :: check for flush
-  =/  is-flush  (check-6-hand-flush raw-hand)
-  :: check for straight
-  =/  is-straight  (check-6-hand-straight raw-hand)
-  ?:  &(is-straight is-flush)
-    8
-  ?:  is-flush
-    5
-  ?:  is-straight
-    4
-  :: check down here cause this can possibly contain flush
-  ?:  is-pair
-    1
-  0
+  =/  possible-5-card-hands
+  %^    spin
+      (gulf 0 5)
+    hand
+  |=  [r=@ud h=poker-deck]
+  ^-  [[@ud poker-deck] poker-deck]
+  =/  new-hand
+  (oust [r 1] h)
+  [[(eval-5-cards new-hand) new-hand] h] 
+  =/  sorted-5-card-hands
+    %+  sort
+      p.possible-5-card-hands
+    |=  [a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]]
+    (gth r.a r.b)
+  =/  best-hand-rank
+    -.-.sorted-5-card-hands
+  =.  sorted-5-card-hands
+    %+  skim
+      sorted-5-card-hands
+    |=  [r=@ud h=poker-deck]
+    ^-  ?
+    =(r best-hand-rank)
+  ?:  (gth (lent sorted-5-card-hands) 1)
+    =.  sorted-5-card-hands
+      %+  sort
+        sorted-5-card-hands
+      break-ties
+    -:(head sorted-5-card-hands)
+  -:(head sorted-5-card-hands)
 
+::
 ++  eval-5-cards
   |=  hand=poker-deck
   ^-  @ud 
@@ -681,16 +664,6 @@
   0
 
 ::
-++  check-6-hand-flush
-  |=  raw-hand=(list [@ud @ud])
-  ^-  ?
-  =/  f
-    |=  [c=@ud h=(list [@ud @ud])]
-    ::  generate a hand without card c
-    [(oust [c 1] h) h]
-  (lien (turn p:(spin (gulf 0 5) raw-hand f) check-5-hand-flush) |=(a=? a))
-
-::
 ++  check-5-hand-flush
   |=  raw-hand=(list [@ud @ud])
   ^-  ?
@@ -699,16 +672,6 @@
     |=  c=[@ud @ud]
       =(+.c first-card-suit)
   (levy raw-hand suit-check)
-
-:: **hand must be sorted before using this
-++  check-6-hand-straight
-  |=  raw-hand=(list [@ud @ud])
-  ^-  ?
-  =/  f
-    |=  [c=@ud h=(list [@ud @ud])]
-    ::  generate a hand without card c
-    [(oust [c 1] h) h]
-  (lien (turn p:(spin (gulf 0 5) raw-hand f) check-5-hand-straight) |=(a=? a))
 
 :: **hand must be sorted before using this
 ++  check-5-hand-straight

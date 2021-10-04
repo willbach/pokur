@@ -428,7 +428,6 @@
   ^-  tang
   =/  hand
   ~[[%6 %hearts] [%10 %spades] [%8 %clubs] [%7 %clubs] [%8 %hearts] [%king %clubs]] 
-  ~&  >>  (eval-6-cards hand)
   ?>  =(1 (eval-6-cards hand))
   ~
 :: 5-card hand evaluation tests
