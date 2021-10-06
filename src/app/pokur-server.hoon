@@ -114,6 +114,57 @@
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
   ?+  wire  (on-arvo:def wire sign-arvo)
+  :: ROUND TIMER wire (for tournaments)
+    [%timer @ta %round-timer ~]
+  =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
+  ~&  >>>  "SERVER: Round ended on game {<game-id>} at {<now.bowl>}"
+  =/  game
+    (~(get by active-games.state) game-id)
+  ?~  game
+    ~&  >>>  "server error: round timer popped on non-existent game."
+    :-  ~  this
+  =/  game  u.game
+  :: if no players left in game, poke ourselves to end it
+  ?:  %+  levy
+        chips.game.game
+      |=  [ship @ud @ud ? ? left=?]
+      left
+    :_  this
+    :~
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%end-game game-id.game.game])
+      ==
+    ==
+  =.  game
+  ~(increment-current-round modify-state game)
+  =.  active-games.state
+  (~(put by active-games.state) [game-id game])
+  =/  cards
+  :~  :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%send-game-updates game])
+      ==
+      :: set new round timer 
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%set-timer game-id %round `@da`(add now.bowl (need round-duration.game.game))])
+      ==
+  ==
+  [cards this]
+  :: TURN TIMER wire
     [%timer @ta ~]
   :: TODO: check here if timer is a player timeout or tournament round
   :: use increment-current-round if it's a round timer, and set a new one
@@ -219,7 +270,7 @@
           [our.bowl %pokur-server]
           %poke
           %pokur-server-action
-          !>([%set-timer game-id new-timer])
+          !>([%set-timer game-id %turn new-timer])
       ==
     ==
   :: there's no ongoing timer to cancel, just set new
@@ -230,7 +281,7 @@
         [our.bowl %pokur-server]
         %poke
         %pokur-server-action
-        !>([%set-timer game-id new-timer])
+        !>([%set-timer game-id %turn new-timer])
     ==
   ==
   =.  turn-timer.game  new-timer
@@ -265,11 +316,18 @@
   ?-  -.server-action
     %set-timer
   ?>  (team:title [our src]:bowl)
-  ~&  >>>  "SERVER: setting turn timer"
+  ~&  >>>  "SERVER: setting timer"
+  =/  timer-path
+  ?-  type.server-action
+    %turn
+  /timer/(scot %da game-id.server-action)
+    %round
+  /timer/(scot %da game-id.server-action)/round-timer
+  ==
   :_  state
     :~
       :*  %pass
-          /timer/(scot %da game-id.server-action)
+          timer-path
           %arvo
           %b
           %wait
@@ -279,7 +337,7 @@
     ::
     %cancel-timer
   ?>  (team:title [our src]:bowl)
-  ~&  >>>  "SERVER: canceling turn timer"
+  ~&  >>>  "SERVER: canceling timer"
   :_  state
     :~
       :*  %pass
@@ -306,26 +364,26 @@
       %cash
       ~
       %turbo
-      ~m5
+      (some ~m5)
       %fast
-      ~m10
+      (some ~m10)
       %slow
-      ~m20
+      (some ~m20)
     ==
   =/  min-bets-list
     ?:  =(type.c-data %cash)
       ~[min-bet.c-data]
-    ~[20 40 60 100 150 200 300 400 600 800 1000 1500 2000 3000]
+    ~[20 40 60 100 150 200 300 400 600 800 1.000 1.500 2.000 3.000]
   =/  starting-stack
     ?-  type.c-data
       %cash
       starting-stack.c-data
       %turbo
-      1000
+      1.000
       %fast
-      1000
+      1.000
       %slow
-      1000
+      1.000
     ==
   =/  chips
     %+  turn
@@ -348,6 +406,7 @@
       chips=chips
       pots=~[[0 players]]
       current-round=0 :: stays at 0 for cash games
+      round-over=%.n
       current-bet=0
       min-bets=min-bets-list
       round-duration=round-duration
@@ -370,8 +429,7 @@
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])
-  :_  state
-    :: init first hand here
+  =/  init-cards
     :~  
       :*  %pass
           /poke-wire
@@ -388,9 +446,24 @@
           [our.bowl %pokur-server]
           %poke
           %pokur-server-action
-          !>([%set-timer id.c-data turn-timer.new-server-state])
+          !>([%set-timer id.c-data %turn turn-timer.new-server-state])
       ==
-      :: TODO init first *round timer*, if in tournament
+    ==
+  :_  state
+    :: init first *round timer*, if in tournament
+    ?:  =(type.c-data %cash)  
+      init-cards
+    %+  weld
+      init-cards
+    :~
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%set-timer id.c-data %round `@da`(add now.bowl (need round-duration))])
+      ==
     ==
     ::
     %leave-game

@@ -46,7 +46,7 @@
           ==
           ['current_round' (numb:enjs current-round.game.upd)]
           ['current_bet' (numb:enjs current-bet.game.upd)]
-          ['min_bet' (numb:enjs (snag min-bets.game.upd current-round.game.upd))]
+          ['min_bet' (numb:enjs (snag current-round.game.upd min-bets.game.upd))]
           ['last_bet' (numb:enjs last-bet.game.upd)]
           :-  'board'
           :-  %a

@@ -51,6 +51,7 @@
     chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
     pots=(list [@ud (list ship)]) :: usually just one, but side pots are stored here.
     current-round=@ud :: set to 0 if cash game
+    round-over=? :: set to indicate that next hand should increment current-round
     current-bet=@ud
     min-bets=(list @ud)
     round-duration=(unit @dr)
@@ -128,7 +129,7 @@
     [%initialize-hand game-id=@da]
     [%send-game-updates game=server-game-state]
     [%end-game game-id=@da]
-    [%set-timer game-id=@da time=@da]
+    [%set-timer game-id=@da type=?(%turn %round) time=@da]
     [%cancel-timer game-id=@da time=@da]
     [%wipe-all-games ~]
   ==

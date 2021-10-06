@@ -261,9 +261,9 @@
     :: if Tournament, set blinds based on round we're on
     =/  new-min-bet
       %+  snag
-        min-bets.game.state
-      :: this will be 0 in a cash game
-      current-round.game.state
+        :: this will always be 0 in a cash game
+        current-round.game.state
+      min-bets.game.state
     =.  state
       %+  commit-chips 
         small-blind.game.state 
@@ -281,13 +281,20 @@
     state
 
 ::  this gets called when a tournament round timer runs out
-::  it increments the round and sets an update message in the game state
+::  it tells us to increment when current hand is over
+::  and sets an update message in the game state
   ++  increment-current-round
     ^-  server-game-state
-    =.  current-round.game.state
-    (add 1 current-round.game.state)
+    =.  round-over.game.state
+    %.y
+    =/  new-min-bet
+    %+  snag
+      (add 1 current-round.game.state)
+    min-bets.game.state
+    =/  new-blinds
+    [(div new-min-bet 2) new-min-bet]
     =.  update-message.game.state
-    "Round {<current-round.game.state>} beginning now"
+    "Round {<current-round.game.state>} beginning at next hand. New blinds: {<-.new-blinds>}/{<+.new-blinds>}"
     state
 
 ::  given a list of [winner [rank hand]], send them the pot. prepare for next hand 
@@ -356,14 +363,18 @@
       [pot chips]
     :: take hands away, clear board, clear bet, clear pot
     =.  chips.game.state         q.new-chips
-    =.  pots.game.state           ~[[0 players.game.state]]
+    =.  pots.game.state          ~[[0 players.game.state]]
     =.  board.game.state         ~
     =.  current-bet.game.state   0
     =.  last-bet.game.state      0
     =.  hands.state              ~
-    :: inc hands-played
+    :: if round is over, increment it
+    =.  current-round.game.state
+    ?.  round-over.game.state
+      current-round.game.state
+    (add 1 current-round.game.state)
+    =.  round-over.game.state    %.n
     =.  hands-played.game.state  +(hands-played.game.state)
-    :: set fresh deck
     =.  deck.state               generate-deck
     :: set any players with stack of 0 to folded
     =.  chips.game.state
@@ -415,6 +426,11 @@
       %+  add 
         amount.action 
       committed:(get-player-chips who chips.game.state)
+    =/  current-min-bet
+      %+  snag
+        :: this will always be 0 in a cash game
+        current-round.game.state
+      min-bets.game.state
     :: ALL-IN logic here
     ?:  ?|  =(amount.action stack)
             (gth amount.action stack)
@@ -442,7 +458,7 @@
     :: resume logic for not-all-in
     ?:  ?&  
           =(current-bet.game.state 0)
-          (lth bet-plus-committed min-bet.game.state)
+          (lth bet-plus-committed current-min-bet)
         ==
       !!  :: this is a starting bet below min-bet
     ?:  =(bet-plus-committed current-bet.game.state)
