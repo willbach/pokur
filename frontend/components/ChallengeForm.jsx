@@ -3,13 +3,23 @@ import React, { useState } from 'react';
 const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
   const [sendToList, setSendToList] = useState({0:''});
   const [addPlayerText, setAddPlayerText] = useState("Add Player");
+  const [showCashOptions, setShowCashOptions] = useState(false);
 
   const handleChange = (target) => {
     const id = target.id;
     setSendToList({...sendToList, [id]: target.value });
   };
 
-  const addToInput = () => {
+  const showOrHideCashOptions = (target) => {
+    if (target.value == "cash") {
+      setShowCashOptions(true);
+    } else {
+      setShowCashOptions(false);
+    }
+  };
+
+  const addToInput = (e) => {
+    e.preventDefault();
     var n = Object.keys(sendToList).length;
     if (n >= 7) {
       setAddPlayerText("8 player maximum for cash games");
@@ -22,10 +32,9 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
     if (!sentChallenge) {
       e.preventDefault();
       const to = Object.values(sendToList);
-      urb.poke({
-        app: 'pokur',
-        mark: 'pokur-client-action',
-        json: {
+      var json;
+      if (e.target.gameType.value == "cash") {
+        json = {
           'issue-challenge': {
             'to': to,
             'host': e.target.host.value,
@@ -36,6 +45,23 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             'time-limit-seconds': parseInt(e.target.turnTimer.value),
           }
         }
+      } else {
+        json = {
+          'issue-challenge': {
+            'to': to,
+            'host': e.target.host.value,
+            'type': e.target.gameType.value,
+            'min-bet': 0,
+            'starting-stack': 0,
+            'turn-time-limit': "s" + parseInt(e.target.turnTimer.value),
+            'time-limit-seconds': parseInt(e.target.turnTimer.value),
+          }
+        }
+      }
+      urb.poke({
+        app: 'pokur',
+        mark: 'pokur-client-action',
+        json: json,
       });
       setSentChallenge(true);
     } else {
@@ -54,7 +80,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
             <input name="to" id={i} type="text" value={data} onChange={e => handleChange(e.target)} />
         </label>
         ))}
-        <button onClick={() => addToInput()}>
+        <button onClick={e => addToInput(e)}>
           {addPlayerText}
         </button>
         <br />
@@ -63,6 +89,20 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           <input name="host" type="text"/>
         </label>
         <br />
+        <br />
+        <label>
+          Game type: 
+          <select name="gameType" onChange={e => showOrHideCashOptions(e.target)}>
+            <option value="turbo">Turbo Tournament</option>
+            <option value="fast">Fast Tournament</option>
+            <option value="slow">Slow Tournament</option>
+            <option value="cash">Cash</option>
+          </select>
+        </label>
+        <br />
+        {showCashOptions
+        ?
+        <>
         <label>
           Min. bet / big blind size: $
           <input name="minBet" type="number"/>
@@ -72,16 +112,9 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           Starting stack size: $
           <input name="stackSize" type="number"/>
         </label>
-        <br />
-        <label>
-          Game type: 
-          <select name="gameType">
-            <option value="cash">Cash</option>
-            <option value="turbo">Turbo Tournament</option>
-            <option value="fast">Fast Tournament</option>
-            <option value="slow">Slow Tournament</option>
-          </select>
-        </label>
+        </>
+        : <></>
+        }
         <br />
         <label>
           Turn time limit (in seconds):
