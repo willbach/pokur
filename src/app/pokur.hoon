@@ -5,7 +5,7 @@
     $%  state-zero
     ==
 +$  state-zero
-    $:  game=(unit poker-game-state)
+    $:  game=(unit pokur-game-state)
         challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
         challenges-received=(map @da pokur-challenge)
     ==
@@ -112,8 +112,8 @@
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
       %fact
-      =/  new-state=poker-game-state  
-        !<(poker-game-state q.cage.sign)
+      =/  new-state=pokur-game-state  
+        !<(pokur-game-state q.cage.sign)
       =/  my-hand-eval
         =/  full-hand  (weld my-hand.new-state board.new-state)
         ?+  (lent full-hand)  100 :: fake rank number to induce "-"

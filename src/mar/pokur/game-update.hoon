@@ -52,7 +52,7 @@
           :-  %a
           %+  turn
             board.game.upd
-          |=  c=poker-card:pokur
+          |=  c=pokur-card:pokur
           %-  pairs:enjs 
           :~  ['val' (numb:enjs (card-val-to-atom:pokur -.c))]
               ['suit' [%s +.c]]
@@ -61,7 +61,7 @@
           :-  %a
           %+  turn
             my-hand.game.upd
-          |=  c=poker-card:pokur
+          |=  c=pokur-card:pokur
           %-  pairs:enjs 
             :~  ['val' (numb:enjs (card-val-to-atom:pokur -.c))]
                 ['suit' [%s +.c]]

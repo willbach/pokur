@@ -2,7 +2,7 @@
   "name": "pokur",
   "version": "0.0.3",
   "private": true,
-  "description": "Play poker on Urbit",
+  "description": "Play Texas Hold'em on Urbit",
   "author": "~hodzod-walrus",
   "babel": {
     "presets": [

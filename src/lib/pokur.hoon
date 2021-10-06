@@ -6,7 +6,7 @@
 ::  modifies game-state with hand from 
 ::  server-state to send copy to given player
   ++  make-player-cards 
-    |=  hand=[ship poker-deck]
+    |=  hand=[ship pokur-deck]
     =.  my-hand.game.state
       (tail hand)
     :^  %give 
@@ -43,7 +43,7 @@
       turn-river
     ?:  =(5 n)
       (process-win (determine-winner hands.state))
-    poker-flop
+    pokur-flop
 
 ::  **takes in a shuffled deck**
 ::  assign dealer, assign blinds, assign first action 
@@ -96,7 +96,7 @@
       dealt-count  (dec dealt-count)
     ==
 
-  ++  poker-flop
+  ++  pokur-flop
     ^-  server-game-state
     =.  state
       committed-chips-to-pot
@@ -300,13 +300,13 @@
 ::  given a list of [winner [rank hand]], send them the pot. prepare for next hand 
 ::  by clearing board, hands and bets, reset fold status, increment hands-played.
   ++  process-win
-    |=  winners=(list [ship [@ud poker-deck]])
+    |=  winners=(list [ship [@ud pokur-deck]])
     ^-  server-game-state
     :: get ship names
     =/  winning-ships
     %+  turn
       winners
-    |=  a=[ship [@ud poker-deck]]
+    |=  a=[ship [@ud pokur-deck]]
     -.a
     =/  winning-rank  -.+:(head winners)
     :: sends any extra committed chips to pot
@@ -337,7 +337,7 @@
         =/  hands-in-pot
           %+  skim
             hands.state
-          |=  [p=ship hand=poker-deck]
+          |=  [p=ship hand=pokur-deck]
           ?^  (find [p]~ players-in.pot)
             %.y
           %.n
@@ -394,7 +394,7 @@
       "{<winning-ships>} wins hand with {<(hierarchy-to-rank winning-rank)>}"
     state
 
-::  given a player and a poker-action, handles the action.
+::  given a player and a pokur-action, handles the action.
 ::  currently checks for being given the wrong player (not their turn),
 ::  bad bet (2x existing bet, >BB, or matches current bet (call)),
 ::  and trying to check when there's a bet to respond to.
@@ -520,10 +520,10 @@
 :: It returns a list of winning ships, which usually contains just
 :: the one, but can have up to n ships all tied. 
   ++  determine-winner
-    |=  hands=(list [ship poker-deck])
-    ^-  (list [ship [@ud poker-deck]])
+    |=  hands=(list [ship pokur-deck])
+    ^-  (list [ship [@ud pokur-deck]])
     =/  eval-each-hand
-      |=  [who=ship hand=poker-deck]
+      |=  [who=ship hand=pokur-deck]
       =/  hand  
         (weld hand board.game.state)  
       [who (evaluate-hand hand)]
@@ -532,21 +532,21 @@
     =/  player-ranks  
       %+  sort 
         hand-ranks 
-      |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
+      |=  [a=[p=ship [r=@ud h=pokur-deck]] b=[p=ship [r=@ud h=pokur-deck]]]
       (gth r.a r.b)
     :: check for tie(s) and break before returning winner
     ?:  =(-.+.-.player-ranks -.+.+<.player-ranks)
       =/  player-ranks
       %+  sort
         player-ranks
-      |=  [a=[p=ship [r=@ud h=poker-deck]] b=[p=ship [r=@ud h=poker-deck]]]
+      |=  [a=[p=ship [r=@ud h=pokur-deck]] b=[p=ship [r=@ud h=pokur-deck]]]
       ^-  ?
       (break-ties +.a +.b)
       :: then check for identical hands, in which case pot must be split.
       =/  winning-players
         %+  skim
           player-ranks
-        |=  a=[p=ship [r=@ud h=poker-deck]]
+        |=  a=[p=ship [r=@ud h=pokur-deck]]
         (hands-equal h.a +.+:(head player-ranks))
       ?:  %+  gth
             (lent winning-players)
@@ -575,8 +575,8 @@
 :: **returns a cell of [hierarchy-number hand]
 :: where hand is the strongest 5 cards evaluated.
 ++  evaluate-hand
-  |=  hand=poker-deck
-  ^-  [@ud poker-deck]
+  |=  hand=pokur-deck
+  ^-  [@ud pokur-deck]
   =/  removal-pairs
   :~  [0 1]  [0 2]  [0 3]  [0 4]  [0 5]  [0 6]
       [1 2]  [1 3]  [1 4]  [1 5]  [1 6]
@@ -590,8 +590,8 @@
   %^    spin
       `(list [@ud @ud])`removal-pairs
     hand
-  |=  [r=[@ud @ud] h=poker-deck]
-  ^-  [[@ud poker-deck] poker-deck]
+  |=  [r=[@ud @ud] h=pokur-deck]
+  ^-  [[@ud pokur-deck] pokur-deck]
   =/  new-hand
   (oust [-.r 1] (oust [+.r 1] h))
   [[(eval-5-cards new-hand) new-hand] h]
@@ -599,7 +599,7 @@
   =/  sorted-5-card-hands
     %+  sort
       p.possible-5-card-hands
-    |=  [a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]]
+    |=  [a=[r=@ud h=pokur-deck] b=[r=@ud h=pokur-deck]]
     (gth r.a r.b)
     
   ::  elimate any hand without a score that matches top hand
@@ -609,7 +609,7 @@
   =.  sorted-5-card-hands
     %+  skim
       sorted-5-card-hands
-    |=  [r=@ud h=poker-deck]
+    |=  [r=@ud h=pokur-deck]
     ^-  ?
     =(r best-hand-rank)
   :: break any ties
@@ -624,28 +624,28 @@
 :: arm for players to evaluate their hand before the river
 :: this is the same as evaluate-hand, just with 6 cards
 ++  eval-6-cards
-  |=  hand=poker-deck
+  |=  hand=pokur-deck
   ^-  @ud
   =/  possible-5-card-hands
   %^    spin
       (gulf 0 5)
     hand
-  |=  [r=@ud h=poker-deck]
-  ^-  [[@ud poker-deck] poker-deck]
+  |=  [r=@ud h=pokur-deck]
+  ^-  [[@ud pokur-deck] pokur-deck]
   =/  new-hand
   (oust [r 1] h)
   [[(eval-5-cards new-hand) new-hand] h] 
   =/  sorted-5-card-hands
     %+  sort
       p.possible-5-card-hands
-    |=  [a=[r=@ud h=poker-deck] b=[r=@ud h=poker-deck]]
+    |=  [a=[r=@ud h=pokur-deck] b=[r=@ud h=pokur-deck]]
     (gth r.a r.b)
   =/  best-hand-rank
     -.-.sorted-5-card-hands
   =.  sorted-5-card-hands
     %+  skim
       sorted-5-card-hands
-    |=  [r=@ud h=poker-deck]
+    |=  [r=@ud h=pokur-deck]
     ^-  ?
     =(r best-hand-rank)
   ?:  (gth (lent sorted-5-card-hands) 1)
@@ -658,7 +658,7 @@
 
 ::
 ++  eval-5-cards
-  |=  hand=poker-deck
+  |=  hand=pokur-deck
   ^-  @ud 
   :: check for pairs 
   =/  make-histogram
@@ -722,7 +722,7 @@
 :: ONLY WORKS 100% for 5 card hands -- kickers BREAK THIS
 :: use in a sort function to sort hands with more granularity to find true winner
 ++  break-ties
-  |=  [hand1=[r=@ud h=poker-deck] hand2=[r=@ud h=poker-deck]]
+  |=  [hand1=[r=@ud h=pokur-deck] hand2=[r=@ud h=pokur-deck]]
   ^-  ?
   ::  if ranks are strictly better, just return that
   ::  otherwise break equally-ranked hands
@@ -730,7 +730,7 @@
     (gth r.hand1 r.hand2)
   ::  sort whole hands to start
   =/  sorter
-   |=  [a=poker-card b=poker-card]
+   |=  [a=pokur-card b=pokur-card]
      (gth (card-val-to-atom -.a) (card-val-to-atom -.b))
   =.  h.hand1  (sort h.hand1 sorter)
   =.  h.hand2  (sort h.hand2 sorter)
@@ -759,40 +759,40 @@
   :: if we get here we were given a wrong hand rank or a royal flush (can't tie those)
   %.n
 
-:: Sorts cards in poker-deck by frequency of value
+:: Sorts cards in pokur-deck by frequency of value
 :: **assumes it is getting a rank-sorted hand**
 ++  sort-hand-by-frequency
-  |=  hand=poker-deck
-  ^-  poker-deck
+  |=  hand=pokur-deck
+  ^-  pokur-deck
   ::  need to preserve sorting, other than moving pairs/sets to top
   ::  this is n^2 complexity and can/should be better... 
   =/  get-frequency
-    |=  c=poker-card
+    |=  c=pokur-card
     ^-  @ud
     %-  lent
       %+  skim
         hand
-      |=  [d=poker-card]
+      |=  [d=pokur-card]
         =(-.d -.c)  
   =/  sorted-cards-with-frequencies
     %+  sort
       %+  turn
         hand
-      |=  [c=poker-card]
+      |=  [c=pokur-card]
         [c (get-frequency c)]
-    |=  [a=[c=poker-card f=@ud] b=[c=poker-card f=@ud]]
+    |=  [a=[c=pokur-card f=@ud] b=[c=pokur-card f=@ud]]
       ?:  =(f.a f.b)
         (gth -.c.a -.c.b)
       (gth f.a f.b)
   :: get rid of freq counts for final return
   %+  turn
     sorted-cards-with-frequencies
-  |=  [c=poker-card f=@ud]
+  |=  [c=pokur-card f=@ud]
     c
 
 :: Utility function to check if two 5-card hands are the same.
 ++  hands-equal
-  |=  [hand1=poker-deck hand2=poker-deck]
+  |=  [hand1=pokur-deck hand2=pokur-deck]
   ^-  ?
   ?:  .=  (card-val-to-atom -:(head hand1))
       (card-val-to-atom -:(head hand2))
@@ -803,7 +803,7 @@
 
 :: %.y if hand1 has higher card, %.n if hand2 does  
 ++  find-high-card
-  |=  [hand1=poker-deck hand2=poker-deck]
+  |=  [hand1=pokur-deck hand2=pokur-deck]
   ^-  ?
   ?:  .=  (card-val-to-atom -:(head hand1))
       (card-val-to-atom -:(head hand2))
@@ -818,7 +818,7 @@
 
 ::  not actually using this anywhere
 ++  rank-to-hierarchy
-  |=  rank=poker-hand-rank
+  |=  rank=pokur-hand-rank
   ^-  @ud
   ?-  rank
     %royal-flush      9
@@ -850,7 +850,7 @@
   ==
 
 ++  card-to-raw
-  |=  c=poker-card
+  |=  c=pokur-card
   ^-  [@ud @ud]
   [(card-val-to-atom -.c) (suit-to-atom +.c)]
 
@@ -913,8 +913,8 @@
   ==
 
 ++  generate-deck
-  ^-  poker-deck
-  =|  new-deck=poker-deck
+  ^-  pokur-deck
+  =|  new-deck=pokur-deck
   =/  i  0
   |-
   ?:  (gth i 3)
@@ -931,9 +931,9 @@
 ::  given a deck and entropy, return shuffled deck
 ::  TODO: this could be better... not sure it's robust enough for real play
 ++  shuffle-deck
-  |=  [unshuffled=poker-deck entropy=@]
-  ^-  poker-deck
-  =|  shuffled=poker-deck
+  |=  [unshuffled=pokur-deck entropy=@]
+  ^-  pokur-deck
+  =|  shuffled=pokur-deck
   =/  random  ~(. og entropy)
   =/  remaining  (lent unshuffled)
   |-
@@ -949,8 +949,8 @@
 
 ::  gives back [hand rest] where hand is n cards from top of deck, rest is rest
 ++  draw
-  |=  [n=@ud d=poker-deck]
-  ^-  [hand=poker-deck rest=poker-deck]
+  |=  [n=@ud d=pokur-deck]
+  ^-  [hand=pokur-deck rest=pokur-deck]
   :-  (scag n d)
   (slag n d)
 --

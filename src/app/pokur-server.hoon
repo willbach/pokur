@@ -94,7 +94,7 @@
     :: find their hand
     ~&  >>  "SERVER: sending subscriber their game state"
     =.  my-hand.game.u.game
-      +.-:(skim hands.u.game |=([s=ship h=poker-deck] =(s u.player)))
+      +.-:(skim hands.u.game |=([s=ship h=pokur-deck] =(s u.player)))
     :_  this
       :~  :*  
             %give 
@@ -496,7 +496,7 @@
   =/  cards
   %+  turn 
     hands.game 
-  |=  hand=[ship poker-deck]
+  |=  hand=[ship pokur-deck]
   (~(make-player-cards modify-state game) hand)
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
@@ -509,7 +509,7 @@
   =/  cards
     %+  turn 
         hands.game.server-action 
-      |=  hand=[ship poker-deck]
+      |=  hand=[ship pokur-deck]
       (~(make-player-cards modify-state game.server-action) hand)  
   :_  state
     cards

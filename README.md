@@ -1,5 +1,5 @@
 # pokur
-Urbit poker app
+Urbit Texas Hold'em app
 
 How to install
 1. Run 'npm install', then 'npm run build'
