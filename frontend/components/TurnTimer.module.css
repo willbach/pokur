@@ -1,0 +1,29 @@
+.timer .countdown_bar {
+    width: 100%;
+    height: 20px;
+    background-color: white;
+}
+
+.timer .countdown_bar_filled {
+    height: 20px;
+    background-color: #04AA6D;
+    transition-property: width;
+    transition-duration: 1s;
+    transition-timing-function: cubic-bezier(0, 0, 1, 1);
+}
+
+.blinking_red {
+    color: red;
+    animation: blink-animation 1s steps(5, start) infinite;
+    -webkit-animation: blink-animation 1s steps(5, start) infinite;
+  }
+  @keyframes blink-animation {
+    to {
+      visibility: hidden;
+    }
+  }
+  @-webkit-keyframes blink-animation {
+    to {
+      visibility: hidden;
+    }
+  }

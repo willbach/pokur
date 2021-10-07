@@ -1,0 +1,147 @@
+.game_info {
+    text-align: center;
+    width: 200px;
+    font-size: 1em;
+    /* border: 1px solid black; */
+}
+
+.game_table {
+    position: relative;
+    margin: 0 auto;
+    margin-top: 100px;
+    margin-bottom: 75px;
+    padding-top: 100px;
+    width: 80%;
+    min-width: 860px;
+    min-height: 300px;
+    text-align: center;
+    border: 2px solid black;
+    border-radius: 200px;
+    background-color: var(--dark-red);
+    color: var(--light-text);
+}
+
+/* seating arrangements */
+
+.player_seat {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    padding: 6px;
+    left: 100px;
+    bottom: 0;
+    background-color: rgba(30, 30, 30, 0.8);
+    border-radius: 20px;
+    transform: translate(-50%, 50%);
+    font-size: 18px;
+}
+
+.player_seat .name_display {
+    width: 100%;
+    height: 25px;
+    margin-bottom: 3px;
+}
+
+.player_seat .name_display p {
+    display: inline;
+}
+
+.their_turn {
+    -webkit-box-shadow:inset 0px 0px 0px 3px #fff;
+    -moz-box-shadow:inset 0px 0px 0px 3px #fff;
+    box-shadow:inset 0px 0px 0px 3px #fff;
+}
+
+.player_seat:nth-of-type(2) {
+    left: 0;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.player_seat:nth-of-type(3) {
+    left: 25%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player_seat:nth-of-type(4) {
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player_seat:nth-of-type(5) {
+    left: 75%;
+    top: 0;
+    transform: translate(-50%, -50%);
+}
+
+.player_seat:nth-of-type(6) {
+    right: 0;
+    left: auto;
+    top: 50%;
+    transform: translate(50%, -50%);
+}
+
+.player_seat:nth-of-type(7) {
+    right: 100px;
+    left: auto;
+    bottom: 0;
+    transform: translate(50%, 50%);
+}
+
+.update_messages h3:nth-last-of-type(1) {
+    color: #ccc;
+}
+.update_messages h3:nth-last-of-type(2) {
+    color: #aaa;
+}
+.update_messages h3:nth-last-of-type(3) {
+    color: #777;
+}
+.update_messages h3:nth-last-of-type(4) {
+    color: #333;
+}
+.update_messages h3:nth-last-of-type(5) {
+    color: #000;
+}
+
+.game_table h3 {
+    font-size: 24px;
+}
+
+.small_card {
+    display: flex;
+    width: 40px;
+    height: 60px;
+    border: 2px solid black;
+}
+
+.small_card:nth-of-type(1) {
+    transform: rotate(-8deg) translate(10px);
+}
+
+.small_card:nth-of-type(2) {
+    transform: rotate(8deg) translate(-10px);
+}
+
+/* pattern sourced from https://www.magicpattern.design/tools/css-backgrounds */
+.small_card.hidden {
+    background-color: #c8c8c8;
+    background-image:  linear-gradient(30deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(150deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(30deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(150deg, #cf0000 12%, transparent 12.5%, transparent 87%, #cf0000 87.5%, #cf0000), linear-gradient(60deg, #cf000077 25%, transparent 25.5%, transparent 75%, #cf000077 75%, #cf000077), linear-gradient(60deg, #cf000077 25%, transparent 25.5%, transparent 75%, #cf000077 75%, #cf000077);
+    background-size: 8px 14px;
+    background-position: 0 0, 0 0, 4px 7px, 4px 7px, 0 0, 4px 7px;
+}
+
+.player_cards {
+    display: flex;
+    flex-flow: row wrap;
+    min-width: 64px;
+    justify-content: center;
+}
+
+.board {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+}

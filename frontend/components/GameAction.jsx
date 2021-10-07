@@ -1,6 +1,7 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card, TurnTimer } from '../components';
+import styles from './GameAction.module.css';
 
 const GameAction = ({ urb, game, myBet, setMyBet }) => {
 
@@ -28,73 +29,77 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
   const betToMatch = game.current_bet - myChips.committed;
 
   return (
-    <div className="player-info">
-      <div className="profile">
-        {window.ship.length <= 13
-         ? sigil({
-            patp: window.ship,
+    <>
+      {game.whose_turn == window.ship 
+       ? <TurnTimer countdown={game.time_limit_seconds} />
+       : <></>}
+      <div className={styles.player_info}>
+        <div className={styles.profile}>
+          {window.ship.length <= 13
+           ? sigil({
+              patp: window.ship,
+              renderer: reactRenderer,
+              size: 100,
+              colors: ['black', 'white'],
+            })
+           : sigil({
+            patp: "zod",
             renderer: reactRenderer,
             size: 100,
             colors: ['black', 'white'],
-          })
-         : sigil({
-          patp: "zod",
-          renderer: reactRenderer,
-          size: 100,
-          colors: ['black', 'white'],
-        })}
-        <p>{"~" + window.ship}</p>
-      </div>
-      <div className="hand">
-        {game.hand.map(card => (
-          <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
-          ))}
-      </div>
-      <div className="bet-input">
-        <p>Your stack: ${myChips.stack} Bet: ${myChips.committed}</p>
-        <p>Your hand: {game.my_hand_rank}</p>
-        <input name="bet"
-             type="range" 
-             min={game.current_bet > 0 
-                   ? game.current_bet + game.last_bet
-                   : game.min_bet}
-             max={myChips.stack + myChips.committed} 
-             value={myBet} 
-             onChange={(e) => setMyBet(e.target.value)} />
-        <br />
-        <label>
-          $
+          })}
+          <p>{"~" + window.ship}</p>
+        </div>
+        <div className={styles.hand}>
+          {game.hand.map(card => (
+            <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
+            ))}
+        </div>
+        <div className={styles.bet_input}>
+          <p>Your stack: ${myChips.stack} Bet: ${myChips.committed}</p>
+          <p>Your hand: {game.my_hand_rank}</p>
           <input name="bet"
-                 type="number" 
-                 min={betToMatch} 
-                 max={myChips.stack + myChips.committed} 
-                 value={myBet} 
-                 onChange={(e) => setMyBet(e.target.value)} />
-        </label>
-        {game.whose_turn != window.ship
-         ? <p>Waiting for {"~"+game.whose_turn} to play</p>
-         : <div className="action-buttons">
-             <button onClick={() => handleAction("bet", myBet)}>
-               {myBet > myChips.stack + myChips.committed
-                 ? <span>All-in</span>
-                 : game.current_bet > 0
-                   ? <span>Raise to ${myBet}</span> 
-                   : <span>Bet ${myBet}</span>}
-             </button>
-             {betToMatch > 0 
-             ? <button onClick={() => handleAction("bet", betToMatch + myChips.committed)}>
-                 Call ${betToMatch + myChips.committed}
+               type="range" 
+               min={game.current_bet > 0 
+                     ? game.current_bet + game.last_bet
+                     : game.min_bet}
+               max={myChips.stack + myChips.committed} 
+               value={myBet} 
+               onChange={(e) => setMyBet(e.target.value)} />
+          <br />
+          <label>
+            $
+            <input name="bet"
+                   type="number" 
+                   min={betToMatch} 
+                   max={myChips.stack + myChips.committed} 
+                   value={myBet} 
+                   onChange={(e) => setMyBet(e.target.value)} />
+          </label>
+          {game.whose_turn != window.ship
+           ? <p>Waiting for {"~"+game.whose_turn} to play</p>
+           : <div className={styles.action_buttons}>
+               <button className={styles.button} onClick={() => handleAction("bet", myBet)}>
+                 {myBet > myChips.stack + myChips.committed
+                   ? <span>All-in</span>
+                   : game.current_bet > 0
+                     ? <span>Raise to ${myBet}</span> 
+                     : <span>Bet ${myBet}</span>}
                </button>
-             : <button onClick={() => handleAction("check", 0)}>
-                 Check
-               </button>}
-             <button onClick={() => handleAction("fold", 0)}>
-               Fold
-             </button>
-             <TurnTimer countdown={game.time_limit_seconds} />
-           </div>}
+               {betToMatch > 0 
+               ? <button className={styles.button} onClick={() => handleAction("bet", betToMatch + myChips.committed)}>
+                   Call ${betToMatch + myChips.committed}
+                 </button>
+               : <button className={styles.button} onClick={() => handleAction("check", 0)}>
+                   Check
+                 </button>}
+               <button className={styles.button} onClick={() => handleAction("fold", 0)}>
+                 Fold
+               </button>
+             </div>}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -33,6 +33,7 @@
       hands=(list [ship pokur-deck])
       deck=pokur-deck
       hand-is-over=?
+      game-is-over=?
       turn-timer=?(~ @da)
   ==
 ::

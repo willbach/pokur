@@ -1,0 +1,42 @@
+.wrapper {
+    width: 90%;
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 25px;
+    border-left: 8px solid black;
+    background-color: var(--dark-green);
+    color: var(--light-text);
+}
+
+.title {
+    font-size: 1.5em;
+    font-style: italic;
+    margin-bottom: 1.5em;
+}
+
+.form {
+    text-align: left;
+}
+
+label {
+    display: block;
+}
+
+input, option {
+    padding: 4px;
+    margin: 10px 0;
+    box-shadow: 0 0 15px 4px rgba(0,0,0,0.06);
+}
+
+.button {
+    color: var(--light-text);
+    background: var(--dark-blue);
+    padding: 10px 20px 10px 20px;
+    text-decoration: none;
+    border: none;
+}
+  
+.button:hover {
+    background: var(--light-blue);
+    text-decoration: none;
+}

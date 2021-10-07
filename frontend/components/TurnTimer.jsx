@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styles from './TurnTimer.module.css';
 
 const TurnTimer = ({ countdown }) => {
   
@@ -20,12 +21,12 @@ const TurnTimer = ({ countdown }) => {
   });
 
   return (
-    <div className="timer">
-      <div className="countdown-bar">
-        <div className="countdown-bar-filled" style={{width: `${(timeLeft / countdown) * 100}%`}}>
+    <div className={styles.timer}>
+      <div className={styles.countdown_bar}>
+        <div className={styles.countdown_bar_filled} style={{width: `${(timeLeft / countdown) * 100}%`}}>
           {timeLeft > 0
            ? <p>{timeLeft}</p>
-           : <p className="blinking-red">0</p>}
+           : <p className={styles.blinking_red}>0</p>}
         </div>
       </div>
     </div>

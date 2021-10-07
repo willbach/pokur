@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styles from './ChallengeList.module.css';
 
 const ChallengeList = ({ urb, setSentChallenge }) => {
   const [challenges, setChallenges] = useState({});
@@ -77,9 +78,9 @@ const ChallengeList = ({ urb, setSentChallenge }) => {
   };
 
   return (
-    <div>
-      <h2>Active Challenges</h2>
-      <table className="challenge-list">
+    <div className={styles.wrapper}>
+      <p className={styles.title}>Invites received:</p>
+      <table className={styles.challenge_list}>
         <thead>
           <tr>
             <th>Challenger</th>
@@ -94,17 +95,28 @@ const ChallengeList = ({ urb, setSentChallenge }) => {
               <tr key={id}>
                 <td>{data.challenger == '~'+window.ship ? "You" : data.challenger}</td>
                 <td>{data.host}</td>
-                <td>{JSON.stringify(data.players)}</td>
+                <td>{
+                  Object.entries(data.players).map(([player, player_data]) => (
+                    <li key={player}>
+                       <p className={styles.player_name}>
+                         {player}
+                       </p>
+                       <p className={styles.player_response}>
+                         {player_data.accepted ? "Accepted." : player_data.declined ? "Declined." : "Waiting.."}
+                       </p>
+                    </li>
+                  ))
+                  }</td>
                 <td>{data.type}</td>
                 <td>{data.challenger == '~'+window.ship 
-                 ? <button onClick={() => cancelChallenge(id)}>
+                 ? <button className={styles.button} onClick={() => cancelChallenge(id)}>
                      Cancel
                    </button>
                  : <>
-                    <button onClick={() => acceptChallenge(id)}>
+                    <button className={styles.button} onClick={() => acceptChallenge(id)}>
                       Accept
                     </button>
-                    <button onClick={() => declineChallenge(id)}>
+                    <button className={styles.button} onClick={() => declineChallenge(id)}>
                       Decline
                     </button>
                    </>}</td>

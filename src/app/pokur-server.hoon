@@ -216,24 +216,44 @@
   |=  game=server-game-state
   ^-  (list card)
   ~&  >>  "SERVER: sending update cards"
-  ?.  hand-is-over.game
+  ?.  game-is-over.game
+    ?.  hand-is-over.game
+      :~  :*  %pass
+              /poke-wire
+              %agent
+              [our.bowl %pokur-server]
+              %poke
+              %pokur-server-action
+              !>([%send-game-updates game])
+          ==
+      ==
+    :: initialize new hand, update message to clients
     :~  :*  %pass
             /poke-wire
             %agent
             [our.bowl %pokur-server]
             %poke
             %pokur-server-action
-            !>([%send-game-updates game])
+            !>([%initialize-hand game-id.game.game])
         ==
     ==
-  :: initialize new hand, update message to clients
+  :: the game is over, end it
+  ~&  >>  "SERVER: a game is over because everyone left or somebody won."
   :~  :*  %pass
           /poke-wire
           %agent
           [our.bowl %pokur-server]
           %poke
           %pokur-server-action
-          !>([%initialize-hand game-id.game.game])
+          !>([%send-game-updates game])
+      ==
+      :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%end-game game-id.game.game])
       ==
   ==
 ++  perform-move
@@ -425,6 +445,7 @@
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=`@da`(add now.bowl turn-time-limit.new-game-state)
     ]
   =.  active-games.state

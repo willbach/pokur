@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import styles from './ChallengeForm.module.css';
 
 const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
   const [sendToList, setSendToList] = useState({0:''});
@@ -70,23 +71,20 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
   };
 
   return (
-    <div>
-      <p>Send a challenge poke</p>
-      <form onSubmit={e => handleSubmit(e)}>
+    <div className={styles.wrapper}>
+      <p className={styles.title}>Start a game</p>
+      <form onSubmit={e => handleSubmit(e)} className={styles.form}>
+        <label>To:</label>
         {Object.entries(sendToList).map(([i, data]) => ( 
-          <label key={i}>
-            <br />
-            To: 
-            <input name="to" id={i} type="text" value={data} onChange={e => handleChange(e.target)} />
-        </label>
+            <input key={i} name="to" id={i} type="text"  placeholder="~zod" value={data} onChange={e => handleChange(e.target)} />
         ))}
-        <button onClick={e => addToInput(e)}>
+        <button className={styles.button} onClick={e => addToInput(e)}>
           {addPlayerText}
         </button>
         <br />
         <label>
           Host ship: 
-          <input name="host" type="text"/>
+          <input name="host" type="text" placeholder="~zod"/>
         </label>
         <br />
         <br />
@@ -118,10 +116,10 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
         <br />
         <label>
           Turn time limit (in seconds):
-          <input name="turnTimer" type="number"/>
+          <input name="turnTimer" type="number" placeholder="60"/>
         </label>
         <br />
-        <input type="submit" value="Submit" />
+        <input className={styles.button} type="submit" value="Submit" />
       </form>
     </div>
   );

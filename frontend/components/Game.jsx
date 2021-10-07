@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction } from '../components';
+import styles from './Game.module.css';
 
 const Game = ({ urb, game, myBet, setMyBet, gameMessages }) => {
 
@@ -17,15 +18,10 @@ const Game = ({ urb, game, myBet, setMyBet, gameMessages }) => {
   };
 
   return( 
-    <div className="game-wrapper">
+    <div className={styles.wrapper}>
       <GameInfo game={game} gameMessages={gameMessages} />
-      <br />
-      {game.whose_turn != window.ship
-       ? <span></span>
-       : <p>It's your turn!</p>}
       <GameAction urb={urb} game={game} myBet={myBet} setMyBet={setMyBet} />
-      <br />
-      <button onClick={() => leaveGame()}>
+      <button className={styles.leave_game} onClick={() => leaveGame()}>
         Leave Game
       </button>
     </div>

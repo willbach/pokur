@@ -69,7 +69,8 @@ const App = () => {
   function updateGameState(newGameState) {
     if (newGameState.in_game) {
       setGameState(newGameState);
-      if (gameMessages[0] != newGameState.update_message) {
+      // TODO why doesn't this work??
+      if (!(gameMessages[0] === newGameState.update_message)) {
         setGameMessages(old => [newGameState.update_message,...old]);
       }
       localStorage.setItem("gameTimer", newGameState.time_limit_seconds);

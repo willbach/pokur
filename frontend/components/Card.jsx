@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Card.module.css';
 
 const Card = ({ suit, val }) => {
 
@@ -19,14 +20,14 @@ const Card = ({ suit, val }) => {
   const suitIcon = suits[suit][0];
 
   return (
-      <div className={`card ${color}`}>
-        <div className="card-top">
-          <div className="card-value">{value}</div>
-          <div className="card-suit">{suitIcon}</div>
+      <div className={`${styles.card} ${styles[color]}`}>
+        <div className={styles.card_top}>
+          <div className={styles.card_value}>{value}</div>
+          <div className={styles.card_suit}>{suitIcon}</div>
         </div>
-        <div className="card-bot">
-          <div className="card-value">{value}</div>
-          <div className="card-suit">{suitIcon}</div>
+        <div className={styles.card_bot}>
+          <div className={styles.card_value}>{value}</div>
+          <div className={styles.card_suit}>{suitIcon}</div>
         </div>
       </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
 import { Card, TurnTimer } from '../components';
+import styles from './GameInfo.module.css';
 
 const GameInfo = ({ game, gameMessages }) => {
 
@@ -65,33 +66,33 @@ const GameInfo = ({ game, gameMessages }) => {
 
   return (
     <>
-      <div className="game-info">
+      <div className={styles.game_info}>
         <p>Game ID: {game.id}</p>
         <p>Host: {"~" + game.host}</p>
         <p>Hands played: {game.hands_played}</p>
         <p>SB/BB: ${game.min_bet / 2}/${game.min_bet}</p>
       </div>
-      <div className="update-messages">
+      <div className={styles.update_messages}>
           {
             recentMessages.map((message,i) => (
               <h3 key={i}>{message}</h3>
             ))
           }
         </div>
-      <div className="game-table">
+      <div className={styles.game_table}>
         {Object.entries(generateAlignedPlayers(game.chips)).map(([player, data]) => (
             player.slice(0, -1) == "placeholder"
-            ? <div key={data} className="player-seat" style={{"display":"none"}}></div>
-            : <div key={player} className={`player-seat ${"~" + game.whose_turn == player ? `their-turn` : ``}`}>
-                <div className="name-display">
+            ? <div key={data} className={styles.player_seat} style={{"display":"none"}}></div>
+            : <div key={player} className={`${styles.player_seat} ${"~" + game.whose_turn == player ? `their-turn` : ``}`}>
+                <div className={styles.name_display}>
                   <p>{player}</p>
                 </div>
                 {player == "~" + game.whose_turn
                  ? <TurnTimer countdown={game.time_limit_seconds} />
                  : <></>}
-                <div className="player-cards">
-                  <div className="small-card hidden" />
-                  <div className="small-card hidden" />
+                <div className={styles.player_cards}>
+                  <div className={styles.small_card_hidden} />
+                  <div className={styles.small_card_hidden} />
                 </div>
                 <p>${data.stack} 
                    {data.committed > 0 
@@ -104,7 +105,7 @@ const GameInfo = ({ game, gameMessages }) => {
                 </p>
               </div>
         ))}
-        <div className="board">
+        <div className={styles.board}>
           {game.board.map(card => (
             <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
             ))}

@@ -1,0 +1,21 @@
+.wrapper {
+    width: 95%;
+    margin: 0 auto;
+    text-align: center;
+    display:grid;
+}
+
+.leave_game {
+    margin-top: 50px;
+    color: var(--light-text);
+    background: var(--dark-red);
+    padding: 10px 20px 10px 20px;
+    width: 100px;
+    text-decoration: none;
+    border: none;
+}
+  
+.leave_game:hover {
+    background: var(--red);
+    text-decoration: none;
+}

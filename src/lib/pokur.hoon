@@ -378,14 +378,26 @@
     =.  deck.state               generate-deck
     :: set any players with stack of 0 to folded
     =.  chips.game.state
-      %+  turn
-        chips.game.state
-      |=  [s=ship stack=@ud c=@ud acted=? folded=? left=?]
-        ?:  =(stack 0)
-          [s stack c %.y %.y %.n]
-        [s stack c acted folded left]
+    %+  turn
+      chips.game.state
+    |=  [s=ship stack=@ud c=@ud acted=? folded=? left=?]
+      ?:  =(stack 0)
+        [s stack c %.y %.y %.n]
+      [s stack c acted folded left]
     :: set hand to over to trigger next hand on server
     =.  hand-is-over.state       %.y
+    :: set game to over if only one player has any chips
+    =/  players-with-chips
+    %+  skip
+      chips.game.state
+    |=  [s=ship stack=@ud c=@ud ? ? left=?]
+    |(left &(=(0 stack) =(0 c)))
+    =.  game-is-over.state
+    ?:  ?|  =(1 (lent players-with-chips))
+            =(0 (lent players-with-chips))
+        ==
+      %.y
+    %.n
     :: update game message to inform clients
     :: TODO pretty-print this, branching if multiple people tie
     =.  update-message.game.state
