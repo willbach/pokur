@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction } from '../components';
 
-const Game = ({ urb, game, myBet, setMyBet }) => {
+const Game = ({ urb, game, myBet, setMyBet, gameMessages }) => {
 
   const leaveGame = () => {
     urb.poke({
@@ -18,7 +18,7 @@ const Game = ({ urb, game, myBet, setMyBet }) => {
 
   return( 
     <div className="game-wrapper">
-      <GameInfo game={game} />
+      <GameInfo game={game} gameMessages={gameMessages} />
       <br />
       {game.whose_turn != window.ship
        ? <span></span>

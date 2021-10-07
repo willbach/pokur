@@ -26,6 +26,7 @@ const App = () => {
   const [inGame, setInGame] = useState(false);
   const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
+  const [gameMessages, setGameMessages] = useState(["", "", "", "", ""]);
 
   useEffect(() => {
     if (localStorage.getItem("host") && localStorage.getItem("code")) {
@@ -68,6 +69,9 @@ const App = () => {
   function updateGameState(newGameState) {
     if (newGameState.in_game) {
       setGameState(newGameState);
+      if (gameMessages[0] != newGameState.update_message) {
+        setGameMessages(old => [newGameState.update_message,...old]);
+      }
       localStorage.setItem("gameTimer", newGameState.time_limit_seconds);
       setMyBet(
         newGameState.current_bet > 0 
@@ -83,8 +87,7 @@ const App = () => {
   return (
     <>
       <header>
-        <p>Pokur -- play Texas hold 'em on Urbit</p>
-        <a href="/">Return to Landscape</a> 
+        <p>Pokur Beta 1.0</p>
       </header>
       {loggedIn 
       ? <span></span>
@@ -120,6 +123,7 @@ const App = () => {
                   game={gameState} 
                   myBet={myBet} 
                   setMyBet={setMyBet}
+                  gameMessages={gameMessages}
                 />
               : !sentChallenge 
                  ? <div>

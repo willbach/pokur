@@ -49,7 +49,9 @@ table {
 /* End CSS Reset */
 
 :root {
-    --bg: #F2E6D0;
+    --bg: #faf9f9;
+    --light-text: #faf9f9;
+    --dark-text: #000;
     --red: #BF0404;
     --dark-red: #592525;
     --dark-green: #0E4015;
@@ -69,53 +71,42 @@ body {
 }
 
 header {
-    display: flex;
-    justify-content: space-around;
     top: 0px;
     height: 20px;
     width: 100%;
-    background-color: #000;
-    color: #fff;
+    background-color: var(--dark-green);
+    color: var(--light-text);
     margin-bottom: 25px;
-}
-
-header a {
-    color: #fff;
-    text-decoration: underline;
-}
-
-header a:visited {
-    color: #fff;
+    padding-left: 100px;
 }
 
 .game-wrapper {
-    width: 80%;
+    width: 95%;
     margin: 0 auto;
     text-align: center;
+    display:grid;
 }
 
 .game-info {
     text-align: center;
+    width: 200px;
+    font-size: 1em;
     /* border: 1px solid black; */
-}
-
-.game-info p {
-    font-size: 12px;
 }
 
 .game-table {
     position: relative;
     margin: 0 auto;
-    margin-top: 75px;
+    margin-top: 100px;
     margin-bottom: 75px;
-    padding-top: 75px;
-    min-width: 800px;
+    padding-top: 100px;
+    min-width: 860px;
     min-height: 300px;
     text-align: center;
     border: 2px solid black;
     border-radius: 200px;
     background-color: var(--dark-red);
-    color: #fff;
+    color: var(--light-text);
 }
 
 /* seating arrangements */
@@ -192,6 +183,22 @@ header a:visited {
     transform: translate(50%, 50%);
 }
 
+.update-messages h3:nth-last-of-type(1) {
+    color: #ccc;
+}
+.update-messages h3:nth-last-of-type(2) {
+    color: #aaa;
+}
+.update-messages h3:nth-last-of-type(3) {
+    color: #777;
+}
+.update-messages h3:nth-last-of-type(4) {
+    color: #333;
+}
+.update-messages h3:nth-last-of-type(5) {
+    color: #000;
+}
+
 .game-table h3 {
     font-size: 24px;
 }
@@ -205,10 +212,6 @@ header a:visited {
     align-content: stretch;
     padding: 2px;
     width: 600px;
-}
-
-.player-info .profile {
-    /* border: 1px solid black; */
 }
 
 .player-info .bet-input {
@@ -285,11 +288,13 @@ header a:visited {
 }
 
 .small-card:nth-of-type(1) {
-    transform: translate(10px);
+    transform: translate(20px);
+    transform: rotate(-8deg);
 }
 
 .small-card:nth-of-type(2) {
-    transform: translate(-10px);
+    transform: translate(-20px);
+    transform: rotate(8deg);
 }
 
 /* pattern sourced from https://www.magicpattern.design/tools/css-backgrounds */
