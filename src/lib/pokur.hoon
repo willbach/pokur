@@ -402,8 +402,16 @@
     :: TODO pretty-print this, branching if multiple people tie
     =.  update-message.game.state
       ?:  =(winning-rank 10)
-        "{<winning-ships>} wins hand"
-      "{<winning-ships>} wins hand with {<(hierarchy-to-rank winning-rank)>}"
+        "{<(head winning-ships)>} wins hand."
+      ?:  =((lent winners) 1)
+        "{<(head winning-ships)>} wins hand with {<(hierarchy-to-rank winning-rank)>}: {<+.+:(head winners)>}"
+      :: multiple winners.. more complex update message
+      =/  winning-hands
+      %+  turn
+        winners
+      |=  [s=ship info=[@ud hand=pokur-deck]]
+      hand.info
+      "{<winning-ships>} win hand, split pot. Their hands: {<winning-hands>}"
     state
 
 ::  given a player and a pokur-action, handles the action.
@@ -525,6 +533,11 @@
     ?.  is-betting-over
       next-player-turn
     next-round
+    :: lib should never, ever see these :)
+      %receive-msg
+    !!
+      %send-msg
+    !!
     ==
 
 :: takes a list of hands and finds winning hand. This is only called

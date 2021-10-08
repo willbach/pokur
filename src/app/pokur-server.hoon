@@ -239,6 +239,8 @@
     ==
   :: the game is over, end it
   ~&  >>  "SERVER: a game is over because everyone left or somebody won."
+  =.  update-message.game.game
+  "The game is now over."
   :~  :*  %pass
           /poke-wire
           %agent
@@ -329,6 +331,11 @@
     (perform-move now.bowl src.bowl game-id.action %bet amount.action)
       %fold
     (perform-move now.bowl src.bowl game-id.action %fold 0)
+    :: server doesn't do these... yet.
+      %receive-msg
+    !!
+      %send-msg
+    !!
   ==
 ++  handle-server-action
   |=  =server-action:pokur

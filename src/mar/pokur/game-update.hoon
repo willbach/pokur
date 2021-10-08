@@ -75,6 +75,18 @@
       %-  pairs:enjs
       :~  ['in_game' [%b %.n]]
       ==
+      %msgs
+      %-  pairs:enjs
+      :~  :-  'messages'
+          :-  %a
+          %+  turn
+            msg-list.upd
+          |=  [from=ship msg=tape]
+          %-  pairs:enjs 
+          :~  ['from' (ship:enjs from)]
+              ['msg' (tape:enjs msg)]
+          ==
+      ==
     ==
   --
 ++  grad  %noun

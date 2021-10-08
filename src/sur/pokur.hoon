@@ -67,6 +67,7 @@
 +$  pokur-game-update
   $%  [%update game=pokur-game-state my-hand-rank=tape]
       [%left-game t=?]
+      [%msgs msg-list=(list [from=ship msg=tape])]
   ==
 ::
 +$  pokur-challenge
@@ -119,6 +120,8 @@
     [%check game-id=@da]
     [%bet game-id=@da amount=@ud]
     [%fold game-id=@da]
+    [%send-msg msg=tape]
+    [%receive-msg msg=tape]
   ==  
 ::
 ::  server actions

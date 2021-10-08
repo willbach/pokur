@@ -14,6 +14,7 @@
       :~  [%check get-id]
           [%bet get-id-and-amount]
           [%fold get-id]
+          [%send-msg get-msg]
       ==
     ++  get-id
       %-  ot:dejs
@@ -23,6 +24,10 @@
       %-  ot:dejs
       :~  [%game-id (se:dejs %da)]
           [%amount ni:dejs]
+      ==
+    ++  get-msg
+      %-  ot:dejs
+      :~  [%msg (se:dejs %tape)]
       ==
     --
   --

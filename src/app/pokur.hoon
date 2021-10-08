@@ -8,6 +8,7 @@
     $:  game=(unit pokur-game-state)
         challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
         challenges-received=(map @da pokur-challenge)
+        game-msgs-received=(list [from=ship msg=tape])
     ==
 ::
 +$  card  card:agent:gall
@@ -100,6 +101,12 @@
     ~&  >  "CLIENT: sending current game state to subscriber"
     :_  this
       ~[[%give %fact ~[/game] [%pokur-game-update !>([%update u.game.state "-"])]]]
+    [%game-msgs ~]
+    ?~  game.state
+      `this
+    ~&  >  "CLIENT: sending game msgs"
+    :_  this
+      ~[[%give %fact ~[/game-msgs] [%pokur-game-update !>([%msgs game-msgs-received.state])]]]
   ==
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
@@ -142,12 +149,12 @@
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
-  ?>  (team:title [our src]:bowl)
   ?~  game.state
     :_  state
       ~[[%give %poke-ack `~[leaf+"Error: can't process action, not in game yet."]]]
   ?-  -.action
     %check
+  ?>  (team:title [our src]:bowl)
   :_  state
     :~  :*  %pass  /poke-wire  %agent 
             [host.u.game.state %pokur-server] 
@@ -156,6 +163,7 @@
         ==
     ==
     %bet
+  ?>  (team:title [our src]:bowl)
   :_  state
     :~  :*  %pass  /poke-wire  %agent 
             [host.u.game.state %pokur-server]
@@ -164,6 +172,7 @@
         ==
     ==
     %fold
+  ?>  (team:title [our src]:bowl)
   :_  state
     :~  :*  %pass  /poke-wire  %agent
             [host.u.game.state %pokur-server]
@@ -171,6 +180,20 @@
             !>([%fold game-id=game-id.u.game.state])
         ==
     ==
+    %send-msg
+  ?>  (team:title [our src]:bowl)
+  :: add our msg to our state (from: us)
+  :_  state
+    :: loop through players and poke all of them w/ receive-msg
+    :: and update subscribe
+    ~
+    %receive-msg
+  :: this, but title matches a player in players.game.state
+  :: ?>  (team:title [our src]:bowl)
+  :: add it to our state (from: src.bowl)
+  :: and update our subscribers
+  :_  state
+    ~
   ==
 ++  handle-client-action
   |=  =client-action:pokur
