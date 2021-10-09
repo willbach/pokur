@@ -1,13 +1,11 @@
 .player_info {
-    margin: 0 auto;
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
     align-content: stretch;
     padding: 2px;
-    width: 100%;
-    min-width: 600px;
-    max-width: 860px;
+    height: 100%;
+    flex-grow: 3;
 }
 
 .hand {

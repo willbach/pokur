@@ -402,9 +402,9 @@
     :: TODO pretty-print this, branching if multiple people tie
     =.  update-message.game.state
       ?:  =(winning-rank 10)
-        "{<(head winning-ships)>} wins hand."
+        "{<(head winning-ships)>} wins hand #{<hands-played.game.state>}."
       ?:  =((lent winners) 1)
-        "{<(head winning-ships)>} wins hand with {<(hierarchy-to-rank winning-rank)>}: {<+.+:(head winners)>}"
+        "{<(head winning-ships)>} wins hand #{<hands-played.game.state>} with {<(hierarchy-to-rank winning-rank)>}: {<+.+:(head winners)>}"
       :: multiple winners.. more complex update message
       =/  winning-hands
       %+  turn

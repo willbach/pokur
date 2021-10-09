@@ -182,18 +182,42 @@
     ==
     %send-msg
   ?>  (team:title [our src]:bowl)
-  :: add our msg to our state (from: us)
+  :: poke should fail if we're not in a game
+  =/  game  (need game.state)
+  =/  cards
+    %+  turn
+      players.game
+    |=  player=ship
+    :*  %pass
+        /poke-wire 
+        %agent 
+        [player %pokur]
+        %poke
+        %pokur-game-action
+        !>([%receive-msg msg=msg.action])
+    ==
   :_  state
-    :: loop through players and poke all of them w/ receive-msg
-    :: and update subscribe
-    ~
+    cards
     %receive-msg
-  :: this, but title matches a player in players.game.state
+  :: poke should fail if we're not in a game
+  =/  game  (need game.state)
+  :: this, but title matches a player in players.game.state???
   :: ?>  (team:title [our src]:bowl)
+  =.  game-msgs-received.state
+  %+  weld
+    ~[[src.bowl msg.action]]
+  game-msgs-received.state
+  
   :: add it to our state (from: src.bowl)
   :: and update our subscribers
   :_  state
-    ~
+    :~  :*  %give
+            %fact
+            ~[/game-msgs]
+            :-  %pokur-game-update
+            !>([%msgs game-msgs-received.state])
+        ==
+    ==
   ==
 ++  handle-client-action
   |=  =client-action:pokur

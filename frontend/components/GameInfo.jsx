@@ -12,7 +12,7 @@ const GameInfo = ({ game, gameMessages }) => {
     }
     return pot
   };
-
+  
   const recentMessages = gameMessages.length < 5 ? gameMessages : gameMessages.slice(0, 5);
 
   // this is to place the players in seating arrangements

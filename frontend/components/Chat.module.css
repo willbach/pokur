@@ -1,0 +1,11 @@
+.wrapper {
+    height: 100%;
+    flex-grow: 1;
+}
+
+.message_list {
+    max-height: 200px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
+}

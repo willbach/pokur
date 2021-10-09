@@ -5,6 +5,12 @@
     display:grid;
 }
 
+.lower {
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+}
+
 .leave_game {
     margin-top: 50px;
     color: var(--light-text);

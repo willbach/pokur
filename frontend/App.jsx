@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useReducer, useEffect, useState } from "react";
 import { ChallengeForm, ChallengeList, Game } from './components';
 import _ from "lodash";
 import Urbit from "@urbit/http-api";
@@ -18,6 +18,14 @@ const createApi = (host, code) =>
     }
   );
 
+function messageReducer(state, newMessage) {
+  if (state[0] != newMessage) {
+    return [newMessage, ...state];
+  } else {
+    return state;
+  }
+}
+
 const App = () => {
   const [loggedIn, setLoggedIn] = useState();
   const [urb, setUrb] = useState();
@@ -26,7 +34,7 @@ const App = () => {
   const [inGame, setInGame] = useState(false);
   const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
-  const [gameMessages, setGameMessages] = useState(["", "", "", "", ""]);
+  const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
 
   useEffect(() => {
     if (localStorage.getItem("host") && localStorage.getItem("code")) {
@@ -69,11 +77,8 @@ const App = () => {
   function updateGameState(newGameState) {
     if (newGameState.in_game) {
       setGameState(newGameState);
-      // TODO why doesn't this work??
-      if (!(gameMessages[0] === newGameState.update_message)) {
-        setGameMessages(old => [newGameState.update_message,...old]);
-      }
-      localStorage.setItem("gameTimer", newGameState.time_limit_seconds);
+      setGameMessages(newGameState.update_message);
+      // localStorage.setItem("gameTimer", newGameState.time_limit_seconds);
       setMyBet(
         newGameState.current_bet > 0 
               ? newGameState.current_bet + newGameState.last_bet

@@ -27,7 +27,7 @@
       ==
     ++  get-msg
       %-  ot:dejs
-      :~  [%msg (se:dejs %tape)]
+      :~  [%msg sa:dejs]
       ==
     --
   --
