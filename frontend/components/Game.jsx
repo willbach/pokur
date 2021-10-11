@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction, Chat } from '../components';
 import styles from './Game.module.css';
 
-const Game = ({ urb, game, myBet, setMyBet, gameMessages }) => {
+const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages }) => {
   const [sub, setSub] = useState();
   const [chatMessages, setChatMessages] = useState([]);
 
@@ -57,7 +57,14 @@ const Game = ({ urb, game, myBet, setMyBet, gameMessages }) => {
     <div className={styles.wrapper}>
       <GameInfo game={game} gameMessages={gameMessages} />
       <div className={styles.lower}>
-        <GameAction urb={urb} game={game} myBet={myBet} setMyBet={setMyBet} />
+        {
+         spectating
+         ? <></>
+         : <GameAction urb={urb}
+                       game={game}
+                       myBet={myBet}
+                       setMyBet={setMyBet} />
+        }
         <Chat messages={chatMessages} send={sendChat} />
       </div>
       <button className={styles.leave_game} onClick={() => leaveGame()}>

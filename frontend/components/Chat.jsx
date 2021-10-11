@@ -8,8 +8,6 @@ const Chat = ({ messages, send }) => {
     send(e.target.message.value);
   }
 
-  console.log(messages);
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.message_list}>

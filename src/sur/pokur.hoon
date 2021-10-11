@@ -35,8 +35,6 @@
       hand-is-over=?
       game-is-over=?
       turn-timer=?(~ @da)
-      spectators-allowed=?
-      spectators=(list ship)
   ==
 ::
 ::  This is the data a pokur-client holds for a given game
@@ -65,6 +63,8 @@
     dealer=ship
     small-blind=ship
     big-blind=ship
+    spectators-allowed=?
+    spectators=(list ship)
   == 
 +$  pokur-game-update
   $%  [%update game=pokur-game-state my-hand-rank=tape]

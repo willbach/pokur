@@ -32,6 +32,7 @@ const App = () => {
   const [sub, setSub] = useState();
   const [sentChallenge, setSentChallenge] = useState(false);
   const [inGame, setInGame] = useState(false);
+  const [spectating, setSpectating] = useState(false);
   const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
   const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
@@ -84,6 +85,11 @@ const App = () => {
               ? newGameState.current_bet + newGameState.last_bet
               : newGameState.min_bet
       )
+      if (newGameState.players.includes(window.ship)) {
+        setSpectating(false);
+      } else {
+        setSpectating(true);
+      }
       setInGame(true);
     } else {
       setInGame(false);
@@ -127,6 +133,7 @@ const App = () => {
       {inGame ? <Game 
                   urb={urb}
                   game={gameState} 
+                  spectating={spectating}
                   myBet={myBet} 
                   setMyBet={setMyBet}
                   gameMessages={gameMessages}
@@ -140,6 +147,7 @@ const App = () => {
                      />
                      <ChallengeList 
                        urb={urb}
+                       setSpectating={setSpectating}
                        setSentChallenge={setSentChallenge} 
                      />
                    </div>

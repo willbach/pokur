@@ -16,6 +16,7 @@
           [%decline-challenge parse-id]
           [%leave-game parse-id]
           [%cancel-challenge parse-id]
+          [%subscribe parse-sub]
       ==
     ++  parse-challenge
       %-  ot:dejs
@@ -31,6 +32,11 @@
     ++  parse-id
       %-  ot:dejs
       :~  [%id (se:dejs %da)]
+      ==
+    ++  parse-sub
+      %-  ot:dejs
+      :~  [%id (se:dejs %da)]
+          [%host (se:dejs %p)]
       ==
     --
   --

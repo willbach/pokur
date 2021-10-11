@@ -34,8 +34,8 @@ const GameInfo = ({ game, gameMessages }) => {
     } else if (realPlayers.length == 2) {
       output = {
         "placeholder0": 0,
-        "placeholder1": 1,
         [realPlayers[0]]: chipsCopy[realPlayers[0]],
+        "placeholder1": 1,
         "placeholder2": 2,
         "placeholder3": 3,
         [realPlayers[1]]: chipsCopy[realPlayers[1]],
@@ -91,8 +91,8 @@ const GameInfo = ({ game, gameMessages }) => {
                  ? <TurnTimer countdown={game.time_limit_seconds} />
                  : <></>}
                 <div className={styles.player_cards}>
-                  <div className={styles.small_card_hidden} />
-                  <div className={styles.small_card_hidden} />
+                  <div className={styles.small_card} />
+                  <div className={styles.small_card} />
                 </div>
                 <p>${data.stack} 
                    {data.committed > 0 

@@ -184,9 +184,13 @@
   ?>  (team:title [our src]:bowl)
   :: poke should fail if we're not in a game
   =/  game  (need game.state)
+  =/  send-to
+  %+  weld
+    players.game
+  spectators.game
   =/  cards
     %+  turn
-      players.game
+      send-to
     |=  player=ship
     :*  %pass
         /poke-wire 

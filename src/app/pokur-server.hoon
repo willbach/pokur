@@ -86,16 +86,16 @@
     == 
   ?>  =(src.bowl u.player)
   ?~  (find [u.player]~ players.game.u.game)
-    ?.  spectators-allowed.u.game
+    ?.  spectators-allowed.game.u.game
       :_  this
       =/  err  "player not in this game"
       :~  [%give %watch-ack `~[leaf+err]]
       ==
     :: give game state to a spectator
     :: add them to spectator list
-    =.  spectators.u.game
+    =.  spectators.game.u.game
     %+  weld
-      spectators.u.game
+      spectators.game.u.game
     ~[src.bowl]
     =.  active-games.state
     (~(put by active-games.state) [u.game-id u.game])
@@ -341,7 +341,6 @@
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
-  ~&  >>  "SERVER: recieving action at {<now.bowl>}"
   ?-  -.action
       %check
     (perform-move now.bowl src.bowl game-id.action %check 0)
@@ -361,7 +360,6 @@
   ?-  -.server-action
     %set-timer
   ?>  (team:title [our src]:bowl)
-  ~&  >>>  "SERVER: setting timer"
   =/  timer-path
   ?-  type.server-action
     %turn
@@ -382,7 +380,6 @@
     ::
     %cancel-timer
   ?>  (team:title [our src]:bowl)
-  ~&  >>>  "SERVER: canceling timer"
   :_  state
     :~
       :*  %pass
@@ -462,6 +459,8 @@
       dealer=(snag 1 players)  :: TODO this should be random perhaps?
       small-blind=~zod :: these get re-assigned in hand initialization,
       big-blind=~zod   :: ~zod is placeholder.
+      spectators-allowed=spectators.c-data
+      spectators=~
     ]
   =/  new-server-state
     :: this is where very first game timer is set
@@ -472,8 +471,6 @@
       hand-is-over=%.y
       game-is-over=%.n
       turn-timer=`@da`(add now.bowl turn-time-limit.new-game-state)
-      spectators-allowed=spectators.c-data
-      spectators=~
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])
@@ -523,6 +520,12 @@
   :: remove sender from their game
   =/  game
     (~(remove-player modify-state game) src.bowl)
+  :: remove spectator if they were one
+  =.  spectators.game.game
+  %+  skip
+    spectators.game.game
+  |=  s=ship
+  =(s src.bowl)
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state
@@ -549,29 +552,43 @@
   =.  active-games.state
     (~(put by active-games.state) [game-id.server-action game])
   :_  state
+  ?:  =((lent spectators.game.game) 0)
     cards
+  :: send spectator updates if any
+  ~&  >>  "we sending speccy updates"
+  %+  weld
+    cards
+  %+  turn
+    spectators.game.game
+  |=  s=ship
+  :^  %give 
+      %fact 
+      ~[/game/(scot %da game-id.server-action)/(scot %p s)]
+      [%pokur-game-state !>(game.game)]
     ::
     ::
     %send-game-updates
   ?>  (team:title [our src]:bowl)
+  ~&  >>  "we sending game updates"
   =/  cards
     %+  turn 
         hands.game.server-action 
       |=  hand=[ship pokur-deck]
       (~(make-player-cards modify-state game.server-action) hand)
-  :: send spectator updates if any
   :_  state
-    ?:  =((lent spectators.game.server-action) 0)
-      cards
-    %+  weld
-      cards
-    %+  turn
-      spectators.game.server-action
-    |=  s=ship
-    :^  %give 
-        %fact 
-        ~[/game/(scot %da game-id.game.game.server-action)/(scot %p s)]
-        [%pokur-game-state !>(game.game.server-action)]
+  ?:  =((lent spectators.game.game.server-action) 0)
+    cards
+  :: send spectator updates if any
+  ~&  >>  "we sending speccy updates"
+  %+  weld
+    cards
+  %+  turn
+    spectators.game.game.server-action
+  |=  s=ship
+  :^  %give 
+      %fact 
+      ~[/game/(scot %da game-id.game.game.server-action)/(scot %p s)]
+      [%pokur-game-state !>(game.game.server-action)]
     ::
     ::
     %kick

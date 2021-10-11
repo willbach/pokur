@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChallengeList.module.css';
 
-const ChallengeList = ({ urb, setSentChallenge }) => {
+const ChallengeList = ({ urb, setSentChallenge, setSpectating }) => {
   const [challenges, setChallenges] = useState({});
   const [sub, setSub] = useState();
 
@@ -77,8 +77,27 @@ const ChallengeList = ({ urb, setSentChallenge }) => {
     setSentChallenge(false);
   };
 
+  const trySpectate = (e) => {
+    e.preventDefault();
+    urb.poke({
+      app: 'pokur',
+      mark: 'pokur-client-action',
+      json: {
+        'subscribe': {
+          'id': e.target.game_id.value,
+          'host': e.target.game_host.value,
+        }
+      },
+    });
+  }
+
   return (
     <div className={styles.wrapper}>
+      <form className={styles.spectate_form} onSubmit={e => trySpectate(e)}>
+        <input name="game_id" type="text" placeholder="game id" />
+        <input name="game_host" type="text" placeholder="host ship" />
+        <input className={styles.button} type="submit" value="Subscribe" />
+      </form>
       <p className={styles.title}>Invites received:</p>
       <table className={styles.challenge_list}>
         <thead>

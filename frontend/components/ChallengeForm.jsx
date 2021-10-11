@@ -39,6 +39,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           'issue-challenge': {
             'to': to,
             'host': e.target.host.value,
+            'spectators': e.target.spectators.checked,
             'type': e.target.gameType.value,
             'min-bet': parseInt(e.target.minBet.value),
             'starting-stack': parseInt(e.target.stackSize.value),
@@ -51,6 +52,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           'issue-challenge': {
             'to': to,
             'host': e.target.host.value,
+            'spectators': e.target.spectators.checked,
             'type': e.target.gameType.value,
             'min-bet': 0,
             'starting-stack': 0,
@@ -117,6 +119,10 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
         <label>
           Turn time limit (in seconds):
           <input name="turnTimer" type="number" placeholder="60"/>
+        </label>
+        <label>
+          Spectators allowed?
+          <input name="spectators" type="checkbox" defaultChecked />
         </label>
         <br />
         <input className={styles.button} type="submit" value="Submit" />
