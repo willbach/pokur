@@ -94,9 +94,10 @@ const ChallengeList = ({ urb, setSentChallenge, setSpectating }) => {
   return (
     <div className={styles.wrapper}>
       <form className={styles.spectate_form} onSubmit={e => trySpectate(e)}>
+        <p>Spectate an active game</p>
         <input name="game_id" type="text" placeholder="game id" />
         <input name="game_host" type="text" placeholder="host ship" />
-        <input className={styles.button} type="submit" value="Subscribe" />
+        <input className={`${styles.button} ${styles.inline_button}`} type="submit" value="Spectate" />
       </form>
       <p className={styles.title}>Invites received:</p>
       <table className={styles.challenge_list}>

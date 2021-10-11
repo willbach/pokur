@@ -12,6 +12,11 @@
     font-size: 1.5em;
     font-style: italic;
     margin-bottom: 1.5em;
+    margin-top: 1.5em;
+}
+
+.spectate_form p {
+    font-style: italic;
 }
 
 .challenge_list {
@@ -46,11 +51,16 @@ li {
 .button {
     color: var(--light-text);
     background: var(--dark-blue);
-    padding: 10px 20px 10px 20px;
+    padding: 4px 20px 4px 20px;
     width: 50%;
     height: 100%;
     text-decoration: none;
     border: none;
+}
+
+.inline_button {
+    width: 100px;
+    display: inline;
 }
   
 .button:hover {

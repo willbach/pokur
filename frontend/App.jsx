@@ -99,10 +99,10 @@ const App = () => {
   return (
     <>
       <header>
-        <p>Pokur Beta 1.0</p>
+        <p>Pokur Beta</p>
       </header>
       {loggedIn 
-      ? <span></span>
+      ? <></>
       : <div id="login"><pre>Login:</pre>
       <form
         onSubmit={(e) => {
