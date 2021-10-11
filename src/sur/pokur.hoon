@@ -35,6 +35,8 @@
       hand-is-over=?
       game-is-over=?
       turn-timer=?(~ @da)
+      spectators-allowed=?
+      spectators=(list ship)
   ==
 ::
 ::  This is the data a pokur-client holds for a given game
@@ -76,6 +78,7 @@
     challenger=ship :: person who issued challenge
     players=(list [player=ship accepted=? declined=?])
     host=ship :: address of pokur-server used for game
+    spectators=?
     min-bet=@ud :: only for cash games
     starting-stack=@ud :: only for cash games
     type=pokur-game-type
@@ -97,6 +100,7 @@
       %issue-challenge
       to=(list ship) 
       host=ship
+      spectators=?
       min-bet=@ud
       starting-stack=@ud
       type=pokur-game-type

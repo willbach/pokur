@@ -245,6 +245,7 @@
       challenger=our.bowl
       players=player-list
       host=host.client-action
+      spectators=spectators.client-action
       min-bet=min-bet.client-action
       starting-stack=starting-stack.client-action
       type=type.client-action
@@ -527,8 +528,9 @@
   =/  old-host     host.old-game
   =/  old-game-id  game-id.old-game
   =:  
-      game.state            ~
-      challenge-sent.state  ~
+      game.state                ~
+      challenge-sent.state      ~
+      game-msgs-received.state  ~
     ==
   :_  state    
     :~  :: unsub from game's path

@@ -84,25 +84,43 @@
       =/  err  "invalid player"
       :~  [%give %watch-ack `~[leaf+err]]
     == 
+  ?>  =(src.bowl u.player)
   ?~  (find [u.player]~ players.game.u.game)
-    :_  this
+    ?.  spectators-allowed.u.game
+      :_  this
       =/  err  "player not in this game"
       :~  [%give %watch-ack `~[leaf+err]]
-    ==
-  ?>  =(src.bowl u.player)
-    :: give a good subscriber their game state
-    :: find their hand
-    ~&  >>  "SERVER: sending subscriber their game state"
-    =.  my-hand.game.u.game
-      +.-:(skim hands.u.game |=([s=ship h=pokur-deck] =(s u.player)))
-    :_  this
-      :~  :*  
-            %give 
-            %fact 
-            ~[/game/(scot %da u.game-id)/(scot %p u.player)]
-            [%pokur-game-state !>(game.u.game)]
-          ==
       ==
+    :: give game state to a spectator
+    :: add them to spectator list
+    =.  spectators.u.game
+    %+  weld
+      spectators.u.game
+    ~[src.bowl]
+    =.  active-games.state
+    (~(put by active-games.state) [u.game-id u.game])
+    ~&  >>  "SERVER: sending spectator their game state"
+    :_  this
+    :~  :*  
+          %give 
+          %fact 
+          ~[/game/(scot %da u.game-id)/(scot %p u.player)]
+          [%pokur-game-state !>(game.u.game)]
+        ==
+    ==
+  :: give a good subscriber their game state
+  :: find their hand
+  ~&  >>  "SERVER: sending subscriber their game state"
+  =.  my-hand.game.u.game
+  +.-:(skim hands.u.game |=([s=ship h=pokur-deck] =(s u.player)))
+  :_  this
+    :~  :*  
+          %give 
+          %fact 
+          ~[/game/(scot %da u.game-id)/(scot %p u.player)]
+          [%pokur-game-state !>(game.u.game)]
+        ==
+    ==
   ==
 ++  on-leave
   |=  =path
@@ -454,6 +472,8 @@
       hand-is-over=%.y
       game-is-over=%.n
       turn-timer=`@da`(add now.bowl turn-time-limit.new-game-state)
+      spectators-allowed=spectators.c-data
+      spectators=~
     ]
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])
@@ -538,9 +558,20 @@
     %+  turn 
         hands.game.server-action 
       |=  hand=[ship pokur-deck]
-      (~(make-player-cards modify-state game.server-action) hand)  
+      (~(make-player-cards modify-state game.server-action) hand)
+  :: send spectator updates if any
   :_  state
-    cards
+    ?:  =((lent spectators.game.server-action) 0)
+      cards
+    %+  weld
+      cards
+    %+  turn
+      spectators.game.server-action
+    |=  s=ship
+    :^  %give 
+        %fact 
+        ~[/game/(scot %da game-id.game.game.server-action)/(scot %p s)]
+        [%pokur-game-state !>(game.game.server-action)]
     ::
     ::
     %kick

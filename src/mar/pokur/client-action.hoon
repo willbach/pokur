@@ -21,6 +21,7 @@
       %-  ot:dejs
       :~  [%to (ar:dejs (se:dejs %p))]
           [%host (se:dejs %p)]
+          [%spectators bo:dejs]
           [%min-bet ni:dejs]
           [%starting-stack ni:dejs]
           [%type (se:dejs %tas)]
