@@ -3,10 +3,10 @@ import { ChallengeForm, ChallengeList, Game } from './components';
 import _ from "lodash";
 import Urbit from "@urbit/http-api";
 
-const createApi = (host, code) =>
+const createApi = (code) =>
   _.memoize(
     () => {
-      const urb = new Urbit(host, code);
+      const urb = new Urbit('', code);
       urb.ship = window.ship;
       try {
         urb.connect();
@@ -38,11 +38,10 @@ const App = () => {
   const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
 
   useEffect(() => {
-    if (localStorage.getItem("host") && localStorage.getItem("code")) {
-      console.log("got host/code from cookie");
+    if (localStorage.getItem("code")) {
+      console.log("got code from cookie");
       setLoggedIn(true);
       const _urb = createApi(
-        localStorage.getItem("host"),
         localStorage.getItem("code")
       );
       setUrb(_urb);
@@ -66,10 +65,9 @@ const App = () => {
       });
   }, [urb]);
 
-  const login = (host, code) => {
-    localStorage.setItem("host", host);
+  const login = (code) => {
     localStorage.setItem("code", code);
-    const _urb = createApi(host, code);
+    const _urb = createApi(code);
     setUrb(_urb);
     setLoggedIn(true);
     return () => {};
@@ -103,32 +101,23 @@ const App = () => {
       </header>
       {loggedIn 
       ? <></>
-      : <div id="login"><pre>Login:</pre>
+      : <div className="login"><pre>Login:</pre>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const host = e.target.host.value;
           const code = e.target.code.value;
-          login(host, code);
+          login(code);
         }}
       >
         <input
-          type="host"
-          name="host"
-          placeholder={
-            loggedIn ? localStorage.getItem("host") : "Host"
-          }
-        />
-        <br />
-        <input
-          type="code"
+          type="password"
           name="code"
           placeholder={
             loggedIn ? localStorage.getItem("code") : "Code"
           }
         />
         <br />
-        <input type="submit" value="Login" />
+        <input className="button" type="submit" value="Login" />
       </form></div> }
       {inGame ? <Game 
                   urb={urb}
