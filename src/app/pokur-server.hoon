@@ -286,6 +286,7 @@
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   :: poke ourself to set a turn timer
+  ~&  >>  "pokur-server: performing move {<move-type>} for {<who>}"
   =/  new-timer  `@da`(add time turn-time-limit.game.game)
   =/  timer-cards
   ?.  =(turn-timer.game ~)
