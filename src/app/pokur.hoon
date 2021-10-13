@@ -25,14 +25,8 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ~&  >  '%pokur initialized successfully'
-  =/  launchapp  [%launch-action !>([%add %pokur [[%basic 'pokur' '/~pokur/img/tile.png' '/~pokur'] %.y]])]
-  =/  filea  [%file-server-action !>([%serve-dir /'~pokur' /app/pokur %.n %.n])]
   =.  game.state  ~
-  :_  this
-  :~  [%pass /srv %agent [our.bowl %file-server] %poke filea]
-      [%pass /pokur %agent [our.bowl %launch] %poke launchapp]
-      ==
+  :-  ~  this
 ++  on-save
   ^-  vase
   !>(state)
@@ -66,13 +60,11 @@
     ==
     ::
     %pokur-client-action
-    ~&  >  !<(client-action:pokur vase)
     =^  cards  state
     (handle-client-action:hc !<(client-action:pokur vase))
     [cards this]
     ::
     %pokur-game-action
-    ~&  >  !<(game-action:pokur vase)
     =^  cards  state
     (handle-game-action:hc !<(game-action:pokur vase))
     [cards this]
@@ -98,13 +90,11 @@
     [%game ~]
     ?~  game.state
       `this
-    ~&  >  "CLIENT: sending current game state to subscriber"
     :_  this
       ~[[%give %fact ~[/game] [%pokur-game-update !>([%update u.game.state "-"])]]]
     [%game-msgs ~]
     ?~  game.state
       `this
-    ~&  >  "CLIENT: sending game msgs"
     :_  this
       ~[[%give %fact ~[/game-msgs] [%pokur-game-update !>([%msgs game-msgs-received.state])]]]
   ==
@@ -130,7 +120,6 @@
         ==
       =.  game.state
         %-  some  new-state
-      ~&  >  "CLIENT: receiving updated game state"
       :_  this
         ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==
@@ -499,7 +488,6 @@
   ?>  (team:title [our src]:bowl)
   :: TODO if we're already in a game, we need to leave it?
   ?~  game.state
-    ~&  >  "CLIENT: subcribing to new game"
     :_  state
       :~  :*  %pass  /game-updates/(scot %da id.client-action)
               %agent  [host.client-action %pokur-server]

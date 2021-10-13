@@ -231,7 +231,6 @@
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
-  ~&  >>  "pokur-server: sending update cards"
   ?.  game-is-over.game
     ?.  hand-is-over.game
       :~  :*  %pass
@@ -359,11 +358,12 @@
   =/  timer-path
   ?-  type.server-action
     %turn
+  ~&  >>>  "pokur-server: setting TURN timer."
   /timer/(scot %da game-id.server-action)
     %round
+  ~&  >>>  "pokur-server: setting ROUND timer."
   /timer/(scot %da game-id.server-action)/round-timer
   ==
-  ~&  >>>  "pokur-server: setting turn timer."
   :_  state
     :~
       :*  %pass
