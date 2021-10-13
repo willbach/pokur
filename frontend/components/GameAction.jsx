@@ -74,7 +74,7 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
         {game.whose_turn != window.ship
          ? <p>Waiting for {"~"+game.whose_turn} to play</p>
          : <div className={styles.action_buttons}>
-             <button className="button" onClick={() => handleAction("bet", myBet)}>
+             <button className={styles.button} onClick={() => handleAction("bet", myBet)}>
                {myBet > myChips.stack + myChips.committed
                  ? <span>All-in</span>
                  : game.current_bet > 0
@@ -82,13 +82,13 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
                    : <span>Bet ${myBet}</span>}
              </button>
              {betToMatch > 0 
-             ? <button className="button" onClick={() => handleAction("bet", betToMatch + myChips.committed)}>
+             ? <button className={styles.button} onClick={() => handleAction("bet", betToMatch + myChips.committed)}>
                  Call ${betToMatch + myChips.committed}
                </button>
-             : <button className="button" onClick={() => handleAction("check", 0)}>
+             : <button className={styles.button} onClick={() => handleAction("check", 0)}>
                  Check
                </button>}
-             <button className="button" onClick={() => handleAction("fold", 0)}>
+             <button className={styles.button} onClick={() => handleAction("fold", 0)}>
                Fold
              </button>
            </div>}

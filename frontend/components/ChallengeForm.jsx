@@ -85,7 +85,7 @@ const ChallengeForm = ({ ob, urb, sentChallenge, setSentChallenge }) => {
         {Object.entries(sendToList).map(([i, data]) => ( 
             <input key={i} name="to" id={i} type="text"  placeholder="~zod" value={data} onChange={e => handleChange(e.target)} />
         ))}
-        <button className="button" onClick={e => addToInput(e)}>
+        <button className={styles.inline_button} onClick={e => addToInput(e)}>
           {addPlayerText}
         </button>
         <br />
@@ -139,7 +139,7 @@ const ChallengeForm = ({ ob, urb, sentChallenge, setSentChallenge }) => {
           <input name="spectators" type="checkbox" defaultChecked />
         </label>
         <br />
-        <input className="button" type="submit" value="Submit" />
+        <input className={styles.button} type="submit" value="Submit" />
       </form>
     </div>
   );
