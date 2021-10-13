@@ -99,7 +99,6 @@
     ~[src.bowl]
     =.  active-games.state
     (~(put by active-games.state) [u.game-id u.game])
-    ~&  >>  "SERVER: sending spectator their game state"
     :_  this
     :~  :*  
           %give 
@@ -110,7 +109,6 @@
     ==
   :: give a good subscriber their game state
   :: find their hand
-  ~&  >>  "SERVER: sending subscriber their game state"
   =.  my-hand.game.u.game
   +.-:(skim hands.u.game |=([s=ship h=pokur-deck] =(s u.player)))
   :_  this
@@ -135,11 +133,11 @@
   :: ROUND TIMER wire (for tournaments)
     [%timer @ta %round-timer ~]
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
-  ~&  >>>  "SERVER: Round ended on game {<game-id>} at {<now.bowl>}"
+  ~&  >>>  "pokur-server: Round ended on game {<game-id>} at {<now.bowl>}"
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
-    ~&  >>>  "server error: round timer popped on non-existent game."
+    ~&  >>>  "pokur-server error: round timer popped on non-existent game."
     :-  ~  this
   =/  game  u.game
   :: if no players left in game, poke ourselves to end it
@@ -184,11 +182,9 @@
   [cards this]
   :: TURN TIMER wire
     [%timer @ta ~]
-  :: TODO: check here if timer is a player timeout or tournament round
-  :: use increment-current-round if it's a round timer, and set a new one
   :: the timer ran out.. a player didn't make a move in time
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
-  ~&  >>>  "SERVER: Player timed out on game {<game-id>} at {<now.bowl>}"
+  ~&  >>>  "pokur-server: Player timed out on game {<game-id>} at {<now.bowl>}"
   :: find active player in that game
   =/  game
     (~(get by active-games.state) game-id)
@@ -201,6 +197,7 @@
         chips.game.game
       |=  [ship @ud @ud ? ? left=?]
       left
+    ~&  >>  "pokur-server: ending game, all players left."
     :_  this
     :~
       :*  %pass
@@ -215,6 +212,7 @@
   :: reset that game's turn timer
   =.  turn-timer.game  ~
   :: push alert that player timed out
+  ~&  >>  "pokur-server: {<whose-turn.game.game>} timed out."
   =.  update-message.game.game
     "{<whose-turn.game.game>} timed out."
   =.  active-games.state
@@ -233,7 +231,7 @@
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
-  ~&  >>  "SERVER: sending update cards"
+  ~&  >>  "pokur-server: sending update cards"
   ?.  game-is-over.game
     ?.  hand-is-over.game
       :~  :*  %pass
@@ -256,7 +254,7 @@
         ==
     ==
   :: the game is over, end it
-  ~&  >>  "SERVER: a game is over because everyone left or somebody won."
+  ~&  >>  "pokur-server: a game is over because everyone left or somebody won."
   =.  update-message.game.game
   "The game is now over."
   :~  :*  %pass
@@ -290,8 +288,6 @@
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   :: poke ourself to set a turn timer
   =/  new-timer  `@da`(add time turn-time-limit.game.game)
-  :: pad the timer with 2 seconds to account for transit?
-  :: can workshop this depending on real world effect
   =/  timer-cards
   ?.  =(turn-timer.game ~)
     :: there's an ongoing turn timer, cancel it and set fresh one
@@ -367,6 +363,7 @@
     %round
   /timer/(scot %da game-id.server-action)/round-timer
   ==
+  ~&  >>>  "pokur-server: setting turn timer."
   :_  state
     :~
       :*  %pass
@@ -380,6 +377,7 @@
     ::
     %cancel-timer
   ?>  (team:title [our src]:bowl)
+  ~&  >>>  "pokur-server: cancelling turn timer."
   :_  state
     :~
       :*  %pass
@@ -555,7 +553,6 @@
   ?:  =((lent spectators.game.game) 0)
     cards
   :: send spectator updates if any
-  ~&  >>  "we sending speccy updates"
   %+  weld
     cards
   %+  turn
@@ -569,7 +566,6 @@
     ::
     %send-game-updates
   ?>  (team:title [our src]:bowl)
-  ~&  >>  "we sending game updates"
   =/  cards
     %+  turn 
         hands.game.server-action 
@@ -579,7 +575,6 @@
   ?:  =((lent spectators.game.game.server-action) 0)
     cards
   :: send spectator updates if any
-  ~&  >>  "we sending speccy updates"
   %+  weld
     cards
   %+  turn
