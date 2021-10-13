@@ -327,25 +327,25 @@
   ::  that we had previously received but not yet declined.
     %challenge-update
   =/  challenge  challenge.client-action
-  ?.  (~(has by challenges-received.state) id.challenge)
-    ?~  challenge-sent.state
-      :_  state
-        ~[[%give %poke-ack `~[leaf+"error: got an update for a challenge from {<src.bowl>} that you don't have."]]]
-    ?.  =(id.challenge id.u.challenge-sent.state)
-      :_  state
-        ~[[%give %poke-ack `~[leaf+"error: got an update for a non-existent challenge that you didn't make."]]]
-    =.  challenge-sent.state
-      (some challenge)
+  ?:  (~(has by challenges-received.state) id.challenge)
+    :: just need to replace our stored version of the challenge with this update
+    =.  challenges-received.state
+      (~(put by challenges-received.state) [id.challenge challenge])
     :_  state
     :: alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
             [%pokur-challenge-update !>([%challenge-update challenge])]
         ==
-    ==  
-  :: just need to replace our stored version of the challenge with this update
-  =.  challenges-received.state
-    (~(put by challenges-received.state) [id.challenge challenge])
+    ==
+  ?~  challenge-sent.state
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: got an update for a challenge from {<src.bowl>} that you don't have."]]]
+  ?.  =(id.challenge id.u.challenge-sent.state)
+    :_  state
+      ~[[%give %poke-ack `~[leaf+"error: got an update for a non-existent challenge that you didn't make."]]]
+  =.  challenge-sent.state
+    (some challenge)
   :: if not all have either accepted or declined, don't start game
   :: also, notify others in the challenge that peer has accepted
   ?.  %+  levy
@@ -353,13 +353,12 @@
       |=  [s=ship accepted=? declined=?]
       |(accepted declined)
     :_  state
-      :: alert the frontend of the update
-      :~  :*  %give  %fact  
-              ~[/challenge-updates]
-              [%pokur-challenge-update !>([%challenge-update challenge])]
-          ==
-      ==
-  ::  if all players have responded, start game here
+    :: just alert the frontend of the update
+    :~  :*  %give  %fact  
+            ~[/challenge-updates]
+            [%pokur-challenge-update !>([%challenge-update challenge])]
+        ==
+    ==
   :: if all players have responded, automatically initialize game
   :: give server the list of players which accepted and will be playing
   =.  players.challenge
