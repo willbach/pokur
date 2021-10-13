@@ -2,18 +2,13 @@ import React, { useReducer, useEffect, useState } from "react";
 import { ChallengeForm, ChallengeList, Game } from './components';
 import _ from "lodash";
 import Urbit from "@urbit/http-api";
+const ob = require('urbit-ob');
 
-const createApi = (code) =>
+const createApi = () =>
   _.memoize(
     () => {
-      const urb = new Urbit('', code);
+      const urb = new Urbit('', '');
       urb.ship = window.ship;
-      try {
-        urb.connect();
-      } catch (err) {
-        console.log(err);
-      }
-      urb.onError = (message) => console.log(message);
       return urb;
     }
   );
@@ -27,7 +22,6 @@ function messageReducer(state, newMessage) {
 }
 
 const App = () => {
-  const [loggedIn, setLoggedIn] = useState();
   const [urb, setUrb] = useState();
   const [sub, setSub] = useState();
   const [sentChallenge, setSentChallenge] = useState(false);
@@ -38,15 +32,8 @@ const App = () => {
   const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
 
   useEffect(() => {
-    if (localStorage.getItem("code")) {
-      console.log("got code from cookie");
-      setLoggedIn(true);
-      const _urb = createApi(
-        localStorage.getItem("code")
-      );
+      const _urb = createApi();
       setUrb(_urb);
-      return () => {};
-    }
   }, []);
 
   // subscribe to /game path to recieve game updates
@@ -64,14 +51,6 @@ const App = () => {
         setSub(subscriptionId);
       });
   }, [urb]);
-
-  const login = (code) => {
-    localStorage.setItem("code", code);
-    const _urb = createApi(code);
-    setUrb(_urb);
-    setLoggedIn(true);
-    return () => {};
-  };
 
   function updateGameState(newGameState) {
     if (newGameState.in_game) {
@@ -99,53 +78,32 @@ const App = () => {
       <header>
         <p>Pokur Beta</p>
       </header>
-      {loggedIn 
-      ? <></>
-      : <div className="login"><pre>Login:</pre>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const code = e.target.code.value;
-          login(code);
-        }}
-      >
-        <input
-          type="password"
-          name="code"
-          placeholder={
-            loggedIn ? localStorage.getItem("code") : "Code"
-          }
-        />
-        <br />
-        <input className="button" type="submit" value="Login" />
-      </form></div> }
-      {inGame ? <Game 
+      {inGame 
+        ? <Game 
+            urb={urb}
+            game={gameState} 
+            spectating={spectating}
+            myBet={myBet} 
+            setMyBet={setMyBet}
+            gameMessages={gameMessages}
+          />
+        : <>
+            {!sentChallenge 
+              ? <ChallengeForm 
+                  ob={ob}
                   urb={urb}
-                  game={gameState} 
-                  spectating={spectating}
-                  myBet={myBet} 
-                  setMyBet={setMyBet}
-                  gameMessages={gameMessages}
+                  sentChallenge={sentChallenge}
+                  setSentChallenge={setSentChallenge} 
                 />
-              : !sentChallenge 
-                 ? <div>
-                     <ChallengeForm 
-                       urb={urb}
-                       sentChallenge={sentChallenge}
-                       setSentChallenge={setSentChallenge} 
-                     />
-                     <ChallengeList 
-                       urb={urb}
-                       setSpectating={setSpectating}
-                       setSentChallenge={setSentChallenge} 
-                     />
-                   </div>
-                 : <div>
-                    <ChallengeList 
-                       urb={urb}
-                       setSentChallenge={setSentChallenge}  
-                     />
-                   </div>}
+              : <></>
+            }
+            <ChallengeList 
+              ob={ob}
+              urb={urb}
+              setSentChallenge={setSentChallenge}  
+            /> 
+          </>
+        }
     </>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styles from './ChallengeForm.module.css';
 
-const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
+const ChallengeForm = ({ ob, urb, sentChallenge, setSentChallenge }) => {
   const [sendToList, setSendToList] = useState({0:''});
   const [addPlayerText, setAddPlayerText] = useState("Add Player");
   const [showCashOptions, setShowCashOptions] = useState(false);
@@ -9,6 +9,11 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
   const handleChange = (target) => {
     const id = target.id;
     setSendToList({...sendToList, [id]: target.value });
+    if (ob.isValidPatp(target.value)) {
+      target.className = "valid";
+    } else {
+      target.className = "invalid";
+    }
   };
 
   const showOrHideCashOptions = (target) => {
@@ -80,13 +85,22 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
         {Object.entries(sendToList).map(([i, data]) => ( 
             <input key={i} name="to" id={i} type="text"  placeholder="~zod" value={data} onChange={e => handleChange(e.target)} />
         ))}
-        <button className={styles.button} onClick={e => addToInput(e)}>
+        <button className="button" onClick={e => addToInput(e)}>
           {addPlayerText}
         </button>
         <br />
         <label>
           Host ship: 
-          <input name="host" type="text" placeholder="~zod"/>
+          <input name="host" 
+                 type="text"
+                 placeholder="~zod"
+                 onChange={e => {
+                                 if (ob.isValidPatp(e.target.value)) {
+                                   e.target.className = "valid";
+                                 } else {
+                                   e.target.className = "invalid";
+                                 }
+                                }} />
         </label>
         <br />
         <br />
@@ -125,7 +139,7 @@ const ChallengeForm = ({ urb, sentChallenge, setSentChallenge }) => {
           <input name="spectators" type="checkbox" defaultChecked />
         </label>
         <br />
-        <input className={styles.button} type="submit" value="Submit" />
+        <input className="button" type="submit" value="Submit" />
       </form>
     </div>
   );

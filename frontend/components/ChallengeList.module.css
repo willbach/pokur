@@ -58,6 +58,10 @@ li {
     border: none;
 }
 
+.full_width {
+    width: 50%;
+}
+
 .inline_button {
     width: 100px;
     display: inline;

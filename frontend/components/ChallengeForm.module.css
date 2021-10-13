@@ -27,16 +27,3 @@ input, option {
     margin: 10px 0;
     box-shadow: 0 0 15px 4px rgba(0,0,0,0.06);
 }
-
-.button {
-    color: var(--light-text);
-    background: var(--dark-blue);
-    padding: 4px 20px 4px 20px;
-    text-decoration: none;
-    border: none;
-}
-  
-.button:hover {
-    background: var(--light-blue);
-    text-decoration: none;
-}

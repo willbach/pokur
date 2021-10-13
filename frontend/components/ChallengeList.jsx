@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChallengeList.module.css';
 
-const ChallengeList = ({ urb, setSentChallenge, setSpectating }) => {
+const ChallengeList = ({ ob, urb, setSentChallenge }) => {
   const [challenges, setChallenges] = useState({});
   const [sub, setSub] = useState();
 
@@ -96,7 +96,16 @@ const ChallengeList = ({ urb, setSentChallenge, setSpectating }) => {
       <form className={styles.spectate_form} onSubmit={e => trySpectate(e)}>
         <p>Spectate an active game</p>
         <input name="game_id" type="text" placeholder="game id" />
-        <input name="game_host" type="text" placeholder="host ship" />
+        <input name="game_host" 
+               type="text"
+               placeholder="~hosten" 
+               onChange={e => {
+                                 if (ob.isValidPatp(e.target.value)) {
+                                   e.target.className = "valid";
+                                 } else {
+                                   e.target.className = "invalid";
+                                 }
+                                }}/>
         <input className={`${styles.button} ${styles.inline_button}`} type="submit" value="Spectate" />
       </form>
       <p className={styles.title}>Invites received:</p>
@@ -129,7 +138,7 @@ const ChallengeList = ({ urb, setSentChallenge, setSpectating }) => {
                   }</td>
                 <td>{data.type}</td>
                 <td>{data.challenger == '~'+window.ship 
-                 ? <button className={styles.button} onClick={() => cancelChallenge(id)}>
+                 ? <button className={`${styles.button} ${styles.full_width}`} onClick={() => cancelChallenge(id)}>
                      Cancel
                    </button>
                  : <>

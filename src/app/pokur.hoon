@@ -337,32 +337,64 @@
   ::  We've received a challenge UPDATE regarding a challenge
   ::  that we had previously received but not yet declined.
     %challenge-update
-  ?.  (~(has by challenges-received.state) id.challenge.client-action)
+  =/  challenge  challenge.client-action
+  ?.  (~(has by challenges-received.state) id.challenge)
     ?~  challenge-sent.state
       :_  state
         ~[[%give %poke-ack `~[leaf+"error: got an update for a challenge from {<src.bowl>} that you don't have."]]]
-    ?.  =(id.challenge.client-action id.u.challenge-sent.state)
+    ?.  =(id.challenge id.u.challenge-sent.state)
       :_  state
         ~[[%give %poke-ack `~[leaf+"error: got an update for a non-existent challenge that you didn't make."]]]
     =.  challenge-sent.state
-      (some challenge.client-action)
+      (some challenge)
     :_  state
     :: alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%challenge-update challenge.client-action])]
+            [%pokur-challenge-update !>([%challenge-update challenge])]
         ==
     ==  
   :: just need to replace our stored version of the challenge with this update
   =.  challenges-received.state
-    (~(put by challenges-received.state) [id.challenge.client-action challenge.client-action])
+    (~(put by challenges-received.state) [id.challenge challenge])
+  :: if not all have either accepted or declined, don't start game
+  :: also, notify others in the challenge that peer has accepted
+  ?.  %+  levy
+        players.challenge
+      |=  [s=ship accepted=? declined=?]
+      |(accepted declined)
+    :_  state
+      :: alert the frontend of the update
+      :~  :*  %give  %fact  
+              ~[/challenge-updates]
+              [%pokur-challenge-update !>([%challenge-update challenge])]
+          ==
+      ==
+  ::  if all players have responded, start game here
+  :: if all players have responded, automatically initialize game
+  :: give server the list of players which accepted and will be playing
+  =.  players.challenge
+    %+  skim
+        players.challenge
+      |=  [ship accepted=? ?]
+      accepted
   :_  state
-    :: alert the frontend of the update
-    :~  :*  %give  %fact  
-            ~[/challenge-updates]
-            [%pokur-challenge-update !>([%challenge-update challenge.client-action])]
+    %+  welp
+      :: register game with server
+      :~
+        :*  
+          %pass  /poke-wire  %agent  [host.challenge %pokur-server]
+          %poke  %pokur-server-action  !>([%register-game challenge=challenge])
         ==
-    ==
+      ==
+    :: notify all players that the game is registered
+    %+  turn
+      players.challenge
+    |=  [player=ship ? ?]
+      :*
+        %pass  /poke-wire  %agent  [player %pokur]
+        %poke  %pokur-client-action  !>([%game-registered challenge=challenge])
+      ==
   ::
   ::  Accept a specific challenge that we've received
     %accept-challenge
@@ -372,8 +404,6 @@
   ?~  challenge
     :_  state
       ~[[%give %poke-ack `~[leaf+"error: no challenge with that ID exists"]]]
-  =.  challenges-received.state
-    (~(del by challenges-received.state) id.client-action)
   :_  state
     :: notify challenger that we've accepted
     :: they'll notify the other ships in the lobby of this
@@ -438,62 +468,25 @@
       players.challenge
     |=  [s=ship accepted=? declined=?]
     ?:  =(src.bowl s)
-      [s %.y declined]
+      [s %.y %.n]
     [s accepted declined]
-  :: if not all have either accepted or declined, don't start game
-  :: also, notify others in the challenge that peer has accepted
-  ?.  %+  levy
-        players.challenge
-      |=  [s=ship accepted=? declined=?]
-      |(accepted declined)
-    :_  state
-      :: poke every non-declined ship with update
-      %+  turn
-        %+  skip
-          players.challenge
-        |=  [player=ship accepted=? declined=?]
-        ?|  =(player our.bowl)
-            declined
-          ==
-      |=  [player=ship accepted=? declined=?]
-      :*  %pass  /poke-wire  %agent  [player %pokur]
-          %poke  %pokur-client-action  !>([%challenge-update challenge])
-      ==
-  :: if all players have responded, automatically initialize game
-  :: give server the list of players which accepted and will be playing
-  =.  players.challenge
-    %+  skim
-        players.challenge
-      |=  [ship accepted=? ?]
-      accepted
   :_  state
-    %+  welp
-      :: register game with server
-      :~
-        :*  
-          %pass  /poke-wire  %agent  [host.challenge %pokur-server]
-          %poke  %pokur-server-action  !>([%register-game challenge=challenge])
-        ==
-      :: already doing this
-      :: :*  
-      ::   %pass  /poke-wire  %agent  [our.bowl %pokur]
-      ::   %poke  %pokur-client-action  !>([%subscribe game-id=id.challenge host=host.challenge])
-      :: ==
-      ==
-    :: notify all players that the game is registered
+    :: poke every non-declined ship with update
     %+  turn
       %+  skip
         players.challenge
-      |=  [ship ? declined=?]
+      |=  [player=ship accepted=? declined=?]
       declined
-    |=  [player=ship ? ?]
-      :*
-        %pass  /poke-wire  %agent  [player %pokur]
-        %poke  %pokur-client-action  !>([%game-registered challenge=challenge])
-      ==
+    |=  [player=ship accepted=? declined=?]
+    :*  %pass  /poke-wire  %agent  [player %pokur]
+        %poke  %pokur-client-action  !>([%challenge-update challenge])
+    ==
   ::
   ::
     %game-registered
+  =.  challenges-received.state
+    (~(del by challenges-received.state) id.challenge.client-action)
+  :: remove challenge from our received-list
   :_  state
     :: subscribe to path which game will be served from
     :~  :*

@@ -102,8 +102,24 @@ header {
     text-decoration: none;
     border: none;
 }
+
+.full_width {
+    width: 100%;
+}
+
+.inline_button {
+    width: 100px;
+    display: inline;
+}
   
 .button:hover {
     background: var(--light-blue);
     text-decoration: none;
+}
+
+.valid {
+    color: var(--dark-green);
+}
+.invalid {
+    color: var(--red);
 }
