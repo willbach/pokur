@@ -56,7 +56,6 @@ const App = () => {
     if (newGameState.in_game) {
       setGameState(newGameState);
       setGameMessages(newGameState.update_message);
-      // localStorage.setItem("gameTimer", newGameState.time_limit_seconds);
       setMyBet(
         newGameState.current_bet > 0 
               ? newGameState.current_bet + newGameState.last_bet

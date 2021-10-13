@@ -42,7 +42,22 @@
     ?:  |(=(3 n) =(4 n))
       turn-river
     ?:  =(5 n)
-      (process-win (determine-winner hands.state))
+      =/  unfolded-players
+      %+  turn
+        %+  skip
+          chips.game.state
+        |=  [who=ship n=@ud c=@ud acted=? folded=? left=?]
+        folded
+      |=  [who=ship @ud @ud ? ? ?]
+      who
+      ~&  >>  unfolded-players
+      =/  unfolded-hands
+      %+  skip
+        hands.state
+      |=  [who=ship hand=pokur-deck]
+      =(%.y (find [who]~ unfolded-players))
+      ~&  >>  unfolded-hands
+      (process-win (determine-winner unfolded-hands))
     pokur-flop
 
 ::  **takes in a shuffled deck**

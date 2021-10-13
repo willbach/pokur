@@ -215,8 +215,8 @@
   ~&  >>  "pokur-server: {<whose-turn.game.game>} timed out."
   =.  update-message.game.game
     "{<whose-turn.game.game>} timed out."
-  =.  active-games.state
-  (~(put by active-games.state) [game-id game])
+  :: =.  active-games.state
+  :: (~(put by active-games.state) [game-id game])
   =/  player-to-fold
     whose-turn.game.game
   =/  current-time  now.bowl

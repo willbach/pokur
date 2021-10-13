@@ -5,17 +5,10 @@ const TurnTimer = ({ countdown }) => {
   
   const [timeLeft, setTimeLeft] = useState(countdown);
 
-  // useEffect(() => {
-  //   if (localStorage.getItem("gameTimer")) {
-  //     setTimeLeft(localStorage.getItem("gameTimer"));
-  //   }
-  // }, []);
-
   useEffect(() => {
     setTimeout(() => {
       if (timeLeft > 0) {
         setTimeLeft(timeLeft - 1);
-        // localStorage.setItem("gameTimer", timeLeft - 1);
       }
     }, 1000);
   });

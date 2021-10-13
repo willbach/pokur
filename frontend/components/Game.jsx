@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction, Chat } from '../components';
 import styles from './Game.module.css';
+import TurnTimer from './TurnTimer';
 
 const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages }) => {
   const [sub, setSub] = useState();
@@ -38,7 +39,6 @@ const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages }) => {
         }
       },
     });
-    localStorage.removeItem("gameTimer");
   };
 
   const sendChat = (value) => {

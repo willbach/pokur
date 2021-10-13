@@ -6,6 +6,7 @@ const Chat = ({ messages, send }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     send(e.target.message.value);
+    e.target.message.value = "";
   }
 
   return (
