@@ -1,41 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChallengeList.module.css';
 
-const ChallengeList = ({ ob, urb, setSentChallenge }) => {
-  const [challenges, setChallenges] = useState({});
-  const [sub, setSub] = useState();
-
-  // subscribe to /challenge-updates
-  useEffect(() => {
-    if (!urb || sub) return;
-    urb
-      .subscribe({
-        app: "pokur",
-        path: "/challenge-updates",
-        event: processChallengeUpdate,
-        err: console.log,
-        quit: console.log,
-      })
-      .then((subscriptionId) => {
-        setSub(subscriptionId);
-      });
-  }, [urb]);
-
-  const processChallengeUpdate = (data) => {
-    if (data["update"] == "open" || data["update"] == "modify") {
-      const newChallenge = {
-        challenger: data["challenger"],
-        players: data["players"],
-        host: data["host"],
-        type: data["type"],
-      }
-      setChallenges({ ...challenges, [data["id"]]: newChallenge});
-    } else if (data["update"] == "close") {
-      var newList = {...challenges};
-      delete newList[data["id"]];
-      setChallenges(newList);
-    }
-  };
+const ChallengeList = ({ ob, urb, challenges, setChallenges, setSentChallenge }) => {
 
   const acceptChallenge = (id) => {
     urb.poke({

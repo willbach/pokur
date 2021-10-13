@@ -40,8 +40,7 @@
       %noun
     ?+    q.vase  (on-poke:def mark vase)
         %print-state
-      ~&  >  state
-      ~&  >>  bowl  `this
+      ~&  >  active-games.state  `this
       ::
         %print-subs
       ~&  >>  &2.bowl  `this
@@ -122,7 +121,7 @@
   ==
 ++  on-leave
   |=  =path
-  ~&  "got leave request from {<src.bowl>}"
+  ~&  "pokur-server: got leave request from {<src.bowl>}"
   `this
 ++  on-peek   on-peek:def
 ++  on-agent  on-agent:def
@@ -133,11 +132,10 @@
   :: ROUND TIMER wire (for tournaments)
     [%timer @ta %round-timer ~]
   =/  game-id  (need `(unit @da)`(slaw %da i.t.wire))
-  ~&  >>>  "pokur-server: Round ended on game {<game-id>} at {<now.bowl>}"
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
-    ~&  >>>  "pokur-server error: round timer popped on non-existent game."
+    ~&  >>>  "pokur-server: round timer popped on non-existent game."
     :-  ~  this
   =/  game  u.game
   :: if no players left in game, poke ourselves to end it
@@ -197,7 +195,6 @@
         chips.game.game
       |=  [ship @ud @ud ? ? left=?]
       left
-    ~&  >>  "pokur-server: ending game, all players left."
     :_  this
     :~
       :*  %pass
@@ -219,10 +216,19 @@
   (~(put by active-games.state) [game-id game])
   =/  player-to-fold
     whose-turn.game.game
-  =/  current-time  now.bowl
-  =/  cards
-  (perform-move current-time player-to-fold game-id %fold 0)
-  [cards this]
+  =/  card
+  :~
+    :*  %pass
+        /poke-wire
+        %agent
+        [our.bowl %pokur-server]
+        %poke
+        %pokur-game-action
+        !>([%fold game-id.game.game])
+    ==
+  ==  
+  :: (perform-move current-time player-to-fold game-id %fold 0)
+  [card this]
   ==
 ++  on-fail   on-fail:def
 --
@@ -253,9 +259,10 @@
         ==
     ==
   :: the game is over, end it
-  ~&  >>  "pokur-server: a game is over because everyone left or somebody won."
   =.  update-message.game.game
   "The game is now over."
+  =.  active-games.state
+  (~(put by active-games.state) [game-id.game.game game])
   :~  :*  %pass
           /poke-wire
           %agent
@@ -275,16 +282,23 @@
   ==
 ++  perform-move
   |=  [time=@da who=ship game-id=@da move-type=@tas amount=@ud]
-  ^-  (list card)
+  ^-  (quip card _state)
   =/  game  (~(get by active-games.state) game-id)
   ?~  game
+    :_  state
     ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
   =/  game  u.game
   :: validate that move is from right player
-  ?.  =(whose-turn.game.game who)
+  =/  from
+    ?:  =(who our.bowl)
+    :: automatic fold from timeout!
+    ~&  >  "automatic fold from timeout!! or zod move."
+    whose-turn.game.game
+  who
+  ?.  =(whose-turn.game.game from)
+    :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   :: poke ourself to set a turn timer
-  ~&  >>  "pokur-server: performing move {<move-type>} for {<who>}"
   =/  new-timer  `@da`(add time turn-time-limit.game.game)
   =/  timer-cards
   ?.  =(turn-timer.game ~)
@@ -321,27 +335,26 @@
   =.  turn-timer.game  new-timer
   =.  game 
   ?:  =(move-type %bet)
-    (~(process-player-action modify-state game) who [%bet game-id amount])
+    (~(process-player-action modify-state game) from [%bet game-id amount])
   ?:  =(move-type %check)
-    (~(process-player-action modify-state game) who [%check game-id])
-  (~(process-player-action modify-state game) who [%fold game-id])
+    (~(process-player-action modify-state game) from [%check game-id])
+  (~(process-player-action modify-state game) from [%fold game-id])
   =.  active-games.state
   (~(put by active-games.state) [game-id game])
-  %+  weld
-    timer-cards
-  (generate-update-cards game)
+  :_  state
+  %+  welp
+    (generate-update-cards game)
+  timer-cards
+  
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
   ?-  -.action
       %check
-    :_  state
     (perform-move now.bowl src.bowl game-id.action %check 0)
       %bet
-    :_  state
     (perform-move now.bowl src.bowl game-id.action %bet amount.action)
       %fold
-    :_  state
     (perform-move now.bowl src.bowl game-id.action %fold 0)
     :: server doesn't do these... yet.
       %receive-msg
@@ -358,10 +371,8 @@
   =/  timer-path
   ?-  type.server-action
     %turn
-  ~&  >>>  "pokur-server: setting TURN timer."
   /timer/(scot %da game-id.server-action)
     %round
-  ~&  >>>  "pokur-server: setting ROUND timer."
   /timer/(scot %da game-id.server-action)/round-timer
   ==
   :_  state
@@ -377,7 +388,6 @@
     ::
     %cancel-timer
   ?>  (team:title [our src]:bowl)
-  ~&  >>>  "pokur-server: cancelling turn timer."
   :_  state
     :~
       :*  %pass
@@ -390,7 +400,7 @@
     ==
     ::
     %register-game
-  ~&  >>  "Game initiated with server {<our.bowl>}."
+  ~&  >>  "pokur-server: Game initiated with server {<our.bowl>}."
   =/  players
     %+  turn
       players.challenge.server-action

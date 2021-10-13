@@ -23,13 +23,17 @@ function messageReducer(state, newMessage) {
 
 const App = () => {
   const [urb, setUrb] = useState();
-  const [sub, setSub] = useState();
-  const [sentChallenge, setSentChallenge] = useState(false);
+  const [gameSub, setGameSub] = useState();
+  const [challengeSub, setChallengeSub] = useState();
+  const [chatSub, setChatSub] = useState();
   const [inGame, setInGame] = useState(false);
   const [spectating, setSpectating] = useState(false);
   const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
   const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [challenges, setChallenges] = useState({});
+  const [sentChallenge, setSentChallenge] = useState(false);
 
   useEffect(() => {
       const _urb = createApi();
@@ -38,7 +42,7 @@ const App = () => {
 
   // subscribe to /game path to recieve game updates
   useEffect(() => {
-    if (!urb || sub) return;
+    if (!urb || gameSub) return;
     urb
       .subscribe({
         app: "pokur",
@@ -48,7 +52,7 @@ const App = () => {
         quit: console.log,
       })
       .then((subscriptionId) => {
-        setSub(subscriptionId);
+        setGameSub(subscriptionId);
       });
   }, [urb]);
 
@@ -72,6 +76,60 @@ const App = () => {
     }
   };
 
+  // subscribe to /challenge-updates
+  useEffect(() => {
+    if (!urb || challengeSub) return;
+    urb
+      .subscribe({
+        app: "pokur",
+        path: "/challenge-updates",
+        event: processChallengeUpdate,
+        err: console.log,
+        quit: console.log,
+      })
+      .then((subscriptionId) => {
+        setChallengeSub(subscriptionId);
+      });
+  }, [urb]);
+
+  const processChallengeUpdate = (data) => {
+    if (data["update"] == "open" || data["update"] == "modify") {
+      const newChallenge = {
+        challenger: data["challenger"],
+        players: data["players"],
+        host: data["host"],
+        type: data["type"],
+      }
+      setChallenges({ ...challenges, [data["id"]]: newChallenge});
+    } else if (data["update"] == "close") {
+      var newList = {...challenges};
+      delete newList[data["id"]];
+      setChallenges(newList);
+    }
+  };
+
+  // subscribe to /game-msgs path to recieve player messages
+  useEffect(() => {
+    if (!urb || chatSub) return;
+    urb
+      .subscribe({
+        app: "pokur",
+        path: "/game-msgs",
+        event: updateMessages,
+        err: console.log,
+        quit: console.log,
+      })
+      .then((subscriptionId) => {
+        setChatSub(subscriptionId);
+      });
+  }, [urb]);
+
+  // should messages be sent on the subscription one at a time, or in a bundle??
+  // sending all of them in a bundle for now
+  function updateMessages(messageUpdate) {
+    setChatMessages(messageUpdate["messages"]);
+  };
+
   return (
     <>
       <header>
@@ -85,6 +143,7 @@ const App = () => {
             myBet={myBet} 
             setMyBet={setMyBet}
             gameMessages={gameMessages}
+            chatMessages={chatMessages}
           />
         : <>
             {!sentChallenge 
@@ -99,6 +158,8 @@ const App = () => {
             <ChallengeList 
               ob={ob}
               urb={urb}
+              challenges={challenges}
+              setChallenges={setChallenges}
               setSentChallenge={setSentChallenge}  
             /> 
           </>

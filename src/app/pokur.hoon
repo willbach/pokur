@@ -109,7 +109,6 @@
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
       %fact
-      ~&  >>  "pokur-client: received new game state"
       =/  new-state=pokur-game-state  
         !<(pokur-game-state q.cage.sign)
       =/  my-hand-eval

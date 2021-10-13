@@ -3,31 +3,7 @@ import { GameInfo, GameAction, Chat } from '../components';
 import styles from './Game.module.css';
 import TurnTimer from './TurnTimer';
 
-const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages }) => {
-  const [sub, setSub] = useState();
-  const [chatMessages, setChatMessages] = useState([]);
-
-  // subscribe to /game-msgs path to recieve game updates
-  useEffect(() => {
-    if (!urb || sub) return;
-    urb
-      .subscribe({
-        app: "pokur",
-        path: "/game-msgs",
-        event: updateMessages,
-        err: console.log,
-        quit: console.log,
-      })
-      .then((subscriptionId) => {
-        setSub(subscriptionId);
-      });
-  }, [urb]);
-
-  // should messages be sent on the subscription one at a time, or in a bundle??
-  // sending all of them in a bundle for now
-  function updateMessages(messageUpdate) {
-    setChatMessages(messageUpdate["messages"]);
-  };
+const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages, chatMessages }) => {
 
   const leaveGame = () => {
     urb.poke({

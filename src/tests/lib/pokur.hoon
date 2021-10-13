@@ -16,9 +16,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[40]
+      round-duration=~
       last-bet=0
       board=~[[%10 %spades] [%king %spades] [%ace %spades] [%jack %spades] [%queen %spades]]
       my-hand=~
@@ -26,6 +29,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -33,6 +38,7 @@
       hands=~[[~zod ~[[%jack %clubs] [%jack %hearts]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winners
@@ -53,9 +59,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 500 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[40]
+      round-duration=~
       last-bet=0
       board=~[[%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
       my-hand=~
@@ -63,6 +72,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -70,6 +81,7 @@
       hands=~[[~zod ~[[%jack %hearts] [%10 %hearts]]] [~bus ~[[%2 %hearts] [%10 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winners
@@ -96,9 +108,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[40]
+      round-duration=~
       last-bet=0
       board=~[[%10 %spades] [%jack %clubs] [%jack %hearts] [%jack %spades] [%queen %spades]]
       my-hand=~
@@ -106,6 +121,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -113,6 +130,7 @@
       hands=~[[~zod ~[[%king %spades] [%ace %spades]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winner
@@ -133,9 +151,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[40]
+      round-duration=~
       last-bet=0
       board=~[[%2 %spades] [%2 %clubs] [%jack %hearts] [%6 %spades] [%queen %clubs]]
       my-hand=~
@@ -143,6 +164,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -150,6 +173,7 @@
       hands=~[[~zod ~[[%jack %spades] [%6 %clubs]]] [~bus ~[[%jack %diamonds] [%queen %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winner
@@ -170,9 +194,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[10 20 30]
+      round-duration=(some ~)
       last-bet=0
       board=~[[%2 %hearts] [%3 %clubs] [%3 %hearts] [%jack %spades] [%queen %spades]]
       my-hand=~
@@ -180,6 +207,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -187,6 +216,7 @@
       hands=~[[~zod ~[[%2 %spades] [%2 %clubs]]] [~bus ~[[%2 %diamonds] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winner
@@ -207,9 +237,12 @@
       update-message=""
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n] [~nec 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
       pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
-      min-bet=40
+      min-bets=~[40]
+      round-duration=~
       last-bet=0
       board=~[[%8 %hearts] [%3 %spades] [%3 %hearts] [%jack %spades] [%queen %spades]]
       my-hand=~
@@ -217,6 +250,8 @@
       dealer=~bus
       small-blind=~bus
       big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
     ]
   =/  state
     [
@@ -224,11 +259,55 @@
       hands=~[[~zod ~[[%king %spades] [%7 %spades]]] [~bus ~[[%2 %spades] [%4 %spades]]] [~nec ~[[%8 %diamonds] [%3 %clubs]]]]
       deck=generate-deck
       hand-is-over=%.y
+      game-is-over=%.n
       turn-timer=~
     ]
   =/  winner
     (~(determine-winner modify-state state) hands.state)
   ?>  =(-.-.winner ~nec)
+  ~
+++  test-determine-winner-5
+  ^-  tang
+  =/  test-game-state
+    [
+      game-id=~2021.7.28..18.17.52..1849
+      host=~zod
+      type=%cash
+      turn-time-limit=~s1
+      time-limit-seconds=1
+      players=~[~zod ~bus ~nec]
+      paused=%.n
+      update-message=""
+      hands-played=0
+      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.y %.n] [~nec 1.000 0 %.n %.n %.n]]
+      current-round=0
+      round-over=%.n
+      pots=~[[100 ~[~zod ~bus]]]
+      current-bet=0
+      min-bets=~[40]
+      round-duration=~
+      last-bet=0
+      board=~[[%king %hearts] [%queen %diamonds] [%jack %hearts] [%2 %spades] [%3 %spades]]
+      my-hand=~
+      whose-turn=~bus
+      dealer=~bus
+      small-blind=~bus
+      big-blind=~zod
+      spectators-allowed=%.n
+      spectators=~
+    ]
+  =/  state
+    [
+      game=test-game-state
+      hands=~[[~zod ~[[%king %spades] [%jack %spades]]] [~nec ~[[%queen %clubs] [%jack %clubs]]]]
+      deck=generate-deck
+      hand-is-over=%.y
+      game-is-over=%.n
+      turn-timer=~
+    ]
+  =/  winner
+    (~(determine-winner modify-state state) hands.state)
+  ?>  =(-.-.winner ~zod)
   ~
 :: tie breaking tests
 ++  test-tie-break-1
