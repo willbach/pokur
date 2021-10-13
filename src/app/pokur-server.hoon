@@ -220,7 +220,7 @@
   =/  player-to-fold
     whose-turn.game.game
   =/  current-time  now.bowl
-  =^  cards  state
+  =/  cards
   (perform-move current-time player-to-fold game-id %fold 0)
   [cards this]
   ==
@@ -233,8 +233,6 @@
   ^-  (list card)
   ?.  game-is-over.game
     ?.  hand-is-over.game
-      ~&  >>  "generating mid-hand update cards for GAME:"
-      ~&  >  game
       :~  :*  %pass
               /poke-wire
               %agent
@@ -277,15 +275,13 @@
   ==
 ++  perform-move
   |=  [time=@da who=ship game-id=@da move-type=@tas amount=@ud]
-  ^-  (quip card _state)
+  ^-  (list card)
   =/  game  (~(get by active-games.state) game-id)
   ?~  game
-    :_  state
     ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
   =/  game  u.game
   :: validate that move is from right player
   ?.  =(whose-turn.game.game who)
-    :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   :: poke ourself to set a turn timer
   ~&  >>  "pokur-server: performing move {<move-type>} for {<who>}"
@@ -324,7 +320,6 @@
   ==
   =.  turn-timer.game  new-timer
   =.  game 
-  :: this is lame, i am lame
   ?:  =(move-type %bet)
     (~(process-player-action modify-state game) who [%bet game-id amount])
   ?:  =(move-type %check)
@@ -332,19 +327,21 @@
   (~(process-player-action modify-state game) who [%fold game-id])
   =.  active-games.state
   (~(put by active-games.state) [game-id game])
-  :_  state
-    %+  weld
-      timer-cards
-    (generate-update-cards game)
+  %+  weld
+    timer-cards
+  (generate-update-cards game)
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
   ?-  -.action
       %check
+    :_  state
     (perform-move now.bowl src.bowl game-id.action %check 0)
       %bet
+    :_  state
     (perform-move now.bowl src.bowl game-id.action %bet amount.action)
       %fold
+    :_  state
     (perform-move now.bowl src.bowl game-id.action %fold 0)
     :: server doesn't do these... yet.
       %receive-msg
