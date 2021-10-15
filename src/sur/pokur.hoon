@@ -142,4 +142,42 @@
     [%wipe-all-games ~]
   ==
 ::
+:: HISTORICAL STATES FOR TRANSITIONS
+::
++$  pokur-game-state-zero
+  $:  
+    game-id=@da
+    host=ship
+    type=pokur-game-type
+    turn-time-limit=@dr
+    time-limit-seconds=@ud :: for frontend parsing only
+    players=(list ship)
+    paused=?
+    update-message=tape
+    hands-played=@ud
+    chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
+    pots=(list [@ud (list ship)]) :: usually just one, but side pots are stored here.
+    current-round=@ud :: set to 0 if cash game
+    round-over=? :: set to indicate that next hand should increment current-round
+    current-bet=@ud
+    min-bets=(list @ud)
+    round-duration=(unit @dr)
+    last-bet=@ud
+    board=pokur-deck
+    my-hand=pokur-deck
+    whose-turn=ship
+    dealer=ship
+    small-blind=ship
+    big-blind=ship
+    spectators-allowed=?
+    spectators=(list ship)
+  == 
++$  server-game-state-zero
+  $:  game=pokur-game-state-zero
+      hands=(list [ship pokur-deck])
+      deck=pokur-deck
+      hand-is-over=?
+      game-is-over=?
+      turn-timer=?(~ @da)
+  ==
 --

@@ -2,18 +2,23 @@
 /+  default-agent, dbug, *pokur
 |%
 +$  versioned-state
-    $%  state-zero
-    ==
+  $%  state-one
+      state-zero
+  ==
++$  state-one
+  $:  %1
+      active-games=(map @da server-game-state)
+  ==
 +$  state-zero
-    $:  %0
-        active-games=(map @da server-game-state) 
-    ==
+  $:  %0
+      active-games=(map @da server-game-state-zero) 
+  ==
 ::
 +$  card  card:agent:gall
 ::
 --
 %-  agent:dbug
-=|  state=versioned-state
+=|  state=state-one
 ^-  agent:gall
 =<
 |_  =bowl:gall
@@ -32,7 +37,16 @@
   |=  old-state=vase
   ^-  (quip card _this)
   ~&  >  '%pokur-server recompiled successfully'
-  `this(state !<(versioned-state old-state))
+  =/  prev  !<(versioned-state old-state)
+  ?-  -.prev
+    %0
+    ~&  >>>  '%0'
+    :: just wipe the damn game state to swap. no one will be in-game during the OTA ;)
+    `this(state [%1 `(map @da server-game-state)`~])
+    %1
+    ~&  >>>  '%1'
+    `this(state prev)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)

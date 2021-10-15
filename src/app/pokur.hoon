@@ -2,10 +2,18 @@
 /+  default-agent, dbug, *pokur
 |%
 +$  versioned-state
-    $%  state-zero
+    $%  state-one
+        state-zero
+    ==
++$  state-one
+    $:  %1
+        game=(unit pokur-game-state)
+        challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
+        challenges-received=(map @da pokur-challenge)
+        game-msgs-received=(list [from=ship msg=tape])
     ==
 +$  state-zero
-    $:  game=(unit pokur-game-state)
+    $:  game=(unit pokur-game-state-zero)
         challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
         challenges-received=(map @da pokur-challenge)
         game-msgs-received=(list [from=ship msg=tape])
@@ -15,26 +23,37 @@
 ::
 --
 %-  agent:dbug
-=|  state=versioned-state
+=|  state=state-one
 ^-  agent:gall
 =<
 |_  =bowl:gall
 +*  this      .
-    def   ~(. (default-agent this %|) bowl)
-    hc    ~(. +> bowl)
+    def      ~(. (default-agent this %|) bowl)
+    hc       ~(. +> bowl)
 ::
 ++  on-init
   ^-  (quip card _this)
+  ~&  >  '%pokur started successfully'
   =.  game.state  ~
   :-  ~  this
 ++  on-save
   ^-  vase
+  ~&  >  'on-save v1'
   !>(state)
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  ~&  >  '%pokur recompiled successfully'
-  `this(state !<(versioned-state old-state))
+  ~&  >  'on-load v1'
+  =/  prev  !<(versioned-state old-state)
+  ?+  -.prev
+    :: default switch here, AKA the unlabeled state-0
+    ~&  >>>  '%0'
+    :: just wipe the damn game state to swap. no one will be in-game during the OTA ;)
+    `this(state [%1 ~ challenge-sent.prev challenges-received.prev game-msgs-received.prev])
+    %1
+    ~&  >>>  '%1'
+    `this(state prev)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
