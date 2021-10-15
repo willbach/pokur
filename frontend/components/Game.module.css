@@ -7,16 +7,15 @@
 
 .lower {
     width: 100%;
-    display: flex;
-    flex-flow: row wrap;
 }
 
 .leave_game {
     margin-top: 50px;
+    margin-left: 80%;
     color: var(--light-text);
     background: var(--dark-red);
     padding: 10px 20px 10px 20px;
-    width: 100px;
+    width: 200px;
     text-decoration: none;
     border: none;
 }

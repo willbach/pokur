@@ -1,11 +1,35 @@
 .wrapper {
     height: 100%;
-    flex-grow: 1;
+    width: 40%;
+    float: right;
 }
 
 .message_list {
-    max-height: 200px;
+    height: 200px;
     overflow: auto;
     display: flex;
     flex-direction: column-reverse;
+}
+
+.form {
+    width: 100%;
+}
+
+.form input {
+    width: 70%;
+}
+
+.form button {
+    color: var(--light-text);
+    background: var(--dark-blue);
+    height: 100%;
+    width: 20%;
+    padding: 6px;
+    text-decoration: none;
+    border: none;
+}
+  
+.form button:hover {
+    background: var(--light-blue);
+    text-decoration: none;
 }

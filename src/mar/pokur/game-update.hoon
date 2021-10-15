@@ -13,13 +13,26 @@
       %update
       %-  pairs:enjs
       :~  ['in_game' [%b %.y]]
+          ['game_is_over' [%b game-is-over.game.upd]]
           ['id' [%s (scot %da game-id.game.upd)]]
           ['host' (ship:enjs host.game.upd)]
           ['type' [%s type.game.upd]]
           ['time_limit_seconds' (numb:enjs time-limit-seconds.game.upd)]
           ['players' [%a (turn players.game.upd ship:enjs)]]
           ['paused' [%b paused.game.upd]]
-          ['update_message' (tape:enjs update-message.game.upd)]
+          :-  'update_message'
+          %-  pairs:enjs
+          :~  ['msg' (tape:enjs -.update-message.game.upd)]
+              :-  'hand'
+              :-  %a
+              %+  turn
+                winning-hand.update-message.game.upd
+              |=  c=pokur-card:pokur
+              %-  pairs:enjs 
+              :~  ['val' (numb:enjs (card-val-to-atom:pokur -.c))]
+                  ['suit' [%s +.c]]
+              ==
+          ==
           ['my_hand_rank' (tape:enjs my-hand-rank.upd)]
           ['hands_played' (numb:enjs hands-played.game.upd)]
           :-  'chips' 

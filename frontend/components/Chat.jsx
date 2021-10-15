@@ -19,7 +19,7 @@ const Chat = ({ messages, send }) => {
           ))
         }
       </div>
-      <form onSubmit={e => handleSubmit(e)}>
+      <form className={styles.form} onSubmit={e => handleSubmit(e)}>
         <input name="message" type="text" placeholder="..." />
         <button type="submit">Send</button>
       </form>

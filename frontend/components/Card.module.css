@@ -1,12 +1,23 @@
-.card {
+.card.large {
     display: flex;
-    width: 72px;
-    height: 120px;
+    width: 60px;
+    height: 100px;
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid black;
     margin: 4px;
     padding: 4px;
+}
+
+.card.small {
+    display: inline-block;
+    width: 30px;
+    height: 50px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid black;
+    margin: 1px;
+    padding: 2px;
 }
   
 .black {
@@ -25,12 +36,22 @@
     color: blue;
 }
   
-.card_value {
+.card_value.large {
     font-size: 24px;
 }
   
-.card_suit {
+.card_suit.large {
     font-size: 18px;
+}
+
+.card_value.small {
+    font-size: 14px;
+    text-align: left;
+}
+  
+.card_suit.small {
+    font-size: 11px;
+    text-align: left;
 }
   
 .card_top {

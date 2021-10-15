@@ -1,0 +1,19 @@
+.update_messages h3 {
+    font-size: 1.2em;
+}
+
+.update_messages h3:nth-last-of-type(1) {
+    color: #ccc;
+}
+.update_messages h3:nth-last-of-type(2) {
+    color: #aaa;
+}
+.update_messages h3:nth-last-of-type(3) {
+    color: #777;
+}
+.update_messages h3:nth-last-of-type(4) {
+    color: #333;
+}
+.update_messages h3:nth-last-of-type(5) {
+    color: #000;
+}

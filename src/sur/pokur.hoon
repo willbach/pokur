@@ -33,7 +33,6 @@
       hands=(list [ship pokur-deck])
       deck=pokur-deck
       hand-is-over=?
-      game-is-over=?
       turn-timer=?(~ @da)
   ==
 ::
@@ -41,13 +40,14 @@
 +$  pokur-game-state
   $:  
     game-id=@da
+    game-is-over=?
     host=ship
     type=pokur-game-type
     turn-time-limit=@dr
     time-limit-seconds=@ud :: for frontend parsing only
     players=(list ship)
     paused=?
-    update-message=tape
+    update-message=[tape winning-hand=pokur-deck]
     hands-played=@ud
     chips=(list [ship in-stack=@ud committed=@ud acted=? folded=? left=?])
     pots=(list [@ud (list ship)]) :: usually just one, but side pots are stored here.

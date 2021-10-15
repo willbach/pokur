@@ -7,21 +7,22 @@
   =/  test-game-state
     [
       game-id=~2021.7.28..18.17.52..1849
+      game-is-over=%.n
       host=~zod
       type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
+      turn-time-limit=~s60
+      time-limit-seconds=60
       players=~[~zod ~bus]
       paused=%.n
-      update-message=""
+      update-message=["" ~]
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      pots=~[[100 ~[~zod ~bus]]]
       current-round=0
       round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bets=~[40]
-      round-duration=~
+      round-duration=(some ~s60)
       last-bet=0
       board=~[[%10 %spades] [%king %spades] [%ace %spades] [%jack %spades] [%queen %spades]]
       my-hand=~
@@ -38,84 +39,35 @@
       hands=~[[~zod ~[[%jack %clubs] [%jack %hearts]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
+      turn-timer=~2021.7.28..18.17.52..1849
     ]
   =/  winners
     (~(determine-winner modify-state state) hands.state)
   ?>  =((lent winners) 2)
-  ~
-++  test-determine-winner-tie-2
-  ^-  tang
-  =/  test-game-state
-    [
-      game-id=~2021.7.28..18.17.52..1849
-      host=~zod
-      type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
-      players=~[~zod ~bus]
-      paused=%.n
-      update-message=""
-      hands-played=0
-      chips=~[[~zod 500 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      current-round=0
-      round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
-      current-bet=0
-      min-bets=~[40]
-      round-duration=~
-      last-bet=0
-      board=~[[%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
-      my-hand=~
-      whose-turn=~bus
-      dealer=~bus
-      small-blind=~bus
-      big-blind=~zod
-      spectators-allowed=%.n
-      spectators=~
-    ]
-  =/  state
-    [
-      game=test-game-state
-      hands=~[[~zod ~[[%jack %hearts] [%10 %hearts]]] [~bus ~[[%2 %hearts] [%10 %spades]]]]
-      deck=generate-deck
-      hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
-    ]
-  =/  winners
-    (~(determine-winner modify-state state) hands.state)
-  ::~&  >>  winners
-  =/  new-state 
-    (~(process-win modify-state state) winners)
-  ?>  =((lent winners) 2)
-  ?>  =(-.-.pots.game.new-state 0)
-  ?>  =(-.+.-.chips.game.new-state 550)
-  ?>  =(-.+.-.+.chips.game.new-state 1.050)
   ~
 ++  test-determine-winner-1
   ^-  tang
   =/  test-game-state
     [
       game-id=~2021.7.28..18.17.52..1849
+      game-is-over=%.n
       host=~zod
       type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
+      turn-time-limit=~s60
+      time-limit-seconds=60
       players=~[~zod ~bus]
       paused=%.n
-      update-message=""
+      update-message=["" ~]
       hands-played=0
       chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
+      pots=~[[100 ~[~zod ~bus]]]
       current-round=0
       round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
       current-bet=0
       min-bets=~[40]
-      round-duration=~
+      round-duration=(some ~s60)
       last-bet=0
-      board=~[[%10 %spades] [%jack %clubs] [%jack %hearts] [%jack %spades] [%queen %spades]]
+      board=~[[%5 %spades] [%5 %clubs] [%2 %spades] [%7 %hearts] [%3 %hearts]]
       my-hand=~
       whose-turn=~bus
       dealer=~bus
@@ -127,187 +79,14 @@
   =/  state
     [
       game=test-game-state
-      hands=~[[~zod ~[[%king %spades] [%ace %spades]]] [~bus ~[[%2 %spades] [%3 %spades]]]]
+      hands=~[[~zod ~[[%jack %clubs] [%king %hearts]]] [~bus ~[[%king %spades] [%9 %spades]]]]
       deck=generate-deck
       hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
+      turn-timer=~2021.7.28..18.17.52..1849
     ]
-  =/  winner
+  =/  winners
     (~(determine-winner modify-state state) hands.state)
-  ?>  =(-.-.winner ~zod)
-  ~
-++  test-determine-winner-2
-  ^-  tang
-  =/  test-game-state
-    [
-      game-id=~2021.7.28..18.17.52..1849
-      host=~zod
-      type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
-      players=~[~zod ~bus]
-      paused=%.n
-      update-message=""
-      hands-played=0
-      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      current-round=0
-      round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
-      current-bet=0
-      min-bets=~[40]
-      round-duration=~
-      last-bet=0
-      board=~[[%2 %spades] [%2 %clubs] [%jack %hearts] [%6 %spades] [%queen %clubs]]
-      my-hand=~
-      whose-turn=~bus
-      dealer=~bus
-      small-blind=~bus
-      big-blind=~zod
-      spectators-allowed=%.n
-      spectators=~
-    ]
-  =/  state
-    [
-      game=test-game-state
-      hands=~[[~zod ~[[%jack %spades] [%6 %clubs]]] [~bus ~[[%jack %diamonds] [%queen %spades]]]]
-      deck=generate-deck
-      hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
-    ]
-  =/  winner
-    (~(determine-winner modify-state state) hands.state)
-  ?>  =(-.-.winner ~bus)
-  ~
-++  test-determine-winner-3
-  ^-  tang
-  =/  test-game-state
-    [
-      game-id=~2021.7.28..18.17.52..1849
-      host=~zod
-      type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
-      players=~[~zod ~bus]
-      paused=%.n
-      update-message=""
-      hands-played=0
-      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n]]
-      current-round=0
-      round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
-      current-bet=0
-      min-bets=~[10 20 30]
-      round-duration=(some ~)
-      last-bet=0
-      board=~[[%2 %hearts] [%3 %clubs] [%3 %hearts] [%jack %spades] [%queen %spades]]
-      my-hand=~
-      whose-turn=~bus
-      dealer=~bus
-      small-blind=~bus
-      big-blind=~zod
-      spectators-allowed=%.n
-      spectators=~
-    ]
-  =/  state
-    [
-      game=test-game-state
-      hands=~[[~zod ~[[%2 %spades] [%2 %clubs]]] [~bus ~[[%2 %diamonds] [%3 %spades]]]]
-      deck=generate-deck
-      hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
-    ]
-  =/  winner
-    (~(determine-winner modify-state state) hands.state)
-  ?>  =(-.-.winner ~bus)
-  ~
-++  test-determine-winner-4
-  ^-  tang
-  =/  test-game-state
-    [
-      game-id=~2021.7.28..18.17.52..1849
-      host=~zod
-      type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
-      players=~[~zod ~bus ~nec]
-      paused=%.n
-      update-message=""
-      hands-played=0
-      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.n %.n] [~nec 1.000 0 %.n %.n %.n]]
-      current-round=0
-      round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
-      current-bet=0
-      min-bets=~[40]
-      round-duration=~
-      last-bet=0
-      board=~[[%8 %hearts] [%3 %spades] [%3 %hearts] [%jack %spades] [%queen %spades]]
-      my-hand=~
-      whose-turn=~bus
-      dealer=~bus
-      small-blind=~bus
-      big-blind=~zod
-      spectators-allowed=%.n
-      spectators=~
-    ]
-  =/  state
-    [
-      game=test-game-state
-      hands=~[[~zod ~[[%king %spades] [%7 %spades]]] [~bus ~[[%2 %spades] [%4 %spades]]] [~nec ~[[%8 %diamonds] [%3 %clubs]]]]
-      deck=generate-deck
-      hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
-    ]
-  =/  winner
-    (~(determine-winner modify-state state) hands.state)
-  ?>  =(-.-.winner ~nec)
-  ~
-++  test-determine-winner-5
-  ^-  tang
-  =/  test-game-state
-    [
-      game-id=~2021.7.28..18.17.52..1849
-      host=~zod
-      type=%cash
-      turn-time-limit=~s1
-      time-limit-seconds=1
-      players=~[~zod ~bus ~nec]
-      paused=%.n
-      update-message=""
-      hands-played=0
-      chips=~[[~zod 1.000 0 %.n %.n %.n] [~bus 1.000 0 %.n %.y %.n] [~nec 1.000 0 %.n %.n %.n]]
-      current-round=0
-      round-over=%.n
-      pots=~[[100 ~[~zod ~bus]]]
-      current-bet=0
-      min-bets=~[40]
-      round-duration=~
-      last-bet=0
-      board=~[[%king %hearts] [%queen %diamonds] [%jack %hearts] [%2 %spades] [%3 %spades]]
-      my-hand=~
-      whose-turn=~bus
-      dealer=~bus
-      small-blind=~bus
-      big-blind=~zod
-      spectators-allowed=%.n
-      spectators=~
-    ]
-  =/  state
-    [
-      game=test-game-state
-      hands=~[[~zod ~[[%king %spades] [%jack %spades]]] [~nec ~[[%queen %clubs] [%jack %clubs]]]]
-      deck=generate-deck
-      hand-is-over=%.y
-      game-is-over=%.n
-      turn-timer=~
-    ]
-  =/  winner
-    (~(determine-winner modify-state state) hands.state)
-  ?>  =(-.-.winner ~zod)
+  ?>  =((head -.winners) ~zod)
   ~
 :: tie breaking tests
 ++  test-tie-break-1
@@ -409,6 +188,16 @@
           [%6 %spades] 
           [%7 %hearts] 
         ==
+  ?>  (break-ties hand2 hand1)
+  ~
+++  test-tie-break-6
+  ^-  tang
+  =/  hand1
+    :-  1 :: pair
+      ~[[%6 %clubs] [%king %clubs] [%9 %spades] [%5 %diamonds] [%5 %clubs] [%7 %hearts] [%2 %hearts]]
+  =/  hand2
+    :-  1  :: pair with higher kicker
+      ~[[%6 %clubs] [%king %clubs] [%jack %spades] [%5 %diamonds] [%5 %clubs] [%7 %hearts] [%2 %hearts]]
   ?>  (break-ties hand2 hand1)
   ~
 :: 7-card hand evaluation tests

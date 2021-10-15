@@ -211,7 +211,7 @@
   :: push alert that player timed out
   ~&  >>  "pokur-server: {<whose-turn.game.game>} timed out."
   =.  update-message.game.game
-    "{<whose-turn.game.game>} timed out."
+    ["{<whose-turn.game.game>} timed out." ~]
   =.  active-games.state
   (~(put by active-games.state) [game-id game])
   =/  player-to-fold
@@ -237,7 +237,7 @@
 ++  generate-update-cards
   |=  game=server-game-state
   ^-  (list card)
-  ?.  game-is-over.game
+  ?.  game-is-over.game.game
     ?.  hand-is-over.game
       :~  :*  %pass
               /poke-wire
@@ -259,19 +259,7 @@
         ==
     ==
   :: the game is over, end it
-  =.  update-message.game.game
-  "The game is now over."
-  =.  active-games.state
-  (~(put by active-games.state) [game-id.game.game game])
   :~  :*  %pass
-          /poke-wire
-          %agent
-          [our.bowl %pokur-server]
-          %poke
-          %pokur-server-action
-          !>([%send-game-updates game])
-      ==
-      :*  %pass
           /poke-wire
           %agent
           [our.bowl %pokur-server]
@@ -292,7 +280,6 @@
   =/  from
     ?:  =(who our.bowl)
     :: automatic fold from timeout!
-    ~&  >  "automatic fold from timeout!! or zod move."
     whose-turn.game.game
   who
   ?.  =(whose-turn.game.game from)
@@ -443,6 +430,7 @@
   =/  new-game-state
     [
       game-id=id.c-data
+      game-is-over=%.n
       host=host.c-data
       type=type.c-data
       :: pad the turn timer 5s to account for latency
@@ -451,7 +439,7 @@
       time-limit-seconds=time-limit-seconds.c-data
       players=players
       paused=%.n
-      update-message="Pokur game started, served by {<our.bowl>}"
+      update-message=["Pokur game started, served by {<our.bowl>}" ~]
       hands-played=0
       chips=chips
       pots=~[[0 players]]
@@ -477,7 +465,6 @@
       hands=~
       deck=(shuffle-deck generate-deck eny.bowl)
       hand-is-over=%.y
-      game-is-over=%.n
       turn-timer=`@da`(add now.bowl turn-time-limit.new-game-state)
     ]
   =.  active-games.state
@@ -609,11 +596,40 @@
     ::
     %end-game
   ?>  (team:title [our src]:bowl)
-  ~&  "a game has ended: {<game-id.server-action>}"
+  =/  game  (~(get by active-games.state) game-id.server-action)
+  ?~  game
+    :_  state
+    ~[[%give %poke-ack `~[leaf+"error: server could not find game"]]]
+  =/  last-game-state  u.game
+  =/  cancel-timer-card
+  :~  :*  %pass
+          /poke-wire
+          %agent
+          [our.bowl %pokur-server]
+          %poke
+          %pokur-server-action
+          !>([%cancel-timer game-id.server-action `@da`turn-timer.u.game])
+      ==
+  ==
+  ~&  "pokur-server: a game has ended: {<game-id.server-action>}"
+  =.  -.update-message.game.last-game-state
+    %+  weld
+      "The game is now over!   "
+    -.update-message.game.last-game-state 
   =.  active-games.state
   (~(del by active-games.state) game-id.server-action)
   :_  state
-    ~
+    %+  welp
+      cancel-timer-card
+    :~  :*  %pass
+            /poke-wire
+            %agent
+            [our.bowl %pokur-server]
+            %poke
+            %pokur-server-action
+            !>([%send-game-updates last-game-state])
+        ==
+    ==
     ::
     ::
     %wipe-all-games :: for debugging, mostly

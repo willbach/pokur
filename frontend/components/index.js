@@ -6,5 +6,6 @@ import GameInfo from "./GameInfo";
 import Card from "./Card";
 import Chat from "./Chat";
 import TurnTimer from "./TurnTimer";
+import GameUpdates from "./GameUpdates";
 
-export { ChallengeForm, ChallengeList, Game, GameAction, GameInfo, Card, Chat, TurnTimer };
+export { ChallengeForm, ChallengeList, Game, GameAction, GameInfo, Card, Chat, TurnTimer, GameUpdates };

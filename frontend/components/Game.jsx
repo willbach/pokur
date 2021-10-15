@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GameInfo, GameAction, Chat } from '../components';
 import styles from './Game.module.css';
-import TurnTimer from './TurnTimer';
 
-const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages, chatMessages }) => {
+const Game = ({ urb, game, spectating, myBet, setMyBet, setSentChallenge, gameMessages, chatMessages }) => {
 
   const leaveGame = () => {
     urb.poke({
@@ -15,6 +14,7 @@ const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages, chatMessag
         }
       },
     });
+    setSentChallenge(false);
   };
 
   const sendChat = (value) => {
@@ -31,15 +31,18 @@ const Game = ({ urb, game, spectating, myBet, setMyBet, gameMessages, chatMessag
 
   return( 
     <div className={styles.wrapper}>
-      <GameInfo game={game} gameMessages={gameMessages} />
+      <GameInfo game={game} 
+                gameMessages={gameMessages} 
+                />
       <div className={styles.lower}>
         {
-         spectating
+         spectating ||  game.game_is_over
          ? <></>
          : <GameAction urb={urb}
                        game={game}
                        myBet={myBet}
-                       setMyBet={setMyBet} />
+                       setMyBet={setMyBet}
+                       />
         }
         <Chat messages={chatMessages} send={sendChat} />
       </div>

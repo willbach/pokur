@@ -1,5 +1,5 @@
 node_modules
 .vscode
 src/app/pokur/js/index.js
-src/app/pokur/index.html
 src/install.sh
+src/app/pokur/index.html

@@ -1,21 +1,46 @@
 .player_info {
+    width: 60%;
+    height: 200px;
+    float: left;
     display: flex;
-    flex-flow: row wrap;
-    justify-content: space-between;
-    align-content: stretch;
-    padding: 2px;
+    justify-content: flex-end;
+}
+
+.profile {
     height: 100%;
-    flex-grow: 3;
+    width: 150px;
+    text-align: center;
+}
+
+.profile svg {
+    border-radius: 25px;
+    overflow: hidden;
 }
 
 .hand {
+    height: 100%;
+    width: 156px;
+    margin-left: 10px;
+    flex-shrink: 0;
     display: flex;
     flex-flow: row wrap;
 }
 
+.hand p {
+    position: absolute;
+    margin-top: 130px;
+}
+
 .bet_input {
-    /* border: 1px solid black; */
-    flex-grow: 3;
+    width: 400px;
+    font-size: 1.1em;
+    display: flex;
+    flex-direction: column;
+}
+
+.rangeInput {
+    width: 200px;
+    margin: 10px auto;
 }
 
 .button {
@@ -23,6 +48,7 @@
     background: var(--dark-blue);
     padding: 10px 20px 10px 20px;
     width: 33%;
+    float: left;
     height: 100%;
     text-decoration: none;
     border: none;

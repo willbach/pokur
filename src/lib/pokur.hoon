@@ -50,13 +50,11 @@
         folded
       |=  [who=ship @ud @ud ? ? ?]
       who
-      ~&  >>  unfolded-players
       =/  unfolded-hands
       %+  skip
         hands.state
       |=  [who=ship hand=pokur-deck]
       =(%.y (find [who]~ unfolded-players))
-      ~&  >>  unfolded-hands
       (process-win (determine-winner unfolded-hands))
     pokur-flop
 
@@ -98,6 +96,8 @@
   ++  deal-hands
     ^-  server-game-state
     =/  dealt-count  (lent players.game.state)
+    ::  clear existing hand, if any
+    =.  hands.state  ~
     |-
     ?:  =(dealt-count 0)
       state
@@ -197,13 +197,16 @@
 ::  'committed' pile. used after a bet, call, raise
 ::  is made. committed chips don't go to pot until 
 ::  round of betting is complete
+::  if player doesn't have enough chips, put them all-in!
   ++  commit-chips
     |=  [who=ship amount=@ud]
     ^-  server-game-state
     =/  f
       |=  [p=ship n=@ud c=@ud acted=? folded=? left=?]
       ?:  =(p who)
-        [p (sub n amount) (add c amount) acted folded left]
+        ?:  (gth n amount)
+          [p (sub n amount) (add c amount) acted folded left]
+        [p 0 (add c n) acted folded left]
       [p n c acted folded left] 
     =.  chips.game.state  (turn chips.game.state f)
     state
@@ -309,7 +312,7 @@
     =/  new-blinds
     [(div new-min-bet 2) new-min-bet]
     =.  update-message.game.state
-    "Round {<current-round.game.state>} beginning at next hand. New blinds: {<-.new-blinds>}/{<+.new-blinds>}"
+    ["Round {<current-round.game.state>} beginning at next hand. New blinds: {<-.new-blinds>}/{<+.new-blinds>}" ~]
     state
 
 ::  given a list of [winner [rank hand]], send them the pot. prepare for next hand 
@@ -376,13 +379,12 @@
           [p (add n (add c split-pot)) 0 %.n %.n left]
         [p n 0 %.n %.n left]
       [pot chips]
-    :: take hands away, clear board, clear bet, clear pot
+    ::  clear board, clear bet, clear pot
     =.  chips.game.state         q.new-chips
     =.  pots.game.state          ~[[0 players.game.state]]
     =.  board.game.state         ~
     =.  current-bet.game.state   0
     =.  last-bet.game.state      0
-    =.  hands.state              ~
     :: if round is over, increment it
     =.  current-round.game.state
     ?.  round-over.game.state
@@ -407,7 +409,7 @@
       chips.game.state
     |=  [s=ship stack=@ud c=@ud ? ? left=?]
     |(left &(=(0 stack) =(0 c)))
-    =.  game-is-over.state
+    =.  game-is-over.game.state
     ?:  ?|  =(1 (lent players-with-chips))
             =(0 (lent players-with-chips))
         ==
@@ -417,16 +419,19 @@
     :: TODO pretty-print this, branching if multiple people tie
     =.  update-message.game.state
       ?:  =(winning-rank 10)
-        "{<(head winning-ships)>} wins hand #{<hands-played.game.state>}."
+        ["{<(head winning-ships)>} wins hand #{<hands-played.game.state>}." ~]
       ?:  =((lent winners) 1)
-        "{<(head winning-ships)>} wins hand #{<hands-played.game.state>} with {<(hierarchy-to-rank winning-rank)>}: {<+.+:(head winners)>}"
+        :-  %+  weld
+              "{<(head winning-ships)>} wins hand #{<hands-played.game.state>} with "
+            (hierarchy-to-rank winning-rank) 
+        +.+:(head winners)
       :: multiple winners.. more complex update message
       =/  winning-hands
       %+  turn
         winners
       |=  [s=ship info=[@ud hand=pokur-deck]]
       hand.info
-      "{<winning-ships>} win hand, split pot. Their hands: {<winning-hands>}"
+      ["{<winning-ships>} win hand, split pot. Their hands: " -.winning-hands]
     state
 
 ::  given a player and a pokur-action, handles the action.
@@ -486,7 +491,7 @@
       =.  state
         (set-player-as-acted who)
       =.  update-message.game.state
-        "{<who>} is all-in."
+        ["{<who>} is all-in." ~]
       ?.  is-betting-over
         next-player-turn
       next-round  
@@ -792,7 +797,7 @@
         h.hand1
     =.  h.hand2
       %-  sort-hand-by-frequency 
-        h.hand2
+        h.hand2  
     %+  find-high-card 
       h.hand1 
     h.hand2
@@ -822,7 +827,7 @@
         [c (get-frequency c)]
     |=  [a=[c=pokur-card f=@ud] b=[c=pokur-card f=@ud]]
       ?:  =(f.a f.b)
-        (gth -.c.a -.c.b)
+        (gth (card-val-to-atom -.c.a) (card-val-to-atom -.c.b))
       (gth f.a f.b)
   :: get rid of freq counts for final return
   %+  turn

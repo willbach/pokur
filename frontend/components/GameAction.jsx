@@ -34,26 +34,27 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
          ? sigil({
             patp: window.ship,
             renderer: reactRenderer,
-            size: 100,
+            size: 150,
             colors: ['black', 'white'],
           })
          : sigil({
           patp: "zod",
           renderer: reactRenderer,
-          size: 100,
+          size: 150,
           colors: ['black', 'white'],
         })}
         <p>{"~" + window.ship}</p>
       </div>
       <div className={styles.hand}>
         {game.hand.map(card => (
-          <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
+          <Card key={card.val+card.suit} val={card.val} suit={card.suit} size="large" />
           ))}
+        <p>Your hand: {game.my_hand_rank}</p>
       </div>
       <div className={styles.bet_input}>
-        <p>Your stack: ${myChips.stack} Bet: ${myChips.committed}</p>
-        <p>Your hand: {game.my_hand_rank}</p>
+        <p>Your Stack: ${myChips.stack} Bet: ${myChips.committed}</p>
         <input name="bet"
+             className={styles.rangeInput}
              type="range" 
              min={game.current_bet > 0 
                    ? game.current_bet + game.last_bet
@@ -92,8 +93,8 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
                Fold
              </button>
            </div>}
-           {game.whose_turn == window.ship 
-            ? <TurnTimer countdown={game.time_limit_seconds} />
+           {game.whose_turn == window.ship
+            ? <TurnTimer length={game.time_limit_seconds} />
             : <></>}
       </div>
     </div>

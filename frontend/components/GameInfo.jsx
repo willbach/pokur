@@ -1,6 +1,6 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
-import { Card, TurnTimer } from '../components';
+import { Card, TurnTimer, GameUpdates } from '../components';
 import styles from './GameInfo.module.css';
 
 const GameInfo = ({ game, gameMessages }) => {
@@ -12,8 +12,6 @@ const GameInfo = ({ game, gameMessages }) => {
     }
     return pot
   };
-  
-  const recentMessages = gameMessages.length < 5 ? gameMessages : gameMessages.slice(0, 5);
 
   // this is to place the players in seating arrangements
   // that make sense for different amounts of players at the table
@@ -72,42 +70,60 @@ const GameInfo = ({ game, gameMessages }) => {
         <p>Hands played: {game.hands_played}</p>
         <p>SB/BB: ${game.min_bet / 2}/${game.min_bet}</p>
       </div>
-      <div className={styles.update_messages}>
-          {
-            recentMessages.map((message,i) => (
-              <h3 key={i}>{message}</h3>
-            ))
-          }
-        </div>
+      <GameUpdates messages={gameMessages} />
       <div className={styles.game_table}>
         {Object.entries(generateAlignedPlayers(game.chips)).map(([player, data]) => (
             player.slice(0, -1) == "placeholder"
             ? <div key={data} className={styles.player_seat} style={{"display":"none"}}></div>
             : <div key={player} className={`${styles.player_seat} ${"~" + game.whose_turn == player ? `their-turn` : ``}`}>
-                <div className={styles.name_display}>
-                  <p>{player}</p>
+                <div className={styles.player_info_top}>
+                  <div className={styles.sigil}>
+                  {window.ship.length <= 13
+                    ? sigil({
+                       patp: player,
+                       renderer: reactRenderer,
+                       size: 40,
+                       colors: ['black', 'green'],
+                     })
+                    : sigil({
+                     patp: "zod",
+                     renderer: reactRenderer,
+                     size: 40,
+                     colors: ['black', 'green'],
+                   })}
+                   </div>
+                   <div className={styles.name_display}>
+                    <p>{player}</p>
+                    <p>{data.left 
+                     ? <span>(left game)</span> 
+                     : data.folded ? <span>(folded)</span> 
+                                   : <span></span>}</p>
+                   </div>
                 </div>
-                {player == "~" + game.whose_turn
-                 ? <TurnTimer countdown={game.time_limit_seconds} />
-                 : <></>}
-                <div className={styles.player_cards}>
-                  <div className={styles.small_card} />
-                  <div className={styles.small_card} />
+                <div className={styles.player_info_bot}>
+                  <div className={styles.player_cards}>
+                    <div className={styles.small_card} />
+                    <div className={styles.small_card} />
+                  </div>
+                  <div className={styles.chips}>
+                    <p>Chips: ${data.stack}</p>
+                    <p>
+                      {data.committed > 0 
+                      ? <span>Bet: ${data.committed}</span> 
+                      : <span></span>}     
+                    </p>
+                  </div>
                 </div>
-                <p>${data.stack} 
-                   {data.committed > 0 
-                   ? <span>bet: ${data.committed} &nbsp;</span> 
-                   : <span></span>}     
-                   {data.left 
-                   ? <span>(left game)</span> 
-                   : data.folded ? <span>(folded) &nbsp;</span> 
-                                 : <span></span>}
-                </p>
+                <div className={styles.timer}>
+                  {(player == "~" + game.whose_turn) && !game.game_is_over
+                     ? <TurnTimer length={game.time_limit_seconds} />
+                     : <></>}
+                </div>
               </div>
         ))}
         <div className={styles.board}>
           {game.board.map(card => (
-            <Card key={card.val+card.suit} val={card.val} suit={card.suit} />
+            <Card key={card.val+card.suit} val={card.val} suit={card.suit} size="large" />
             ))}
         </div>
         <h3>Pot: ${calcFullPot(game.pots[0].val)}</h3>

@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Card.module.css';
 
-const Card = ({ suit, val }) => {
+const Card = ({ suit, val, size }) => {
 
   const suits = {
           spades: ["♠︎", "black"], 
@@ -20,14 +20,14 @@ const Card = ({ suit, val }) => {
   const suitIcon = suits[suit][0];
 
   return (
-      <div className={`${styles.card} ${styles[color]}`}>
+      <div className={`${styles.card} ${styles[color]} ${styles[size]}`}>
         <div className={styles.card_top}>
-          <div className={styles.card_value}>{value}</div>
-          <div className={styles.card_suit}>{suitIcon}</div>
+          <div className={`${styles.card_value} ${styles[size]}`}>{value}</div>
+          <div className={`${styles.card_suit} ${styles[size]}`}>{suitIcon}</div>
         </div>
         <div className={styles.card_bot}>
-          <div className={styles.card_value}>{value}</div>
-          <div className={styles.card_suit}>{suitIcon}</div>
+          <div className={`${styles.card_value} ${styles[size]}`}>{value}</div>
+          <div className={`${styles.card_suit} ${styles[size]}`}>{suitIcon}</div>
         </div>
       </div>
   );

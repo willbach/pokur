@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChallengeList.module.css';
 
-const ChallengeList = ({ ob, urb, challenges, setChallenges, setSentChallenge }) => {
+const ChallengeList = ({ ob, urb, challenges, setChallenges, setSentChallenge, setGameMessages }) => {
 
   const acceptChallenge = (id) => {
     urb.poke({
@@ -13,6 +13,7 @@ const ChallengeList = ({ ob, urb, challenges, setChallenges, setSentChallenge })
         }
       },
     });
+    setGameMessages("clear");
   };
 
   const declineChallenge = (id) => {
@@ -55,6 +56,7 @@ const ChallengeList = ({ ob, urb, challenges, setChallenges, setSentChallenge })
         }
       },
     });
+    setGameMessages("clear");
   }
 
   return (

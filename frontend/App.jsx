@@ -14,7 +14,10 @@ const createApi = () =>
   );
 
 function messageReducer(state, newMessage) {
-  if (state[0] != newMessage) {
+  if (newMessage == "clear") {
+    return [{msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}];
+  }
+  if (state[0].msg != newMessage.msg) {
     return [newMessage, ...state];
   } else {
     return state;
@@ -30,7 +33,7 @@ const App = () => {
   const [spectating, setSpectating] = useState(false);
   const [gameState, setGameState] = useState();
   const [myBet, setMyBet] = useState();
-  const [gameMessages, setGameMessages] = useReducer(messageReducer, ["", "", "", "", ""]);
+  const [gameMessages, setGameMessages] = useReducer(messageReducer, [{msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}, {msg: "", hand: []}]);
   const [chatMessages, setChatMessages] = useState([]);
   const [challenges, setChallenges] = useState({});
   const [sentChallenge, setSentChallenge] = useState(false);
@@ -142,6 +145,7 @@ const App = () => {
             spectating={spectating}
             myBet={myBet} 
             setMyBet={setMyBet}
+            setSentChallenge={setSentChallenge} 
             gameMessages={gameMessages}
             chatMessages={chatMessages}
           />
@@ -160,7 +164,8 @@ const App = () => {
               urb={urb}
               challenges={challenges}
               setChallenges={setChallenges}
-              setSentChallenge={setSentChallenge}  
+              setSentChallenge={setSentChallenge}
+              setGameMessages={setGameMessages}
             /> 
           </>
         }

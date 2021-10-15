@@ -15,7 +15,7 @@ table, caption, tbody, tfoot, thead, tr, th, td,
 article, aside, canvas, details, embed, 
 figure, figcaption, footer, header, hgroup, 
 menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
+time, mark, audio, video, button {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -49,7 +49,7 @@ table {
 /* End CSS Reset */
 
 :root {
-    --bg: #faf9f9;
+    --bg: #fdfdfd;
     --light-text: #faf9f9;
     --dark-text: #000;
     --red: #BF0404;
@@ -79,7 +79,7 @@ header {
     width: 100%;
     box-sizing: border-box;
     border-left: 10px solid black;
-    background-color: var(--dark-green);
+    background-color: var(--dark-red);
     color: var(--light-text);
     margin-bottom: 25px;
     padding-left: 100px;
