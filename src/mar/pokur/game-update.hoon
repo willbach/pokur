@@ -1,9 +1,9 @@
 /+  pokur
 =,  format
-|_  upd=pokur-game-update:pokur
+|_  upd=game-update:pokur
 ++  grab
   |%
-  ++  noun  pokur-game-update:pokur
+  ++  noun  game-update:pokur
   --
 ++  grow
   |%

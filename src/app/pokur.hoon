@@ -103,19 +103,19 @@
       :^    %give
           %fact
         ~[/challenge-updates]
-      [%pokur-challenge-update !>([%open-challenge item])]
+      [%challenge-update !>([%open-challenge item])]
     [cards this]
     ::
     [%game ~]
     ?~  game.state
       `this
     :_  this
-      ~[[%give %fact ~[/game] [%pokur-game-update !>([%update u.game.state "-"])]]]
+      ~[[%give %fact ~[/game] [%game-update !>([%update u.game.state "-"])]]]
     [%game-msgs ~]
     ?~  game.state
       `this
     :_  this
-      ~[[%give %fact ~[/game-msgs] [%pokur-game-update !>([%msgs game-msgs-received.state])]]]
+      ~[[%give %fact ~[/game-msgs] [%game-update !>([%msgs game-msgs-received.state])]]]
   ==
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
@@ -140,7 +140,7 @@
       =.  game.state
         %-  some  new-state
       :_  this
-        ~[[%give %fact ~[/game] [%pokur-game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
+        ~[[%give %fact ~[/game] [%game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==
   ==
 ++  on-arvo
@@ -226,7 +226,7 @@
     :~  :*  %give
             %fact
             ~[/game-msgs]
-            :-  %pokur-game-update
+            :-  %game-update
             !>([%msgs game-msgs-received.state])
         ==
     ==
@@ -271,7 +271,7 @@
     %+  welp 
       :~  :*  %give  %fact  
               ~[/challenge-updates]
-              [%pokur-challenge-update !>([%open-challenge challenge])]
+              [%challenge-update !>([%open-challenge challenge])]
           ==
       ==
     :: poke every ship invited with the challenge
@@ -299,7 +299,7 @@
     %+  welp
       :~  :*  %give  %fact  
               ~[/challenge-updates]
-              [%pokur-challenge-update !>([%close-challenge id.challenge])]
+              [%challenge-update !>([%close-challenge id.challenge])]
           ==
       ==
     :: poke every invited ship with an alert that the challenge has been closed
@@ -327,7 +327,7 @@
     :: alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%close-challenge id.client-action])]
+            [%challenge-update !>([%close-challenge id.client-action])]
         ==
     ==
   ::
@@ -339,7 +339,7 @@
     :: alert the frontend of the new challenge
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%open-challenge challenge.client-action])]
+            [%challenge-update !>([%open-challenge challenge.client-action])]
         ==
     ==
   ::  We've received a challenge UPDATE regarding a challenge
@@ -354,7 +354,7 @@
     :: alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%challenge-update challenge])]
+            [%challenge-update !>([%challenge-update challenge])]
         ==
     ==
   ?~  challenge-sent.state
@@ -375,7 +375,7 @@
     :: just alert the frontend of the update
     :~  :*  %give  %fact  
             ~[/challenge-updates]
-            [%pokur-challenge-update !>([%challenge-update challenge])]
+            [%challenge-update !>([%challenge-update challenge])]
         ==
     ==
   :: if all players have responded, automatically initialize game
@@ -513,7 +513,7 @@
             ==
           :*  %give  %fact  
               ~[/challenge-updates]
-              [%pokur-challenge-update !>([%close-challenge id.client-action])]
+              [%challenge-update !>([%close-challenge id.client-action])]
           ==
       ==
   :_  state
@@ -550,7 +550,7 @@
         :: tell frontend we left a game
         :*  %give  %fact
             ~[/game]  
-            %pokur-game-update  !>([%left-game %.n])
+            %game-update  !>([%left-game %.n])
         ==
     ==
   ==

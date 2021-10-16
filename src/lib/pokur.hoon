@@ -863,7 +863,7 @@
 
 ::  not actually using this anywhere
 ++  rank-to-hierarchy
-  |=  rank=pokur-hand-rank
+  |=  rank=hand-rank
   ^-  @ud
   ?-  rank
     %royal-flush      9
