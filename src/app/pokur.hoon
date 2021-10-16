@@ -38,20 +38,16 @@
   :-  ~  this
 ++  on-save
   ^-  vase
-  ~&  >  'on-save v1'
   !>(state)
 ++  on-load
   |=  old-state=vase
   ^-  (quip card _this)
-  ~&  >  'on-load v1'
   =/  prev  !<(versioned-state old-state)
   ?+  -.prev
     :: default switch here, AKA the unlabeled state-0
-    ~&  >>>  '%0'
     :: just wipe the damn game state to swap. no one will be in-game during the OTA ;)
     `this(state [%1 ~ challenge-sent.prev challenges-received.prev game-msgs-received.prev])
     %1
-    ~&  >>>  '%1'
     `this(state prev)
   ==
 ++  on-poke

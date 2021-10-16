@@ -40,11 +40,9 @@
   =/  prev  !<(versioned-state old-state)
   ?-  -.prev
     %0
-    ~&  >>>  '%0'
     :: just wipe the damn game state to swap. no one will be in-game during the OTA ;)
     `this(state [%1 `(map @da server-game-state)`~])
     %1
-    ~&  >>>  '%1'
     `this(state prev)
   ==
 ++  on-poke
@@ -149,7 +147,6 @@
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
-    ~&  >>>  "pokur-server: round timer popped on non-existent game."
     :-  ~  this
   =/  game  u.game
   :: if no players left in game, poke ourselves to end it
@@ -201,7 +198,6 @@
   =/  game
     (~(get by active-games.state) game-id)
   ?~  game
-    ~&  >>>  "server error: turn timeout on non-existent game."
     :-  ~  this
   =/  game  u.game
   :: if no players left in game, poke ourselves to end it
