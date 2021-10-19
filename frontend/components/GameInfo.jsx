@@ -75,7 +75,7 @@ const GameInfo = ({ game, gameMessages }) => {
         {Object.entries(generateAlignedPlayers(game.chips)).map(([player, data]) => (
             player.slice(0, -1) == "placeholder"
             ? <div key={data} className={styles.player_seat} style={{"display":"none"}}></div>
-            : <div key={player} className={`${styles.player_seat} ${"~" + game.whose_turn == player ? `their-turn` : ``}`}>
+            : <div key={player} className={`${styles.player_seat} ${"~" + game.whose_turn == player ? styles.their_turn : ``}`}>
                 <div className={styles.player_info_top}>
                   <div className={styles.sigil}>
                   {window.ship.length <= 13
@@ -119,6 +119,10 @@ const GameInfo = ({ game, gameMessages }) => {
                      ? <TurnTimer length={game.time_limit_seconds} />
                      : <></>}
                 </div>
+                {"~" + game.dealer == player 
+                 ? <div className={styles.dealer_btn}>D</div>
+                 : <></>
+                      }
               </div>
         ))}
         <div className={styles.board}>
@@ -127,6 +131,10 @@ const GameInfo = ({ game, gameMessages }) => {
             ))}
         </div>
         <h3>Pot: ${calcFullPot(game.pots[0].val)}</h3>
+        {game.dealer == window.ship 
+          ? <div className={styles.dealer_btn}>D</div>
+          : <></>
+        }
       </div>
     </>
   );

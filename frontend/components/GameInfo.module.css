@@ -1,8 +1,8 @@
 .game_info {
-    text-align: center;
+    text-align: left;
     width: 200px;
     font-size: 1em;
-    /* border: 1px solid black; */
+    position:absolute;
 }
 
 .game_table {
@@ -36,6 +36,10 @@
     font-size: 18px;
 }
 
+.their_turn {
+    border: 2px solid var(--dark-red);
+}
+
 .player_seat .player_info_top {
     width: 100%;
     height: 40px;
@@ -60,10 +64,20 @@
     box-shadow:inset 0px 0px 0px 3px #fff;
 }
 
+.player_seat:nth-of-type(1) .dealer_btn {
+    top: -10px;
+    right: -25px;
+}
+
 .player_seat:nth-of-type(2) {
     left: 0;
     top: 50%;
     transform: translate(-50%, -70%);
+}
+
+.player_seat:nth-of-type(2) .dealer_btn {
+    bottom: 30px;
+    right: -30px;
 }
 
 .player_seat:nth-of-type(3) {
@@ -72,16 +86,31 @@
     transform: translate(-50%, -50%);
 }
 
+.player_seat:nth-of-type(3) .dealer_btn {
+    bottom: -10px;
+    right: -25px;
+}
+
 .player_seat:nth-of-type(4) {
     left: 50%;
     top: 0;
     transform: translate(-50%, -50%);
 }
 
+.player_seat:nth-of-type(4) .dealer_btn {
+    bottom: -10px;
+    right: -25px;
+}
+
 .player_seat:nth-of-type(5) {
     left: 75%;
     top: 0;
     transform: translate(-50%, -50%);
+}
+
+.player_seat:nth-of-type(5) .dealer_btn {
+    bottom: -10px;
+    right: -25px;
 }
 
 .player_seat:nth-of-type(6) {
@@ -91,6 +120,11 @@
     transform: translate(50%, -70%);
 }
 
+.player_seat:nth-of-type(6) .dealer_btn {
+    bottom: 30px;
+    left: -30px;
+}
+
 .player_seat:nth-of-type(7) {
     right: 100px;
     left: auto;
@@ -98,8 +132,18 @@
     transform: translate(50%, 50%);
 }
 
+.player_seat:nth-of-type(7) .dealer_btn {
+    top: -10px;
+    left: -25px;
+}
+
 .game_table h3 {
     font-size: 24px;
+}
+
+.game_table .dealer_btn {
+    bottom: 10px;
+    left: 45%;
 }
 
 /* pattern sourced from https://www.magicpattern.design/tools/css-backgrounds */
@@ -148,4 +192,15 @@
     display: flex;
     flex-flow: row wrap;
     justify-content: center;
+}
+
+.dealer_btn {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+    border-radius: 15px;
+    padding: 4px;
 }

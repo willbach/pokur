@@ -55,7 +55,8 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
         <p>Your Stack: ${myChips.stack} Bet: ${myChips.committed}</p>
         <input name="bet"
              className={styles.rangeInput}
-             type="range" 
+             type="range"
+             step="5"
              min={game.current_bet > 0 
                    ? game.current_bet + game.last_bet
                    : game.min_bet}

@@ -10,8 +10,9 @@
 }
 
 .leave_game {
-    margin-top: 50px;
-    margin-left: 80%;
+    position: absolute;
+    right: 50px;
+    top: 50px;
     color: var(--light-text);
     background: var(--dark-red);
     padding: 10px 20px 10px 20px;
