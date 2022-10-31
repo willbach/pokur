@@ -45,20 +45,19 @@
       blinds-schedule=(list [sb=@ud bb=@ud])
   ==
 ::
-::  the data a pokur-server holds for a given game
-::  game state pertaining to a player stored in 'game'
+::  the data a pokur-server holds for a given table
 ::
-+$  server-game-state
-  $:  game=game-state
-      hands=(list [ship pokur-deck])
++$  host-table-state
+  $:  hands=(list [ship pokur-deck])
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
+      table
   ==
 ::
-::  the data a pokur-client holds for a given game
+::  the data a pokur-client holds for a given table
 ::
-+$  game-state
++$  table
   $:
     game-id=@da
     game-is-over=?
@@ -87,72 +86,61 @@
     update-message=[tape winning-hand=pokur-deck]  ::  XX
   ==
 ::
-+$  pokur-challenge
-  $:
-    id=@da
-    challenger=ship
-    players=(list [player=ship accepted=? declined=?])
-    host=ship
-    spectators-allowed=?
-    min-bet=@ud
-    starting-stack=@ud
-    type=game-type
-    ::  represented in cord as number between 1 and 999,
-    ::  parsed into @ud or @dr depending on context
-    turn-time-limit=@t
++$  pokur-lobby
+  $:  id=@da
+      challenger=ship
+      players=(set ship)
+      type=game-type
+      tokenized=(unit [metadata=@ux amount=@ud])
+      spectators-allowed=?
+      ::  represented in cord as number between 1 and 999,
+      ::  parsed into @ud or @dr depending on context
+      turn-time-limit=@t
   ==
 ::
 ::  gall actions, pokes
 ::
-+$  game-update
-  $%  [%update game=game-state my-hand-rank=tape]
-      [%msgs msg-list=(list [from=ship msg=tape])]
++$  game-update  ::  from app to frontend
+  $%  [%update table my-hand-rank=tape]
+      [%new-message from=ship msg=tape]
       [%left-game ~]
   ==
 ::
-+$  challenge-update
-  $%
-    [%open-challenge challenge=pokur-challenge]
-    [%challenge-update challenge=pokur-challenge]
-    [%close-challenge id=@da]
++$  player-action  ::  to host
+  $%  [%join-host host=ship]
+      [%leave-host ~]
+      $:  %new-lobby
+          type=game-type
+          tokenized=(unit [metadata=@ux amount=@ud])
+          min-players=@ud
+          spectators-allowed=?
+          turn-time-limit=@t
+      ==
+      [%join-lobby id=@da]
+      [%leave-lobby ~]
+      [%start-game ~]  ::  creator of lobby must perform
+      [%leave-game ~]
+      [%add-escrow ~]  ::  generate %uqbar transaction, if game is tokenized
   ==
 ::
-+$  client-action
-  $%
-    $:  %new-lobby
-        host=ship
-        type=game-type
-        min-players=@ud
-        spectators-allowed=?
-        turn-time-limit=@t
-    ==
-    [%join-lobby host=ship id=@da]
-    [%add-escrow]
-    [%leave-lobby ~]
-    [%leave-game ~]
++$  message-action
+  $%  [%send-msg msg=tape]  ::  from frontend to app
+      [%receive-msg msg=tape]  ::  from our app to their app
   ==
 ::
 +$  game-action
-  $%
-    [%bet game-id=@da amount=@ud]
-    [%check game-id=@da]
-    [%fold game-id=@da]
-    [%send-msg msg=tape]
-    [%receive-msg msg=tape]
+  $%  [%bet amount=@ud]
+      [%check ~]
+      [%fold ~]
   ==
 ::
-::  Pokes used by pokur-server
-::
-+$  server-action
-  $%
-    [%register-game challenge=pokur-challenge]
-    [%kick paths=(list path) subscriber=ship]
-    [%send-game-updates game=server-game-state]
-    [%initialize-hand game-id=@da]
-    [%leave-game game-id=@da]
-    [%end-game game-id=@da]
-    [%set-timer game-id=@da type=?(%turn %round) time=@da]
-    [%cancel-timer game-id=@da time=@da]
-    [%wipe-all-games ~]
++$  host-action  ::  internal pokes for host
+  $%  [%send-game-updates game=server-game-state]
+      [%initialize-hand game-id=@da]
+      [%set-timer game-id=@da type=?(%turn %round) time=@da]
+      [%kick paths=(list path) subscriber=ship]
+      [%cancel-timer game-id=@da time=@da]
+      [%end-game game-id=@da]
+      [%wipe-all-games ~]
   ==
 --
