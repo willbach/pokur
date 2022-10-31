@@ -11,7 +11,7 @@
   ==
 +$  state-zero
   $:  %0
-      active-games=(map @da server-game-state-zero) 
+      active-games=(map @da server-game-state-zero)
   ==
 ::
 +$  card  card:agent:gall
@@ -66,7 +66,7 @@
     ::
     %pokur-game-action
     =^  cards  state
-    %-  handle-game-action:hc 
+    %-  handle-game-action:hc
     !<(game-action:pokur vase)
     [cards this]
   ==
@@ -82,7 +82,7 @@
     :_  this
       =/  err  "invalid game id {<game-id>}"
       :~  [%give %watch-ack `~[leaf+err]]
-    == 
+    ==
   =/  game  (~(get by active-games.state) u.game-id)
   ?~  game
     :_  this
@@ -94,7 +94,7 @@
     :_  this
       =/  err  "invalid player"
       :~  [%give %watch-ack `~[leaf+err]]
-    == 
+    ==
   ?>  =(src.bowl u.player)
   ?~  (find [u.player]~ players.game.u.game)
     ?.  spectators-allowed.game.u.game
@@ -111,11 +111,11 @@
     =.  active-games.state
     (~(put by active-games.state) [u.game-id u.game])
     :_  this
-    :~  :*  
-          %give 
-          %fact 
+    :~  :*
+          %give
+          %fact
           ~[/game/(scot %da u.game-id)/(scot %p u.player)]
-          [%pokur-game-state !>(game.u.game)]
+          [%game-state !>(game.u.game)]
         ==
     ==
   :: give a good subscriber their game state
@@ -123,11 +123,11 @@
   =.  my-hand.game.u.game
   +.-:(skim hands.u.game |=([s=ship h=pokur-deck] =(s u.player)))
   :_  this
-    :~  :*  
-          %give 
-          %fact 
+    :~  :*
+          %give
+          %fact
           ~[/game/(scot %da u.game-id)/(scot %p u.player)]
-          [%pokur-game-state !>(game.u.game)]
+          [%game-state !>(game.u.game)]
         ==
     ==
   ==
@@ -178,7 +178,7 @@
           %pokur-server-action
           !>([%send-game-updates game])
       ==
-      :: set new round timer 
+      :: set new round timer
       :*  %pass
           /poke-wire
           %agent
@@ -236,7 +236,7 @@
         %pokur-game-action
         !>([%fold game-id.game.game])
     ==
-  ==  
+  ==
   :: (perform-move current-time player-to-fold game-id %fold 0)
   [card this]
   ==
@@ -330,7 +330,7 @@
     ==
   ==
   =.  turn-timer.game  new-timer
-  =.  game 
+  =.  game
   ?:  =(move-type %bet)
     (~(process-player-action modify-state game) from [%bet game-id amount])
   ?:  =(move-type %check)
@@ -342,7 +342,7 @@
   %+  welp
     (generate-update-cards game)
   timer-cards
-  
+
 ++  handle-game-action
   |=  action=game-action:pokur
   ^-  (quip card _state)
@@ -480,13 +480,13 @@
   =.  active-games.state
     (~(put by active-games.state) [id.c-data new-server-state])
   =/  init-cards
-    :~  
+    :~
       :*  %pass
           /poke-wire
-          %agent 
-          [our.bowl %pokur-server] 
+          %agent
+          [our.bowl %pokur-server]
           %poke
-          %pokur-server-action 
+          %pokur-server-action
           !>([%initialize-hand id.c-data])
       ==
       :: init first timer
@@ -501,7 +501,7 @@
     ==
   :_  state
     :: init first *round timer*, if in tournament
-    ?:  =(type.c-data %cash)  
+    ?:  =(type.c-data %cash)
       init-cards
     %+  weld
       init-cards
@@ -550,8 +550,8 @@
   (~(initialize-hand modify-state game) dealer.game.game)
   :: make cards to show players game state
   =/  cards
-  %+  turn 
-    hands.game 
+  %+  turn
+    hands.game
   |=  hand=[ship pokur-deck]
   (~(make-player-cards modify-state game) hand)
   =.  active-games.state
@@ -565,17 +565,17 @@
   %+  turn
     spectators.game.game
   |=  s=ship
-  :^  %give 
-      %fact 
+  :^  %give
+      %fact
       ~[/game/(scot %da game-id.server-action)/(scot %p s)]
-      [%pokur-game-state !>(game.game)]
+      [%game-state !>(game.game)]
     ::
     ::
     %send-game-updates
   ?>  (team:title [our src]:bowl)
   =/  cards
-    %+  turn 
-        hands.game.server-action 
+    %+  turn
+        hands.game.server-action
       |=  hand=[ship pokur-deck]
       (~(make-player-cards modify-state game.server-action) hand)
   :_  state
@@ -587,10 +587,10 @@
   %+  turn
     spectators.game.game.server-action
   |=  s=ship
-  :^  %give 
-      %fact 
+  :^  %give
+      %fact
       ~[/game/(scot %da game-id.game.game.server-action)/(scot %p s)]
-      [%pokur-game-state !>(game.game.server-action)]
+      [%game-state !>(game.game.server-action)]
     ::
     ::
     %kick
@@ -601,7 +601,7 @@
             paths.server-action
             `subscriber.server-action
         ==
-    ==  
+    ==
     ::
     ::
     %end-game
@@ -625,7 +625,7 @@
   =.  -.update-message.game.last-game-state
     %+  weld
       "The game is now over!   "
-    -.update-message.game.last-game-state 
+    -.update-message.game.last-game-state
   =.  active-games.state
   (~(del by active-games.state) game-id.server-action)
   :_  state
@@ -645,7 +645,7 @@
     %wipe-all-games :: for debugging, mostly
   ?>  (team:title [our src]:bowl)
   =.  active-games.state
-    ~  
+    ~
   ~&  >>>  "server wiped"
   :_  state
     ~

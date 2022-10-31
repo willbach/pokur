@@ -2,18 +2,11 @@
 /+  default-agent, dbug, *pokur
 |%
 +$  versioned-state
-    $%  state-one
-        state-zero
+    $%  state-0
     ==
-+$  state-one
-    $:  %1
-        game=(unit pokur-game-state)
-        challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
-        challenges-received=(map @da pokur-challenge)
-        game-msgs-received=(list [from=ship msg=tape])
-    ==
-+$  state-zero
-    $:  game=(unit pokur-game-state-zero)
++$  state-0
+    $:  %0
+        game=(unit game-state)
         challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
         challenges-received=(map @da pokur-challenge)
         game-msgs-received=(list [from=ship msg=tape])
@@ -23,7 +16,7 @@
 ::
 --
 %-  agent:dbug
-=|  state=state-one
+=|  state=state-0
 ^-  agent:gall
 =<
 |_  =bowl:gall
@@ -33,55 +26,26 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ~&  >  '%pokur started successfully'
-  =.  game.state  ~
-  :-  ~  this
+  `this(state [%0 ~ ~ ~ ~])
 ++  on-save
   ^-  vase
   !>(state)
 ++  on-load
-  |=  old-state=vase
+  |=  old=vase
   ^-  (quip card _this)
-  =/  prev  !<(versioned-state old-state)
-  ?+  -.prev
-    :: default switch here, AKA the unlabeled state-0
-    :: just wipe the damn game state to swap. no one will be in-game during the OTA ;)
-    `this(state [%1 ~ challenge-sent.prev challenges-received.prev game-msgs-received.prev])
-    %1
-    `this(state prev)
-  ==
+  `this(state !<(versioned-state old))
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+    mark  (on-poke:def mark vase)
-    %json
-    ~&  >>  !<(json vase)
-    `this
-    ::
-    %noun
-    ?+    q.vase  (on-poke:def mark vase)
-        %print-state
-      ~&  >  state
-      ~&  >>  bowl  `this
-      ::
-        %print-subs
-      ~&  >>  &2.bowl  `this
-      ::
-        %print-challenge
-      ~&  >>  challenge-sent.state  `this
-      ::
-        %print-challenges-received
-      ~&  >>  challenges-received.state  `this
-    ==
-    ::
-    %pokur-client-action
+      %pokur-client-action
     =^  cards  state
-    (handle-client-action:hc !<(client-action:pokur vase))
+      (handle-client-action:hc !<(client-action vase))
     [cards this]
-    ::
-    %pokur-game-action
+  ::
+      %pokur-game-action
     =^  cards  state
-    (handle-game-action:hc !<(game-action:pokur vase))
+      (handle-game-action:hc !<(game-action vase))
     [cards this]
   ==
 ::
@@ -92,7 +56,7 @@
     [%challenge-updates ~]
     =/  cards
       %+  turn
-        %+  weld  
+        %+  weld
           ~(val by challenges-received.state)
         (drop challenge-sent.state)
       |=  item=pokur-challenge
@@ -113,8 +77,6 @@
     :_  this
       ~[[%give %fact ~[/game-msgs] [%game-update !>([%msgs game-msgs-received.state])]]]
   ==
-++  on-leave  on-leave:def
-++  on-peek   on-peek:def
 :: Receives responses from pokes or subscriptions to other Gall agents
 :: This is where updates are handled from the pokur-server to which we've subscribed.
 ++  on-agent
@@ -124,13 +86,13 @@
       [%game-updates @ta ~]
     ?+  -.sign  (on-agent:def wire sign)
       %fact
-      =/  new-state=pokur-game-state  
-        !<(pokur-game-state q.cage.sign)
+      =/  new-state=game-state
+        !<(game-state q.cage.sign)
       =/  my-hand-eval
         =/  full-hand  (weld my-hand.new-state board.new-state)
         ?+  (lent full-hand)  100 :: fake rank number to induce "-"
-          %5  (eval-5-cards full-hand)  
-          %6  (eval-6-cards full-hand)  
+          %5  (eval-5-cards full-hand)
+          %6  (eval-6-cards full-hand)
           %7  -:(evaluate-hand full-hand)
         ==
       =.  game.state
@@ -139,19 +101,17 @@
         ~[[%give %fact ~[/game] [%game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
     ==
   ==
-++  on-arvo
-  |=  [=wire =sign-arvo]
-  ^-  (quip card _this)
-  ?.  ?=(%bound +<.sign-arvo)
-    (on-arvo:def wire sign-arvo)
-  [~ this]
-++  on-fail   on-fail:def
+++  on-arvo  on-arvo:def
+++  on-fail  on-fail:def
+++  on-leave  on-leave:def
+++  on-peek   on-peek:def
 --
+::
 ::  start helper cores
 ::
 |_  bowl=bowl:gall
 ++  handle-game-action
-  |=  action=game-action:pokur
+  |=  action=game-action
   ^-  (quip card _state)
   ?~  game.state
     :_  state
@@ -160,16 +120,16 @@
     %check
   ?>  (team:title [our src]:bowl)
   :_  state
-    :~  :*  %pass  /poke-wire  %agent 
-            [host.u.game.state %pokur-server] 
-            %poke  %pokur-game-action 
+    :~  :*  %pass  /poke-wire  %agent
+            [host.u.game.state %pokur-server]
+            %poke  %pokur-game-action
             !>([%check game-id=game-id.u.game.state])
         ==
     ==
     %bet
   ?>  (team:title [our src]:bowl)
   :_  state
-    :~  :*  %pass  /poke-wire  %agent 
+    :~  :*  %pass  /poke-wire  %agent
             [host.u.game.state %pokur-server]
             %poke  %pokur-game-action
             !>([%bet game-id=game-id.u.game.state amount=amount.action])
@@ -197,8 +157,8 @@
       send-to
     |=  player=ship
     :*  %pass
-        /poke-wire 
-        %agent 
+        /poke-wire
+        %agent
         [player %pokur]
         %poke
         %pokur-game-action
@@ -215,7 +175,7 @@
   %+  weld
     ~[[src.bowl msg.action]]
   game-msgs-received.state
-  
+
   :: add it to our state (from: src.bowl)
   :: and update our subscribers
   :_  state
@@ -228,7 +188,7 @@
     ==
   ==
 ++  handle-client-action
-  |=  =client-action:pokur
+  |=  =client-action
   ^-  (quip card _state)
   ?-  -.client-action
   ::
@@ -236,45 +196,40 @@
     %issue-challenge
   ?>  (team:title [our src]:bowl)
   =/  player-list
-  %+  turn 
-    %+  weld 
-      to.client-action 
+  %+  turn
+    %+  weld
+      to.client-action
     ~[our.bowl]
   |=  s=ship
   ?:  =(s our.bowl)
     :: [@p / accepted? / declined?]
     [s %.y %.n]
   [s %.n %.n]
-  =/  turn-time-limit
-  `@dr`+:(scan (trip turn-time-limit.client-action) crub:so)
   =/  challenge
-    [
-      id=now.bowl
+    [ id=now.bowl
       challenger=our.bowl
       players=player-list
-      host=host.client-action
-      spectators=spectators.client-action
-      min-bet=min-bet.client-action
-      starting-stack=starting-stack.client-action
-      type=type.client-action
-      turn-time-limit=turn-time-limit
-      time-limit-seconds=time-limit-seconds.client-action
+      host.client-action
+      spectators.client-action
+      min-bet.client-action
+      starting-stack.client-action
+      type.client-action
+      turn-time-limit.client-action
     ]
-  =.  challenge-sent.state  
+  =.  challenge-sent.state
     %-  some  challenge
   :_  state
     ::  tell our frontend that we've opened a challenge
-    %+  welp 
-      :~  :*  %give  %fact  
+    %+  welp
+      :~  :*  %give  %fact
               ~[/challenge-updates]
               [%challenge-update !>([%open-challenge challenge])]
-          ==
-      ==
+      ==  ==
     :: poke every ship invited with the challenge
     %+  turn
       to.client-action
     |=  player=ship
-    :*  %pass  /poke-wire  %agent  [player %pokur] 
+    :*  %pass  /poke-wire  %agent  [player %pokur]
         %poke  %pokur-client-action  !>([%receive-challenge challenge=challenge])
     ==
   ::
@@ -284,7 +239,7 @@
   ?:  =(~ challenge-sent.state)
     :_  state
       ~[[%give %poke-ack `~[leaf+"error: you haven't issued a challenge yet."]]]
-  =/  challenge  
+  =/  challenge
     (need challenge-sent.state)
   ?.  =(id.challenge id.client-action)
     :_  state
@@ -293,7 +248,7 @@
   :_  state
     :: tell our frontend we're closing a challenge
     %+  welp
-      :~  :*  %give  %fact  
+      :~  :*  %give  %fact
               ~[/challenge-updates]
               [%challenge-update !>([%close-challenge id.challenge])]
           ==
@@ -308,7 +263,7 @@
           declined
         ==
     |=  [player=ship accepted=? declined=?]
-    :*  %pass  /poke-wire  %agent  [player %pokur] 
+    :*  %pass  /poke-wire  %agent  [player %pokur]
         %poke  %pokur-client-action  !>([%challenge-cancelled id=id.challenge])
     ==
   ::
@@ -321,7 +276,7 @@
     (~(del by challenges-received.state) id.client-action)
   :_  state
     :: alert the frontend of the update
-    :~  :*  %give  %fact  
+    :~  :*  %give  %fact
             ~[/challenge-updates]
             [%challenge-update !>([%close-challenge id.client-action])]
         ==
@@ -329,11 +284,11 @@
   ::
   ::  We've received a challenge from another ship
     %receive-challenge
-  =.  challenges-received.state  
+  =.  challenges-received.state
     (~(put by challenges-received.state) [id.challenge.client-action challenge.client-action])
   :_  state
     :: alert the frontend of the new challenge
-    :~  :*  %give  %fact  
+    :~  :*  %give  %fact
             ~[/challenge-updates]
             [%challenge-update !>([%open-challenge challenge.client-action])]
         ==
@@ -348,7 +303,7 @@
       (~(put by challenges-received.state) [id.challenge challenge])
     :_  state
     :: alert the frontend of the update
-    :~  :*  %give  %fact  
+    :~  :*  %give  %fact
             ~[/challenge-updates]
             [%challenge-update !>([%challenge-update challenge])]
         ==
@@ -369,7 +324,7 @@
       |(accepted declined)
     :_  state
     :: just alert the frontend of the update
-    :~  :*  %give  %fact  
+    :~  :*  %give  %fact
             ~[/challenge-updates]
             [%challenge-update !>([%challenge-update challenge])]
         ==
@@ -385,7 +340,7 @@
     %+  welp
       :: register game with server
       :~
-        :*  
+        :*
           %pass  /poke-wire  %agent  [host.challenge %pokur-server]
           %poke  %pokur-server-action  !>([%register-game challenge=challenge])
         ==
@@ -402,7 +357,7 @@
   ::  Accept a specific challenge that we've received
     %accept-challenge
   ?>  (team:title [our src]:bowl)
-  =/  challenge  
+  =/  challenge
     (~(get by challenges-received.state) id.client-action)
   ?~  challenge
     :_  state
@@ -410,7 +365,7 @@
   :_  state
     :: notify challenger that we've accepted
     :: they'll notify the other ships in the lobby of this
-    :~  :*  
+    :~  :*
           %pass  /poke-wire  %agent  [challenger.u.challenge %pokur]
           %poke  %pokur-client-action  !>([%challenge-accepted id=id.client-action])
         ==
@@ -419,7 +374,7 @@
   ::  Decline a specific challenge that we've received
     %decline-challenge
   ?>  (team:title [our src]:bowl)
-  =/  challenge  
+  =/  challenge
     (~(get by challenges-received.state) id.client-action)
   ?~  challenge
     :_  state
@@ -429,7 +384,7 @@
   :_  state
     :: notify challenger that we've declined
     :: they'll notify the other ships in the lobby of this
-    :~  :*  
+    :~  :*
           %pass  /poke-wire  %agent  [challenger.u.challenge %pokur]
           %poke  %pokur-client-action  !>([%challenge-declined id=id.client-action])
         ==
@@ -494,7 +449,7 @@
     :: subscribe to path which game will be served from
     :~  :*
           %pass  /poke-wire  %agent  [our.bowl %pokur]
-          %poke  %pokur-client-action  
+          %poke  %pokur-client-action
           !>([%subscribe id=id.challenge.client-action host=host.challenge.client-action])
         ==
     ==
@@ -507,7 +462,7 @@
               %agent  [host.client-action %pokur-server]
               %watch  /game/(scot %da id.client-action)/(scot %p our.bowl)
             ==
-          :*  %give  %fact  
+          :*  %give  %fact
               ~[/challenge-updates]
               [%challenge-update !>([%close-challenge id.client-action])]
           ==
@@ -526,26 +481,26 @@
   =/  old-game     (need game.state)
   =/  old-host     host.old-game
   =/  old-game-id  game-id.old-game
-  =:  
+  =:
       game.state                ~
       challenge-sent.state      ~
       game-msgs-received.state  ~
     ==
-  :_  state    
+  :_  state
     :~  :: unsub from game's path
         :*  %pass  /game-updates/(scot %da id.client-action)
             %agent  [old-host %pokur-server]
             %leave  ~
         ==
         :: tell server we're leaving game
-        :*  %pass  /poke-wire  %agent 
-            [old-host %pokur-server] 
+        :*  %pass  /poke-wire  %agent
+            [old-host %pokur-server]
             %poke  %pokur-server-action
             !>([%leave-game old-game-id])
         ==
         :: tell frontend we left a game
         :*  %give  %fact
-            ~[/game]  
+            ~[/game]
             %game-update  !>([%left-game %.n])
         ==
     ==
