@@ -26,7 +26,7 @@
         town.context
         bond-salt
         %bond
-        :^    id.caller.context
+        :^    custodian.act
             timelock.act
           [source.p.meta asset-metadata.act 0 our-account]
         ~

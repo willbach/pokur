@@ -92,6 +92,7 @@
       players=(set ship)
       type=game-type
       tokenized=(unit [metadata=@ux amount=@ud])
+      bond-id=(unit @ux)
       spectators-allowed=?
       ::  represented in cord as number between 1 and 999,
       ::  parsed into @ud or @dr depending on context
@@ -103,6 +104,7 @@
 +$  update  ::  from app to frontend
   $%  [%table-update table my-hand-rank=tape]
       [%lobby-update lobby]
+      [%lobbies-available lobbies=(list lobby)]
       [%new-message from=ship msg=tape]
       [%left-game ~]
   ==
@@ -130,8 +132,8 @@
   ==
 ::
 +$  message-action
-  $%  [%send-msg msg=tape]  ::  from frontend to app
-      [%receive-msg msg=tape]  ::  from our app to their app
+  $%  [%send-message msg=tape]  ::  from frontend to app
+      [%receive-message msg=tape]  ::  from our app to their app
   ==
 ::
 +$  game-action

@@ -15,9 +15,9 @@
   ==
 ::
 +$  action
-  $%  ::  caller becomes custodian of a new item held by this contract.
+  $%  ::  create a new bond held by this contract.
       ::  sets escrow asset but not amount or depositors
-      [%new-bond timelock=@ud asset-metadata=id]
+      [%new-bond custodian=address timelock=@ud asset-metadata=id]
       ::  become a depositor in a bond -- caller must first
       ::  set appropriate allowance for this contract
       [%deposit bond-id=id amount=@ud account=id]
