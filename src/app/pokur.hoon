@@ -1,19 +1,14 @@
 /-  *pokur
 /+  default-agent, dbug, *pokur
 |%
-+$  versioned-state
-    $%  state-0
-    ==
-+$  state-0
-    $:  %0
-        game=(unit game-state)
-        challenge-sent=(unit pokur-challenge) :: can only send 1 active challenge
-        challenges-received=(map @da pokur-challenge)
-        game-msgs-received=(list [from=ship msg=tape])
-    ==
-::
 +$  card  card:agent:gall
-::
++$  versioned-state  $%(state-0)
++$  state-0
+  $:  %0
+      table=(unit table)
+      lobby=(unit lobby)
+      messages=(list [=ship =tape])
+  ==
 --
 %-  agent:dbug
 =|  state=state-0
@@ -37,69 +32,76 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  ?+    mark  (on-poke:def mark vase)
-      %pokur-client-action
-    =^  cards  state
-      (handle-client-action:hc !<(client-action vase))
-    [cards this]
-  ::
-      %pokur-game-action
-    =^  cards  state
+  =^  cards  state
+    ?+    mark  (on-poke:def mark vase)
+        %pokur-player-action
+      (handle-player-action:hc !<(player-action vase))
+        %pokur-message-action
+      (handle-message-action:hc !<(message-action vase))
+        %pokur-game-action
       (handle-game-action:hc !<(game-action vase))
-    [cards this]
+    ==
   ==
-::
 ++  on-watch
   |=  =path
   ^-  (quip card _this)
+  ::
+  ::  all subscriptions are from our frontend
+  ::
+  ?>  =(src.bowl our.bowl)
   ?+    path  (on-watch:def path)
-    [%challenge-updates ~]
-    =/  cards
-      %+  turn
-        %+  weld
-          ~(val by challenges-received.state)
-        (drop challenge-sent.state)
-      |=  item=pokur-challenge
-      :^    %give
-          %fact
-        ~[/challenge-updates]
-      [%challenge-update !>([%open-challenge item])]
-    [cards this]
-    ::
-    [%game ~]
-    ?~  game.state
-      `this
+      [%lobby-updates ~]
+    ?~  lobby.state  `this
+    :^  %give  %fact  ~[/lobby-updates]
+    [%pokur-update !>(`update`[%lobby-update u.lobby.state])]
+  ::
+      [%table-updates ~]
+    ?~  table.state  `this
     :_  this
-      ~[[%give %fact ~[/game] [%game-update !>([%update u.game.state "-"])]]]
-    [%game-msgs ~]
-    ?~  game.state
-      `this
-    :_  this
-      ~[[%give %fact ~[/game-msgs] [%game-update !>([%msgs game-msgs-received.state])]]]
+    :_  ~
+    :^  %give  %fact  ~[/table-updates]
+    [%pokur-update !>(`update`[%table-update u.table.state "-"])]
+  ::
+      [%messages ~]
+    ::  don't send all messages, rather scry for those and
+    ::  send subsequent messages along this path
+    `this
   ==
-:: Receives responses from pokes or subscriptions to other Gall agents
-:: This is where updates are handled from the pokur-server to which we've subscribed.
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
+  ::
+  ::  all updates are from our subscription(s) to host ship
+  ::  receive updates about lobbies and active table here
+  ::
   ?+    wire  (on-agent:def wire sign)
-      [%game-updates @ta ~]
-    ?+  -.sign  (on-agent:def wire sign)
-      %fact
-      =/  new-state=game-state
-        !<(game-state q.cage.sign)
-      =/  my-hand-eval
-        =/  full-hand  (weld my-hand.new-state board.new-state)
-        ?+  (lent full-hand)  100 :: fake rank number to induce "-"
-          %5  (eval-5-cards full-hand)
-          %6  (eval-6-cards full-hand)
-          %7  -:(evaluate-hand full-hand)
-        ==
-      =.  game.state
-        %-  some  new-state
-      :_  this
-        ~[[%give %fact ~[/game] [%game-update !>([%update new-state (hierarchy-to-rank my-hand-eval)])]]]
-    ==
+      [%table-updates ~]
+    ?.  ?=(%fact -.sign)
+      ::  TODO resub on kick
+      (on-agent:def wire sign)
+    =/  new  !<(table q.cage.sign)
+    =/  my-hand=tape
+      %-  hierarchy-to-rank
+      =/  full-hand  (weld my-hand.new-state board.new-state)
+      ?+  (lent full-hand)  100 :: fake rank number to induce "-"
+        %5  (eval-5-cards full-hand)
+        %6  (eval-6-cards full-hand)
+        %7  -:(evaluate-hand full-hand)
+      ==
+    :_  this(table new)
+    :_  ~
+    :^  %give  %fact  ~[/table-updates]
+    [%pokur-update !>(`update`[%update new my-hand])]
+  ::
+      [%lobby-updates ~]
+    ?.  ?=(%fact -.sign)
+      ::  TODO resub on kick
+      (on-agent:def wire sign)
+    =/  new  !<(lobby q.cage.sign)
+    :_  this(lobby new)
+    :_  ~
+    :^  %give  %fact  ~[/lobby-updates]
+    [%pokur-update !>(`update`[%lobby-update new])]
   ==
 ++  on-arvo  on-arvo:def
 ++  on-fail  on-fail:def

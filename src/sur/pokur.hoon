@@ -86,9 +86,9 @@
     update-message=[tape winning-hand=pokur-deck]  ::  XX
   ==
 ::
-+$  pokur-lobby
++$  lobby
   $:  id=@da
-      challenger=ship
+      leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       type=game-type
       tokenized=(unit [metadata=@ux amount=@ud])
@@ -100,10 +100,16 @@
 ::
 ::  gall actions, pokes
 ::
-+$  game-update  ::  from app to frontend
-  $%  [%update table my-hand-rank=tape]
++$  update  ::  from app to frontend
+  $%  [%table-update table my-hand-rank=tape]
+      [%lobby-update lobby]
       [%new-message from=ship msg=tape]
       [%left-game ~]
+  ==
++$  host-update  ::  from host to player
+  $%  [%table-update table]
+      [%lobby-update lobby]
+      [%lobbies-available lobbies=(list lobby)]
   ==
 ::
 +$  player-action  ::  to host
