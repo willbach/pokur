@@ -1,18 +1,13 @@
-/-  *pokur :: import types from sur/pokur.hoon
+/-  *pokur
 |%
+++  parse-time-limit
+  |=  tex=@t
+  ^-  @dr
+  ?>  (lth (slav %ud tex) 1.000)
+  (slav %dr `@t`(cat 3 '~s' tex))
+::
 ++  modify-state
   |_  state=server-game-state
-::  modifies game-state with hand from
-::  server-state to send copy to given player
-  ++  make-player-cards
-    |=  hand=[ship pokur-deck]
-    =.  my-hand.game.state
-      (tail hand)
-    :^  %give
-        %fact
-        ~[/game/(scot %da game-id.game.state)/(scot %p (head hand))]
-        [%game-state !>(game.state)]
-
 ::  checks if all players have acted or folded, and
 ::  committed the same amount of chips, OR,
 ::  if a player is all-in, i.e. has 0 in stack

@@ -40,33 +40,30 @@
       big-blind=@ud
   ==
 +$  tournament-spec
-  $:  round-duration=@dr
-      starting-stack=@ud
+  $:  starting-stack=@ud
+      round-duration=@dr
       blinds-schedule=(list [sb=@ud bb=@ud])
   ==
 ::
-::  the data a pokur-server holds for a given table
+::  the data a pokur-host holds for a given table
 ::
 +$  host-table-state
-  $:  hands=(list [ship pokur-deck])
+  $:  hands=(map ship pokur-deck)
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
-      table
+      =table
   ==
 ::
-::  the data a pokur-client holds for a given table
+::  the data a pokur player holds for a given table
 ::
 +$  table
   $:
-    game-id=@da
+    id=@da
     game-is-over=?
-    host=ship
-    type=game-type
-    ::  represented in cord as number between 1 and 999,
-    ::  parsed into @ud or @dr depending on context
-    turn-time-limit=@t
-    players=(map ship [in-stack=@ud committed=@ud acted=? folded=? left=?])
+    =game-type
+    turn-time-limit=@dr
+    players=(map ship [stack=@ud committed=@ud acted=? folded=? left=?])
     pots=(list [@ud (list ship)])  ::  list is for side-pots
     current-bet=@ud
     last-bet=@ud
@@ -81,7 +78,7 @@
     round-over=?  ::  indicates that next hand should increment current-round
     ::  game metadata
     spectators-allowed=?
-    spectators=(list ship)
+    spectators=(set ship)
     hands-played=@ud
     update-message=[tape winning-hand=pokur-deck]  ::  XX
   ==
@@ -90,7 +87,8 @@
   $:  id=@da
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
-      type=game-type
+      min-players=@ud
+      =game-type
       tokenized=(unit [metadata=@ux amount=@ud])
       bond-id=(unit @ux)
       spectators-allowed=?
@@ -99,18 +97,24 @@
       turn-time-limit=@t
   ==
 ::
++$  host-info
+  $:  escrow-contract=[id=@ux town=@ux]
+      uqbar-address=@ux
+  ==
+::
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
-  $%  [%table-update table my-hand-rank=tape]
-      [%lobby-update lobby]
+  $%  [%table table my-hand-rank=tape]
+      [%lobby lobby]
       [%lobbies-available lobbies=(list lobby)]
       [%new-message from=ship msg=tape]
       [%left-game ~]
   ==
 +$  host-update  ::  from host to player
-  $%  [%table-update table]
-      [%lobby-update lobby]
+  $%  [%table table]
+      [%lobby lobby]
+      [%game-starting table-id=@da]
       [%lobbies-available lobbies=(list lobby)]
   ==
 ::
@@ -118,17 +122,17 @@
   $%  [%join-host host=ship]
       [%leave-host ~]
       $:  %new-lobby
-          type=game-type
-          tokenized=(unit [metadata=@ux amount=@ud])
           min-players=@ud
+          =game-type
+          tokenized=(unit [metadata=@ux amount=@ud])
           spectators-allowed=?
           turn-time-limit=@t
       ==
       [%join-lobby id=@da]
-      [%leave-lobby ~]
-      [%start-game ~]  ::  creator of lobby must perform
-      [%leave-game ~]
-      [%add-escrow ~]  ::  generate %uqbar transaction, if game is tokenized
+      [%leave-lobby id=@da]
+      [%start-game id=@da]  ::  creator of lobby must perform
+      [%leave-game id=@da]
+      [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
   ==
 ::
 +$  message-action
@@ -137,18 +141,12 @@
   ==
 ::
 +$  game-action
-  $%  [%bet amount=@ud]
-      [%check ~]
-      [%fold ~]
+  $%  [%check table-id=@da ~]
+      [%fold table-id=@da ~]
+      [%bet table-id=@da amount=@ud]
   ==
 ::
 +$  host-action  ::  internal pokes for host
-  $%  [%send-game-updates game=server-game-state]
-      [%initialize-hand game-id=@da]
-      [%set-timer game-id=@da type=?(%turn %round) time=@da]
-      [%kick paths=(list path) subscriber=ship]
-      [%cancel-timer game-id=@da time=@da]
-      [%end-game game-id=@da]
-      [%wipe-all-games ~]
+  $%  [%set-escrow-info host-info]
   ==
 --
