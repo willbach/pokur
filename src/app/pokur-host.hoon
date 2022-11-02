@@ -110,7 +110,7 @@
     ?:  %+  levy  players.table
         |=([@ud @ud ? ? left=?] left)
       (end-game u.host-table)
-    =.  table  ~(increment-current-round modify-state table)
+    =.  table  ~(increment-current-round modify-table-state table)
     :_  this(tables (~(put by tables) table-id u.host-table))
     %+  snoc
       (send-game-updates u.host-table)
@@ -124,7 +124,8 @@
     :: TURN TIMER wire
     :: the timer ran out.. a player didn't make a move in time
     =/  table-id  (slav %da i.t.wire)
-    ~&  >>>  "%pokur-host: player timed out on game {<table-id>} at {<now.bowl>}"
+    ~&  >>>
+    "%pokur-host: player timed out on game {<table-id>} at {<now.bowl>}"
     ::  find whose turn it is
     ?~  host-table=(~(get by tables.state) table-id)
       `this
@@ -186,7 +187,7 @@
     %+  ~(put by tables.state)  id.table
     %=    u.host-table
         table
-      (~(process-player-action modify-state table) from action)
+      (~(process-player-action modify-table-state table) from action)
     ==
   =^  cards  state
     ?.  game-is-over.table
@@ -277,7 +278,7 @@
       !!
     =*  table  table.u.host-table
     :: remove sender from their game
-    =.  table  (~(remove-player modify-state table) src.bowl)
+    =.  table  (~(remove-player modify-table-state table) src.bowl)
     :: remove spectator if they were one
     =.  spectators.table
       (~(del in spectators.table) src.bowl)
@@ -313,7 +314,7 @@
   =.  deck.host-table
     (shuffle-deck deck.host-table eny.bowl)
   =.  table.host-table
-    %-  ~(initialize-hand modify-state table.host-table)
+    %-  ~(initialize-hand modify-table-state table.host-table)
     dealer.table.host-table
   :-  (send-game-updates host-table)
   state(tables (~(put by tables.state) id.table.host-table host-table))

@@ -13,10 +13,8 @@
       %jack  %queen
       %king  %ace
   ==
-+$  pokur-card
-  [card-val suit]
-+$  pokur-deck
-  (list pokur-card)
++$  pokur-card  [card-val suit]
++$  pokur-deck  (list pokur-card)
 +$  hand-rank
   $?  %royal-flush
       %straight-flush
@@ -58,29 +56,28 @@
 ::  the data a pokur player holds for a given table
 ::
 +$  table
-  $:
-    id=@da
-    game-is-over=?
-    =game-type
-    turn-time-limit=@dr
-    players=(map ship [stack=@ud committed=@ud acted=? folded=? left=?])
-    pots=(list [@ud (list ship)])  ::  list is for side-pots
-    current-bet=@ud
-    last-bet=@ud
-    board=pokur-deck
-    my-hand=pokur-deck
-    whose-turn=ship
-    dealer=ship
-    small-blind=ship
-    big-blind=ship
-    ::  for tournaments
-    current-round=@ud
-    round-over=?  ::  indicates that next hand should increment current-round
-    ::  game metadata
-    spectators-allowed=?
-    spectators=(set ship)
-    hands-played=@ud
-    update-message=[tape winning-hand=pokur-deck]  ::  XX
+  $:  id=@da
+      game-is-over=?
+      =game-type
+      turn-time-limit=@dr
+      players=(map ship [stack=@ud committed=@ud acted=? folded=? left=?])
+      pots=(list [@ud (list ship)])  ::  list is for side-pots
+      current-bet=@ud
+      last-bet=@ud
+      board=pokur-deck
+      my-hand=pokur-deck
+      whose-turn=ship
+      dealer=ship
+      small-blind=ship
+      big-blind=ship
+      ::  for tournaments
+      current-round=@ud
+      round-over=?  ::  indicates that next hand should increment current-round
+      ::  game metadata
+      spectators-allowed=?
+      spectators=(set ship)
+      hands-played=@ud
+      update-message=[tape winning-hand=pokur-deck]  ::  XX
   ==
 ::
 +$  lobby

@@ -42,7 +42,7 @@
       turn-timer=~2021.7.28..18.17.52..1849
     ]
   =/  winners
-    (~(determine-winner modify-state state) hands.state)
+    (~(determine-winner modify-table-state state) hands.state)
   ?>  =((lent winners) 2)
   ~
 ++  test-determine-winner-1
@@ -85,7 +85,7 @@
       turn-timer=~2021.7.28..18.17.52..1849
     ]
   =/  winners
-    (~(determine-winner modify-state state) hands.state)
+    (~(determine-winner modify-table-state state) hands.state)
   ?>  =((head -.winners) ~zod)
   ~
 :: tie breaking tests
@@ -93,19 +93,19 @@
   ^-  tang
   =/  hand1
     :-  0 :: high card
-      :~  [%ace %spades] 
-          [%2 %clubs] 
-          [%3 %hearts] 
-          [%4 %spades] 
-          [%queen %spades] 
+      :~  [%ace %spades]
+          [%2 %clubs]
+          [%3 %hearts]
+          [%4 %spades]
+          [%queen %spades]
         ==
   =/  hand2
     :-  0
-      :~  [%10 %spades] 
-          [%jack %clubs] 
-          [%5 %hearts] 
-          [%6 %spades] 
-          [%queen %spades] 
+      :~  [%10 %spades]
+          [%jack %clubs]
+          [%5 %hearts]
+          [%6 %spades]
+          [%queen %spades]
         ==
   ?>  (break-ties hand1 hand2)
   ~
@@ -113,19 +113,19 @@
   ^-  tang
   =/  hand1
     :-  1 :: pair
-      :~  [%2 %spades] 
-          [%2 %clubs] 
-          [%3 %hearts] 
-          [%4 %spades] 
-          [%queen %spades] 
+      :~  [%2 %spades]
+          [%2 %clubs]
+          [%3 %hearts]
+          [%4 %spades]
+          [%queen %spades]
         ==
   =/  hand2
     :-  1
-      :~  [%10 %spades] 
-          [%queen %clubs] 
-          [%5 %hearts] 
-          [%6 %spades] 
-          [%queen %spades] 
+      :~  [%10 %spades]
+          [%queen %clubs]
+          [%5 %hearts]
+          [%6 %spades]
+          [%queen %spades]
         ==
   ?>  (break-ties hand2 hand1)
   ~
@@ -133,19 +133,19 @@
   ^-  tang
   =/  hand1
     :-  1 :: pair
-      :~  [%king %spades] 
-          [%king %clubs] 
-          [%ace %hearts] 
-          [%4 %spades] 
-          [%queen %spades] 
+      :~  [%king %spades]
+          [%king %clubs]
+          [%ace %hearts]
+          [%4 %spades]
+          [%queen %spades]
         ==
   =/  hand2
     :-  1
-      :~  [%ace %spades] 
-          [%queen %clubs] 
-          [%5 %hearts] 
-          [%6 %spades] 
-          [%queen %spades] 
+      :~  [%ace %spades]
+          [%queen %clubs]
+          [%5 %hearts]
+          [%6 %spades]
+          [%queen %spades]
         ==
   ?>  (break-ties hand1 hand2)
   ~
@@ -154,19 +154,19 @@
   ^-  tang
   =/  hand1
     :-  1 :: pair
-      :~  [%king %spades] 
-          [%2 %clubs] 
-          [%queen %hearts] 
-          [%4 %spades] 
-          [%queen %spades] 
+      :~  [%king %spades]
+          [%2 %clubs]
+          [%queen %hearts]
+          [%4 %spades]
+          [%queen %spades]
         ==
   =/  hand2
     :-  1
-      :~  [%ace %spades] 
-          [%2 %clubs] 
-          [%queen %hearts] 
-          [%6 %spades] 
-          [%queen %spades] 
+      :~  [%ace %spades]
+          [%2 %clubs]
+          [%queen %hearts]
+          [%6 %spades]
+          [%queen %spades]
         ==
   ?>  (break-ties hand2 hand1)
   ~
@@ -174,19 +174,19 @@
   ^-  tang
   =/  hand1
     :-  4 :: straight with 5 cards
-      :~  [%2 %spades] 
-          [%3 %spades] 
-          [%4 %hearts] 
-          [%5 %clubs] 
-          [%6 %spades] 
+      :~  [%2 %spades]
+          [%3 %spades]
+          [%4 %hearts]
+          [%5 %clubs]
+          [%6 %spades]
         ==
   =/  hand2
     :-  4
-      :~  [%3 %spades] 
-          [%4 %hearts] 
-          [%5 %clubs] 
-          [%6 %spades] 
-          [%7 %hearts] 
+      :~  [%3 %spades]
+          [%4 %hearts]
+          [%5 %clubs]
+          [%6 %spades]
+          [%7 %hearts]
         ==
   ?>  (break-ties hand2 hand1)
   ~
@@ -204,12 +204,12 @@
 ++  test-eval1
   ^-  tang
   =/  hand
-    :~  [%10 %spades] 
-        [%jack %clubs] 
-        [%jack %hearts] 
-        [%jack %spades] 
-        [%queen %spades] 
-        [%king %spades] 
+    :~  [%10 %spades]
+        [%jack %clubs]
+        [%jack %hearts]
+        [%jack %spades]
+        [%queen %spades]
+        [%king %spades]
         [%ace %spades]
       ==
   ?>  =(9 -:(evaluate-hand hand))
@@ -217,12 +217,12 @@
 ++  test-eval2
   ^-  tang
   =/  hand
-    :~  [%10 %spades] 
-        [%10 %clubs] 
-        [%jack %hearts] 
-        [%jack %spades] 
-        [%queen %spades] 
-        [%king %hearts] 
+    :~  [%10 %spades]
+        [%10 %clubs]
+        [%jack %hearts]
+        [%jack %spades]
+        [%queen %spades]
+        [%king %hearts]
         [%king %diamonds]
       ==
   ?>  =(2 -:(evaluate-hand hand))
@@ -230,12 +230,12 @@
 ++  test-eval3
   ^-  tang
   =/  hand
-    :~  [%2 %clubs] 
-        [%3 %clubs] 
-        [%4 %clubs] 
-        [%jack %spades] 
-        [%queen %spades] 
-        [%ace %diamonds] 
+    :~  [%2 %clubs]
+        [%3 %clubs]
+        [%4 %clubs]
+        [%jack %spades]
+        [%queen %spades]
+        [%ace %diamonds]
         [%ace %spades]
       ==
   ?>  =(1 -:(evaluate-hand hand))
@@ -243,12 +243,12 @@
 ++  test-eval4
   ^-  tang
   =/  hand
-    :~  [%10 %spades] 
-        [%jack %clubs] 
-        [%2 %hearts] 
-        [%3 %hearts] 
-        [%6 %spades] 
-        [%king %spades] 
+    :~  [%10 %spades]
+        [%jack %clubs]
+        [%2 %hearts]
+        [%3 %hearts]
+        [%6 %spades]
+        [%king %spades]
         [%ace %spades]
       ==
   ?>  =(0 -:(evaluate-hand hand))
@@ -256,12 +256,12 @@
 ++  test-eval5
   ^-  tang
   =/  hand
-    :~  [%queen %spades] 
-        [%jack %hearts] 
-        [%2 %hearts] 
-        [%10 %hearts] 
-        [%6 %hearts] 
-        [%king %hearts] 
+    :~  [%queen %spades]
+        [%jack %hearts]
+        [%2 %hearts]
+        [%10 %hearts]
+        [%6 %hearts]
+        [%king %hearts]
         [%ace %spades]
       ==
   ?>  =(5 -:(evaluate-hand hand))
@@ -269,33 +269,33 @@
 ++  test-eval6
   ^-  tang
   =/  hand
-    :~  [%6 %hearts] 
-        [%king %hearts] 
-        [%2 %hearts] 
-        [%10 %hearts] 
+    :~  [%6 %hearts]
+        [%king %hearts]
+        [%2 %hearts]
+        [%10 %hearts]
         [%ace %spades]
-        [%queen %spades] 
-        [%jack %hearts] 
+        [%queen %spades]
+        [%jack %hearts]
       ==
   ?>  =(5 -:(evaluate-hand hand))
   ~
 ++  test-eval7
   ^-  tang
   =/  hand
-  ~[[%jack %hearts] [%10 %hearts] [%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]] 
+  ~[[%jack %hearts] [%10 %hearts] [%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
   ?>  =(4 -:(evaluate-hand hand))
   ~
 ++  test-eval8
   ^-  tang
   =/  hand
-  ~[[%2 %hearts] [%10 %hearts] [%4 %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]] 
+  ~[[%2 %hearts] [%10 %hearts] [%4 %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
   ?>  =(4 -:(evaluate-hand hand))
   ~
 :: 6-card hand evaluation tests
 ++  test-eval9
   ^-  tang
   =/  hand
-  ~[[%6 %hearts] [%10 %spades] [%8 %clubs] [%7 %clubs] [%8 %hearts] [%king %clubs]] 
+  ~[[%6 %hearts] [%10 %spades] [%8 %clubs] [%7 %clubs] [%8 %hearts] [%king %clubs]]
   ?>  =(1 (eval-6-cards hand))
   ~
 :: 5-card hand evaluation tests
@@ -306,50 +306,50 @@
   ?>  =(9 (eval-5-cards hand))
   ~
 ++  test-eval-straight-flush
-  =/  hand  
+  =/  hand
     ~[[%2 %spades] [%3 %spades] [%4 %spades] [%5 %spades] [%6 %spades]]
   ?>  =(8 (eval-5-cards hand))
   ~
 ++  test-eval-4-of-a-kind
-  =/  hand  
+  =/  hand
     ~[[%2 %spades] [%2 %hearts] [%2 %clubs] [%2 %diamonds] [%6 %spades]]
   ?>  =(7 (eval-5-cards hand))
   ~
 ++  test-eval-full-house
-  =/  hand  
+  =/  hand
     ~[[%2 %spades] [%2 %hearts] [%2 %clubs] [%6 %spades] [%6 %diamonds]]
   ?>  =(6 (eval-5-cards hand))
   ~
 ++  test-eval-flush
-  =/  hand  
+  =/  hand
     ~[[%ace %spades] [%3 %spades] [%4 %spades] [%5 %spades] [%8 %spades]]
   ?>  =(5 (eval-5-cards hand))
   ~
 ++  test-eval-straight
-  =/  hand  
+  =/  hand
     ~[[%2 %hearts] [%3 %diamonds] [%4 %spades] [%5 %spades] [%6 %spades]]
   ?>  =(4 (eval-5-cards hand))
-  =/  wheel-straight 
+  =/  wheel-straight
     ~[[%ace %hearts] [%2 %diamonds] [%3 %spades] [%4 %spades] [%5 %spades]]
   ?>  =(4 (eval-5-cards wheel-straight))
   ~
 ++  test-eval-3-of-a-kind
-  =/  hand  
+  =/  hand
     ~[[%3 %spades] [%3 %clubs] [%3 %diamonds] [%5 %spades] [%6 %spades]]
   ?>  =(3 (eval-5-cards hand))
   ~
 ++  test-eval-2-pair
-  =/  hand  
+  =/  hand
     ~[[%3 %spades] [%3 %clubs] [%4 %spades] [%6 %hearts] [%6 %spades]]
   ?>  =(2 (eval-5-cards hand))
   ~
 ++  test-eval-pair
-  =/  hand  
+  =/  hand
     ~[[%3 %spades] [%3 %clubs] [%4 %spades] [%10 %hearts] [%6 %spades]]
   ?>  =(1 (eval-5-cards hand))
   ~
 ++  test-eval-high-card
-  =/  hand  
+  =/  hand
     ~[[%3 %spades] [%king %clubs] [%4 %spades] [%queen %hearts] [%6 %spades]]
   ?>  =(0 (eval-5-cards hand))
   ~
