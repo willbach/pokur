@@ -40,8 +40,15 @@
 +$  tournament-spec
   $:  starting-stack=@ud
       round-duration=@dr
-      blinds-schedule=(list [sb=@ud bb=@ud])
+      blinds-schedule=(list [small=@ud big=@ud])
   ==
+::
++$  players
+  ::  list maintains table arrangement
+  (list [=ship player-info])
++$  player-info
+  [stack=@ud committed=@ud acted=? folded=? left=?]
+::
 ::
 ::  the data a pokur-host holds for a given table
 ::
@@ -60,8 +67,8 @@
       game-is-over=?
       =game-type
       turn-time-limit=@dr
-      players=(map ship [stack=@ud committed=@ud acted=? folded=? left=?])
-      pots=(list [@ud (list ship)])  ::  list is for side-pots
+      =players
+      pots=(list [amount=@ud in=(list ship)])  ::  list is for side-pots
       current-bet=@ud
       last-bet=@ud
       board=pokur-deck
@@ -72,7 +79,7 @@
       big-blind=ship
       ::  for tournaments
       current-round=@ud
-      round-over=?  ::  indicates that next hand should increment current-round
+      round-is-over=?
       ::  game metadata
       spectators-allowed=?
       spectators=(set ship)

@@ -73,7 +73,7 @@
       =/  err  "invalid table id {<table-id>}"
       :~  [%give %watch-ack `~[leaf+err]]
       ==
-    ?~  (~(has by players.table.u.host-table) src.bowl)
+    ?~  (find [src.bowl]~ players.table.u.host-table)
       ?.  spectators-allowed.table.u.host-table
         :_  this
         =/  err  "player not in this game"
@@ -108,7 +108,7 @@
     =*  table  table.u.host-table
     :: if no players left in game, end it
     ?:  %+  levy  players.table
-        |=([@ud @ud ? ? left=?] left)
+        |=([ship @ud @ud ? ? left=?] left)
       (end-game u.host-table)
     =.  table  ~(increment-current-round modify-table-state table)
     :_  this(tables (~(put by tables) table-id u.host-table))
@@ -132,7 +132,7 @@
     =*  table  table.u.host-table
     ::  if no players left in game, end it
     ?:  %+  levy  players.table
-        |=([@ud @ud ? ? left=?] left)
+        |=([ship @ud @ud ? ? left=?] left)
       (end-game u.host-table)
     :: reset that game's turn timer
     =:  turn-timer.table  ~
