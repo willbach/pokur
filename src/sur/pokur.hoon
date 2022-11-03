@@ -97,7 +97,7 @@
       spectators-allowed=?
       ::  represented in cord as number between 1 and 999,
       ::  parsed into @ud or @dr depending on context
-      turn-time-limit=@t
+      turn-time-limit=@dr
   ==
 ::
 +$  host-info
@@ -129,7 +129,7 @@
           =game-type
           tokenized=(unit [metadata=@ux amount=@ud])
           spectators-allowed=?
-          turn-time-limit=@t
+          turn-time-limit=@dr
       ==
       [%join-lobby id=@da]
       [%leave-lobby id=@da]

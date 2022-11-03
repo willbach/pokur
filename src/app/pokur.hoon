@@ -53,13 +53,13 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ?~  lobby.state  `this
+    :_  this  :_  ~
     :^  %give  %fact  ~[/lobby-updates]
     [%pokur-update !>(`update`[%lobby u.lobby.state])]
   ::
       [%table-updates ~]
     ?~  table.state  `this
-    :_  this
-    :_  ~
+    :_  this  :_  ~
     :^  %give  %fact  ~[/table-updates]
     [%pokur-update !>(`update`[%table u.table.state "-"])]
   ::
@@ -76,6 +76,15 @@
   ::  receive updates about lobbies and active table here
   ::
   ?+    wire  (on-agent:def wire sign)
+      [%start-lobby-poke @ ~]
+    ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
+    ?^  p.sign  !!  ::  TODO new lobby poke failed!
+    :_  this  :_  ~
+    :*  %pass  /lobby-updates/[i.t.wire]
+        %agent  [(need host.state) %pokur-host]
+        %watch  /lobby-updates/[i.t.wire]
+    ==
+  ::
       [%table-updates @ @ ~]
     ?.  ?=(%fact -.sign)
       ?+    -.sign  (on-agent:def wire sign)
@@ -91,28 +100,27 @@
         ::  resub on kick
         :_  this  :_  ~
         [%pass wire %agent [src.bowl %pokur-host] %watch wire]
-        ==
       ==
-    =/  new  !<(table q.cage.sign)
-    =/  my-hand=tape
+    =/  upd  !<(host-update q.cage.sign)
+    ?>  ?=(%table -.upd)
+    =/  my-hand-rank=tape
       %-  hierarchy-to-rank
-      =/  full-hand  (weld my-hand.new board.new)
-      ?+  (lent full-hand)  "-"
-        %5  (eval-5-cards full-hand)
-        %6  (eval-6-cards full-hand)
-        %7  -:(evaluate-hand full-hand)
+      =/  full-hand  (weld my-hand.+.upd board.+.upd)
+      ?+  (lent full-hand)  100
+        %5  (evaluate-5-card-hand full-hand)
+        %6  -:(evaluate-6-card-hand full-hand)
+        %7  -:(evaluate-7-card-hand full-hand)
       ==
-    :_  this(table `new)
-    :_  ~
+    :_  this(table.state `+.upd)  :_  ~
     :^  %give  %fact  ~[/table-updates]
-    [%pokur-update !>(`update`[%update new my-hand])]
+    [%pokur-update !>(`update`[%table +.upd my-hand-rank])]
   ::
       [%lobby-updates ~]
     ?+    -.sign  (on-agent:def wire sign)
         %watch-ack
       ?~  p.sign
         ~&  >  "%pokur: joined host {<src.bowl>}"
-        `this(host `src.bowl)
+        `this(host.state `src.bowl)
       ~&  >>>  "%pokur: tried to join host {<src.bowl>}, failed"
       ~&  >>>  u.p.sign
       `this
@@ -123,7 +131,7 @@
       [%pass wire %agent [src.bowl %pokur-host] %watch wire]
     ::
         %fact
-      =/  upd  !<(host-update cage.sign)
+      =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
           %lobbies-available
         :_  this  :_  ~
@@ -149,18 +157,17 @@
       [%pass wire %agent [src.bowl %pokur-host] %watch wire]
     ::
         %fact
-      =/  upd  !<(host-update cage.sign)
+      =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
-          %lobby-update
-        :_  this(lobby `+.upd)
+          %lobby
+        :_  this(lobby.state `+.upd)
         :_  ~
         :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`[%lobby new])]
+        [%pokur-update !>(`update`[%lobby +.upd])]
       ::
           %game-starting
         =/  path  /table-updates/(scot %da table-id.upd)/(scot %p our.bowl)
-        :_  this(lobby ~)
-        :_  ~
+        :_  this(lobby.state ~)  :_  ~
         [%pass path %agent [src.bowl %pokur-host] %watch path]
       ==
     ==
@@ -197,7 +204,7 @@
     :_  state(lobby ~, table ~, host ~)
     :_  ~
     :*  %pass  /lobby-updates
-        %agent  [host.action %pokur-host]
+        %agent  [u.host.state %pokur-host]
         %leave  ~
     ==
   ::
@@ -213,14 +220,11 @@
       ~|("%pokur: error: can't start lobby, already in game" !!)
     :_  state
     ::  TODO build transaction poke to %uqbar
-    :~  :*  %pass  /lobby-poke
-            %agent  [u.host.state %pokur-host]
-            %poke  %pokur-player-action  !>(action)
-        ==
-        :*  %pass  /lobby-updates/(scot %da id.action)
-            %agent  [u.host.state %pokur-host]
-            %watch  /lobby-updates/(scot %da id.action)
-    ==  ==
+    :_  ~
+    :*  %pass  /start-lobby-poke
+        %agent  [u.host.state %pokur-host]
+        %poke  %pokur-player-action  !>(action)
+    ==
   ::
       %join-lobby
     ::  join a lobby in our current host
@@ -252,7 +256,7 @@
         ==
         :*  %pass  /lobby-updates/(scot %da id.u.lobby.state)
             %agent  [u.host.state %pokur-host]
-            %leave  /lobby-updates/(scot %da id.u.lobby.state)
+            %leave  ~
     ==  ==
   ::
       %start-game
@@ -263,14 +267,13 @@
     ?^  table.state
       ~|("%pokur: error: can't start game, already in one" !!)
     :_  state(lobby ~, messages ~)
-    :_  ~
     :~  :*  %pass  /lobby-poke
             %agent  [u.host.state %pokur-host]
             %poke  %pokur-player-action  !>(action)
         ==
         :*  %pass  /lobby-updates/(scot %da id.u.lobby.state)
             %agent  [u.host.state %pokur-host]
-            %leave  /lobby-updates/(scot %da id.u.lobby.state)
+            %leave  ~
     ==  ==
   ::
       %leave-game
@@ -299,13 +302,13 @@
     ?>  =(src.bowl our.bowl)
     ::  if in lobby, send to everyone in lobby
     ::  if in game, send to everyone in game
-    :_  state(messages [[src.bowl msg.action] messages])
+    :_  state(messages [[src.bowl msg.action] messages.state])
     %+  turn
       ?~  table.state
         ?~  lobby.state
           !!
         ~(tap in players.u.lobby.state)
-      ~(key by players.u.game.state)
+      (turn players.u.table.state head)
     |=  =ship
     ^-  card
     :*  %pass  /message-poke  %agent  [ship %pokur]
@@ -321,8 +324,8 @@
           ?~  lobby.state
             %.n
           (~(has in players.u.lobby.state) src.bowl)
-        (~(has by players.u.table.state) src.bowl)
-    :_  state(messages [[src.bowl msg.action] messages])
+        ?=(^ (find [src.bowl]~ (turn players.u.table.state head)))
+    :_  state(messages [[src.bowl msg.action] messages.state])
     :_  ~
     :^  %give  %fact  ~[/messages]
     [%pokur-update !>(`update`[%new-message src.bowl msg.action])]
@@ -332,18 +335,15 @@
   |=  action=game-action
   ^-  (quip card _state)
   ?>  =(src.bowl our.bowl)
-  ?~  game.state
-    :_  state
-    =+  [%give %poke-ack `~[-]]~
-    leaf+"Error: can't process action, not in game yet."
+  ?~  table.state  !!
   :_  state
   :_  ~
   :^  %pass  /poke-wire  %agent
   :^  [(need host.state) %pokur-host]
     %poke  %pokur-game-action
   ?-  -.action
-    %check  !>(`game-action`[%check table-id.u.table.state])
-    %fold   !>(`game-action`[%fold table-id.u.table.state])
-    %bet    !>(`game-action`[%bet table-id.u.table.state amount.action])
+    %check  !>(`game-action`[%check id.u.table.state ~])
+    %fold   !>(`game-action`[%fold id.u.table.state ~])
+    %bet    !>(`game-action`[%bet id.u.table.state amount.action])
   ==
 --
