@@ -190,7 +190,7 @@
     =/  blinds=[small=@ud big=@ud]
       ?:  ?=(%cash -.game-type.table.state)
         [big-blind small-blind]:game-type.table.state
-      %+  snag  current-round.table.state
+      %+  snag  current-round.game-type.table.state
       blinds-schedule.game-type.table.state
     =.  players.table.state
       (commit-chips small-blind.table.state small.blinds)
@@ -207,14 +207,14 @@
     =/  blinds=[small=@ud big=@ud]
       ?:  ?=(%cash -.game-type.table.state)
         [big-blind small-blind]:game-type.table.state
-      %+  snag  current-round.table.state
+      %+  snag  current-round.game-type.table.state
       blinds-schedule.game-type.table.state
     %=  state
       round-is-over.table  %.y
         update-message.table
       :_  ~
       """
-      Round {<current-round.table.state>} beginning at next hand.
+      Round {<current-round.game-type.table.state>} beginning at next hand.
       New blinds: {<small.new-blinds>}/{<big.new-blinds>}
       """
     ==
@@ -264,21 +264,24 @@
     ::  sends any extra committed chips to pot
     =.  state  committed-chips-to-pot
     =.  state  award-pots
+    =?    state
+        ?&  ?=(%tournament -.game-type.table.state)
+            round-is-over.game-type.table.state
+        ==
+      %=    state
+          current-round.game-type.table
+        +(current-round.game-type.table.state)
+          round-is-over.game-type.table
+        %.n
+      ==
     %=  state
       board.table         ~
       current-bet.table   0
       last-bet.table      0
+      hand-is-over.table  %.y
       deck                generate-deck
       hands-played.table  +(hands-played.table)
       pots.table  [[0 (turn players.table.state head)]]
-    ::
-        current-round.table
-      ?.  round-is-over.table
-        current-round.table.state
-      +(current-round.table.state)
-    ::
-      round-is-over.table  %.n
-      hand-is-over.table   %.y
     ::
         game-is-over.table
       =/  active-with-chips
@@ -297,175 +300,144 @@
       [p i(acted %.y folded %.y)]
     ==
   ::  given a player and a pokur-action, handles the action.
+  ::  returns a unit for pokur-host to either ingest or reject
   ::  currently checks for being given the wrong player (not their turn),
-  ::  bad bet (2x existing bet, >BB, or matches current bet (call)),
+  ::  bad bet (<2x existing bet, >BB, or matches current bet (call)),
   ::  and trying to check when there's a bet to respond to.
-  ::  * if betting is complete, go right into flop/turn/river/determine-winner
+  ::  if betting is complete, go right into flop/turn/river/determine-winner
   ::  * folds trigger win for last standing player
   ++  process-player-action
     |=  [who=ship action=game-action]
-    ^-  host-table-state
-    ?.  =(who whose-turn.table.state)
-      :: error, wrong player making move
-      !!
-    ?-  -.action
-      %check
-    =/  committed
-    committed:(get-player-chips who chips.table.state)
-    ?:  (gth current-bet.table.state committed)
-      :: error, player must match current bet
-      !!
-    ::  set checking player to 'acted'
-    =.  state
-      (set-player-as-acted who)
-    ?.  is-betting-over
+    ^-  (unit host-table-state)
+    ?>  =(who whose-turn.table.state)
+    ?+    -.action  ~
+        %check
+      ?.  .=  current-bet.table.state
+          committed:(need (find [who]~ players.table.state))
+        ~
+      ::  set checking player to 'acted'
+      =.  state  (set-player-as-acted who)
+      ?:  is-betting-over
+        next-betting-round
       next-player-turn
-    next-betting-round
-      %bet
-    =/  stack
-      in-stack:(get-player-chips who chips.table.state)
-    =/  bet-plus-committed
-      %+  add
-        amount.action
-      committed:(get-player-chips who chips.table.state)
-    =/  current-min-bet
-      %+  snag
-        :: this will always be 0 in a cash game
-        current-round.table.state
-      min-bets.table.state
-    :: ALL-IN logic here
-    ?:  ?|  =(amount.action stack)
-            (gth amount.action stack)
-        ==
-      :: if someone tries to bet more than their stack, count it as an all-in
+    ::
+        %fold
+      =.  state  (set-player-as-acted who)
+      =.  state  (set-player-as-folded who)
+      :: if only one player hasn't folded, process win for them
+      =/  players-left
+        %+  skip  players.table.state
+        |=([ship player-info] folded)
+      ?:  =(1 (lent players-left))
+        (process-win [-.-.players-left [10 ~]]~)
+      :: otherwise continue game
+      ?.  is-betting-over
+        next-player-turn
+      next-betting-round
+    ::
+        %bet
+      =/  =player-info
+        +:(need (find [who]~ players.table.state))
+      =/  bet-plus-committed
+        (add amount.action committed.player-info)
+      =/  current-min-bet
+        ?:  ?=(%cash -.game-type.table.state)
+          big-blind.game-type.table.state
+        %-  snag
+        [current-round blinds-schedule]:game-type.table.state
+      ?:  (gte amount.action stack)
+        ::  ALL-IN logic here
+        =.  last-bet.table.state
+          ::  same with last-bet, only update if raise
+          ?:  (gth bet-plus-committed current-bet.table.state)
+            (sub bet-plus-committed current-bet.table.state)
+          last-bet.table.state
+        =.  current-bet.table.state
+          ::  only update current bet if the all-in is a raise
+          ?:  (gth bet-plus-committed current-bet.table.state)
+            bet-plus-committed
+          current-bet.table.state
+        =.  players.table.state  (commit-chips who stack)
+        =.  state  (set-player-as-acted who)
+        =.  update-message.table.state  ["{<who>} is all-in." ~]
+        ?.  is-betting-over
+          next-player-turn
+        next-betting-round
+      ::  resume logic for not-all-in
+      ?:  ?&  =(current-bet.table.state 0)
+              (lth bet-plus-committed current-min-bet)
+          ==
+        ~  ::  this is a starting bet below min-bet
+      ?:  =(bet-plus-committed current-bet.table.state)
+        ::  this is a call
+        =.  players.table.state  (commit-chips who amount.action)
+        =.  state  (set-player-as-acted who)
+        ?.  is-betting-over
+          next-player-turn
+        next-betting-round
+      ::  this is a raise attempt
+      ?.  ?&  (gte amount.action last-bet.table.state)
+              %+  gte  bet-plus-committed
+              (add last-bet.table.state current-bet.table.state)
+          ==
+        ::  error, raise must be >= amount of previous bet/raise
+        !!
+      ::  process raise
+      ::  do this before updating current-bet
       =.  last-bet.table.state
-        :: same with last-bet, only update if raise
-        ?:  (gth bet-plus-committed current-bet.table.state)
-          (sub bet-plus-committed current-bet.table.state)
-        last-bet.table.state
-      =.  current-bet.table.state
-        :: only update current bet if the all-in is a raise
-        ?:  (gth bet-plus-committed current-bet.table.state)
-          bet-plus-committed
-        current-bet.table.state
-      =.  players.table.state
-        (commit-chips who stack)
-      =.  state
-        (set-player-as-acted who)
-      =.  update-message.table.state
-        ["{<who>} is all-in." ~]
+        (sub bet-plus-committed current-bet.table.state)
+      =.  current-bet.table.state  bet-plus-committed
+      =.  players.table.state  (commit-chips who amount.action)
+      =.  state  (set-player-as-acted who)
       ?.  is-betting-over
         next-player-turn
       next-betting-round
-    :: resume logic for not-all-in
-    ?:  ?&
-          =(current-bet.table.state 0)
-          (lth bet-plus-committed current-min-bet)
-        ==
-      !!  :: this is a starting bet below min-bet
-    ?:  =(bet-plus-committed current-bet.table.state)
-      :: this is a call
-      =.  players.table.state
-      %+  commit-chips
-        who
-      amount.action
-      =.  state
-      (set-player-as-acted who)
-      ?.  is-betting-over
-        next-player-turn
-      next-betting-round
-    :: this is a raise attempt
-    ?.  ?&
-          (gte amount.action last-bet.table.state)
-          (gte bet-plus-committed (add last-bet.table.state current-bet.table.state))
-        ==
-      :: error, raise must be >= amount of previous bet/raise
-      !!
-    :: process raise
-    :: do this before updating current-bet
-    =.  last-bet.table.state
-      (sub bet-plus-committed current-bet.table.state)
-    =.  current-bet.table.state
-      bet-plus-committed
-    =.  players.table.state
-      (commit-chips who amount.action)
-    =.  state
-      (set-player-as-acted who)
-    ?.  is-betting-over
-      next-player-turn
-    next-betting-round
-      %fold
-    =.  state
-      (set-player-as-acted who)
-    =.  state
-      (set-player-as-folded who)
-    :: if only one player hasn't folded, process win for them
-    =/  players-left
-      %+  turn
-        %+  skip
-          chips.table.state
-        |=  [ship @ud @ud ? folded=? ?]
-          folded
-      |=  [s=ship @ud @ud ? ? ?]
-        s
-    ?:  =((lent players-left) 1)
-      %-  process-win
-      ~[[-.players-left [10 ~]]]
-    :: otherwise continue game
-    ?.  is-betting-over
-      next-player-turn
-    next-betting-round
-    :: lib should never, ever see these :)
-      %receive-msg
-    !!
-      %send-msg
-    !!
     ==
-  :: takes a list of hands and finds winning hand. This is only called
-  :: when the board is full, so it deals with all 7-card hands.
-  :: It returns a list of winning ships, which usually contains just
-  :: the one, but can have up to n ships all tied.
+  ::  takes a list of hands and finds winning hand. This is only called
+  ::  when the board is full, so it deals with all 7-card hands.
+  ::  It returns a list of winning ships, which usually contains just
+  ::  the one, but can have up to n ships all tied.
   ++  determine-winner
     |=  hands=(list [ship pokur-deck])
     ^-  (list [ship [@ud pokur-deck]])
-    =/  eval-each-hand
+    =/  hand-ranks
+      %+  turn  hands
       |=  [who=ship hand=pokur-deck]
-      =/  hand
-        (weld hand board.table.state)
-      [who (evaluate-7-card-hand hand)]
-    =/  hand-ranks  (turn hands eval-each-hand)
-    :: return player with highest hand rank
+      [who (evaluate-7-card-hand (weld hand board.table.state))]
+    ::  return player with highest hand rank
     =/  player-ranks
-      %+  sort
-        hand-ranks
-      |=  [a=[p=ship [r=@ud h=pokur-deck]] b=[p=ship [r=@ud h=pokur-deck]]]
+      %+  sort  hand-ranks
+      |=  [a=[@ [r=@ud *]] b=[@ [r=@ud *]]]
       (gth r.a r.b)
-    :: check for tie(s) and break before returning winner
-    ?:  =(-.+.-.player-ranks -.+.+<.player-ranks)
-      =/  player-ranks
-      %+  sort
-        player-ranks
-      |=  [a=[p=ship [r=@ud h=pokur-deck]] b=[p=ship [r=@ud h=pokur-deck]]]
-      ^-  ?
-      (break-ties +.a +.b)
-      :: then check for identical hands, in which case pot must be split.
-      =/  winning-players
-        %+  skim
-          player-ranks
-        |=  a=[p=ship [r=@ud h=pokur-deck]]
-        (hands-equal h.a +.+:(head player-ranks))
-      ?:  %+  gth
-            (lent winning-players)
-          1
-        winning-players
-      ~[(head player-ranks)]
-    ~[(head player-ranks)]
+    ::  check for ties and return winner(s)
+    =/  top-rank  -.+.-.player-ranks
+    ?.  =(top-rank -.+.+<.player-ranks)
+      ::  no ties, proceed
+      -.player-ranks^~
+    ::  some players have equally-ranked hands
+    =.  player-ranks
+      %+  sort  player-ranks
+      |=  [a=[@ [r=@ud h=pokur-deck]] b=[@ [r=@ud h=pokur-deck]]]
+      ?:  =(r.a r.b)
+        (break-ties +.a +.b)
+      (gth r.a r.b)
+    ::  then check for identical hands, in which case pot must be split.
+    =/  winning-players  [i.player-ranks]~
+    =.  player-ranks  t.player-ranks
+    |-
+    ?~  player-ranks  winning-players
+    ?.  (hands-equal +.+.i.winning-players +.+.i.player-ranks)
+      winning-players
+    %=  $
+      player-ranks  t.player-ranks
+      winning-players  [i.player-ranks winning-players]
+    ==
   ::
   ++  remove-player
     |=  who=ship
     ^-  host-table-state
-    :: set player to folded+acted+left
-    :: if it was their turn, go to next player's turn
+    ::  set player to folded+acted+left
+    ::  if it was their turn, go to next player's turn
     =.  players.table.state
       %+  turn  players.table.state
       |=  [p=ship i=player-info]
@@ -578,16 +550,14 @@
     %.y
   :: also need to check for wheel straight
   &(=(-.-.raw-hand 12) =(-.+<.raw-hand 3))
-:: given two hands, returns %.y if 1 is better than 2 (like gth)
-:: ONLY WORKS 100% for 5 card hands -- kickers BREAK THIS
-:: use in a sort function to sort hands with more granularity to find true winner
+:: given two hands, returns %.y if 1 is better than 2
+:: *ONLY WORKS* for 5 card hands
 ++  break-ties
   |=  [hand1=[r=@ud h=pokur-deck] hand2=[r=@ud h=pokur-deck]]
   ^-  ?
   ::  if ranks are strictly better, just return that
   ::  otherwise break equally-ranked hands
-  ?.  =(r.hand1 r.hand2)
-    (gth r.hand1 r.hand2)
+  ?.  =(r.hand1 r.hand2)  (gth r.hand1 r.hand2)
   ::  sort whole hands to start
   =.  h.hand1  (sort h.hand1 (card-compare a b))
   =.  h.hand2  (sort h.hand2 (card-compare a b))
@@ -597,24 +567,13 @@
           =(r.hand1 4)
           =(r.hand1 0)
         ==
+    ::  these ties can be broken by just finding high card
     (find-high-card h.hand1 h.hand2)
-  ?:  ?|  =(r.hand1 7)
-          =(r.hand1 6)
-          =(r.hand1 3)
-          =(r.hand1 2)
-          =(r.hand1 1)
-        ==
-    =.  h.hand1
-      %-  sort-hand-by-frequency
-        h.hand1
-    =.  h.hand2
-      %-  sort-hand-by-frequency
-        h.hand2
-    %+  find-high-card
-      h.hand1
-    h.hand2
-  :: if we get here we were given a wrong hand rank or a royal flush (can't tie those)
-  %.n
+  ::  other hands must be sorted by card frequency, then
+  ::  high card within that frequency sorting
+  %+  find-high-card
+    (sort-hand-by-frequency h.hand1)
+  (sort-hand-by-frequency h.hand2)
 :: Sorts cards in pokur-deck by frequency of value, then rank
 ++  sort-hand-by-frequency
   |=  hand=pokur-deck
@@ -644,7 +603,7 @@
     %.n
   $(h1 t.h1, h2 t.h2)
 ::  %.y if hand1 has higher card, %.n if hand2 does
-::  hands must be sorted to use
+::  hands must be sorted by card rank to use
 ++  find-high-card
   |=  [h1=pokur-deck h2=pokur-deck]
   ^-  ?

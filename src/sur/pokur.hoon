@@ -41,6 +41,8 @@
   $:  starting-stack=@ud
       round-duration=@dr
       blinds-schedule=(list [small=@ud big=@ud])
+      current-round=@ud
+      round-is-over=?
   ==
 ::
 +$  players
@@ -77,9 +79,6 @@
       dealer=ship
       small-blind=ship
       big-blind=ship
-      ::  for tournaments
-      current-round=@ud
-      round-is-over=?
       ::  game metadata
       spectators-allowed=?
       spectators=(set ship)

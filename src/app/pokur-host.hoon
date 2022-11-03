@@ -326,7 +326,7 @@
   =/  =table
     :*  id.lobby
         game-is-over=%.n
-        game-type.lobby
+        game-type.lobby(current-round 0, round-is-over %.n)
         turn-time-limit.lobby
         %-  malt
         %+  turn  ~(tap in players.lobby)
@@ -341,8 +341,6 @@
         dealer=*ship
         small-blind=*ship
         big-blind=*ship
-        current-round=0
-        round-over=%.n
         spectators-allowed.lobby
         spectators=~
         hands-played=0
