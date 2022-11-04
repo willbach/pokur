@@ -228,6 +228,7 @@
           src.bowl
           (silt ~[src.bowl])
           min-players.action
+          max-players.action
           game-type.action
           tokenized.action
           ~  ::  TODO bond id
@@ -244,6 +245,8 @@
     ::  add player to existing lobby
     ?~  lobby=(~(get by lobbies.state) id.action)
       !!
+    ::  lobby must not be full
+    ?<  =(max-players.u.lobby ~(wyt in players.u.lobby))
     =.  players.u.lobby
       (~(put in players.u.lobby) src.bowl)
     :_  state(lobbies (~(put by lobbies.state) id.action u.lobby))
@@ -268,10 +271,8 @@
     ::  lobby creator starts game
     ?~  lobby=(~(get by lobbies.state) id.action)
       !!
-    ?.  =(leader.u.lobby src.bowl)
-      !!
-    ?.  (gte ~(wyt in players.u.lobby) min-players.u.lobby)
-      !!
+    ?>  =(leader.u.lobby src.bowl)
+    ?>  (gte ~(wyt in players.u.lobby) min-players.u.lobby)
     ~&  >  "%pokur-host: starting new game {<id.action>}"
     =?    game-type.u.lobby
         ?=(%tournament -.game-type.u.lobby)
@@ -337,6 +338,18 @@
       (~(del in spectators.table) src.bowl)
     :-  (send-game-updates u.host-table)
     state(tables (~(put by tables.state) id.action u.host-table))
+  ::
+      %kick-player
+    ::  src must be lobby leader
+    ?~  lobby=(~(get by lobbies.state) id.action)
+      !!
+    ?>  =(leader.u.lobby src.bowl)
+    =.  players.u.lobby
+      (~(del in players.u.lobby) who.action)
+    :_  state(lobbies (~(put by lobbies.state) id.action u.lobby))
+    :_  ~
+    :^  %give  %fact  ~[/lobby-updates/(scot %da id.u.lobby)]
+    [%pokur-host-update !>(`host-update`[%lobby u.lobby])]
   ==
 ::
 ::  +send-game-updates: make update cards for players and spectators

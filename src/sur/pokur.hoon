@@ -91,6 +91,7 @@
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
+      max-players=@ud
       =game-type
       tokenized=(unit [metadata=@ux amount=@ud])
       bond-id=(unit @ux)
@@ -126,6 +127,7 @@
       [%leave-host ~]
       $:  %new-lobby
           min-players=@ud
+          max-players=@ud
           =game-type
           tokenized=(unit [metadata=@ux amount=@ud])
           spectators-allowed=?
@@ -135,11 +137,13 @@
       [%leave-lobby id=@da]
       [%start-game id=@da]  ::  creator of lobby must perform
       [%leave-game id=@da]
+      [%kick-player id=@da who=ship]  ::  creator of lobby must perform
       [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
   ==
 ::
 +$  message-action
-  $%  [%send-message msg=tape]  ::  from frontend to app
+  $%  [%mute-player who=ship]      ::  from frontend to app
+      [%send-message msg=tape]     ::  from frontend to app
       [%receive-message msg=tape]  ::  from our app to their app
   ==
 ::

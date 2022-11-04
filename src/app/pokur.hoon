@@ -9,6 +9,7 @@
       table=(unit table)
       lobby=(unit lobby)
       messages=(list [=ship =tape])
+      muted-players=(set ship)
   ==
 --
 %-  agent:dbug
@@ -22,7 +23,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 ~ ~ ~ ~])  ::  TODO add default host ~bacrys here
+  `this(state [%0 ~ ~ ~ ~ ~])  ::  TODO add default host ~bacrys here
 ++  on-save
   ^-  vase
   !>(state)
@@ -288,6 +289,18 @@
         %poke  %pokur-player-action  !>(action)
     ==
   ::
+      %kick-player
+    ?~  host.state
+      ~|("%pokur: error: can't edit lobby, no host" !!)
+    ?~  lobby.state
+      ~|("%pokur: error: can't edit lobby, not in one" !!)
+    :_  state
+    :_  ~
+    :*  %pass  /lobby-poke
+        %agent  [u.host.state %pokur-host]
+        %poke  %pokur-player-action  !>(action)
+    ==
+  ::
       %add-escrow
     ::  TODO poke wallet with transaction to escrow contract
     !!
@@ -298,6 +311,10 @@
   |=  action=message-action
   ^-  (quip card _state)
   ?-    -.action
+      %mute-player
+    ?>  =(src.bowl our.bowl)
+    `state(muted-players (~(put in muted-players.state) who.action))
+  ::
       %send-message
     ?>  =(src.bowl our.bowl)
     ::  if in lobby, send to everyone in lobby
@@ -325,6 +342,8 @@
             %.n
           (~(has in players.u.lobby.state) src.bowl)
         ?=(^ (find [src.bowl]~ (turn players.u.table.state head)))
+    ::  skip messages from muted players
+    ?:  (~(has in muted-players.state) src.bowl)  `state
     :_  state(messages [[src.bowl msg.action] messages.state])
     :_  ~
     :^  %give  %fact  ~[/messages]
