@@ -112,7 +112,7 @@
   $%  [%table table my-hand-rank=tape]
       [%lobby lobby]
       [%lobbies-available lobbies=(list lobby)]
-      [%new-message from=ship msg=tape]
+      [%new-message from=ship msg=@t]
       [%left-game ~]
   ==
 +$  host-update  ::  from host to player
@@ -142,9 +142,9 @@
   ==
 ::
 +$  message-action
-  $%  [%mute-player who=ship]      ::  from frontend to app
-      [%send-message msg=tape]     ::  from frontend to app
-      [%receive-message msg=tape]  ::  from our app to their app
+  $%  [%mute-player who=ship]    ::  from frontend to app
+      [%send-message msg=@t]     ::  from frontend to app
+      [%receive-message msg=@t]  ::  from our app to their app
   ==
 ::
 +$  game-action

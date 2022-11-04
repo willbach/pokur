@@ -1,8 +1,8 @@
 /-  pokur
-|_  act=game-state:pokur
+|_  act=host-action:pokur
 ++  grab
   |%
-  ++  noun  game-state:pokur
+  ++  noun  host-action:pokur
   --
 ++  grow
   |%

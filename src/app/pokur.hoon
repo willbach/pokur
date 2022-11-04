@@ -8,7 +8,7 @@
       host=(unit ship)
       table=(unit table)
       lobby=(unit lobby)
-      messages=(list [=ship =tape])
+      messages=(list [=ship msg=@t])
       muted-players=(set ship)
   ==
 --
