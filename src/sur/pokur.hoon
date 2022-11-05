@@ -83,7 +83,7 @@
       spectators-allowed=?
       spectators=(set ship)
       hands-played=@ud
-      update-message=[tape winning-hand=pokur-deck]  ::  XX
+      update-message=[@t winning-hand=pokur-deck]  ::  XX
   ==
 ::
 +$  lobby
@@ -109,8 +109,8 @@
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
-  $%  [%table table my-hand-rank=tape]
-      [%lobby lobby]
+  $%  [%table =table my-hand-rank=@t]
+      [%lobby =lobby]
       [%lobbies-available lobbies=(list lobby)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
@@ -153,7 +153,7 @@
       [%bet table-id=@da amount=@ud]
   ==
 ::
-+$  host-action  ::  internal pokes for host
-  $%  [%set-escrow-info host-info]
++$  host-action  ::  host sets for itself, and pokes players with
+  $%  [%escrow-info host-info]
   ==
 --

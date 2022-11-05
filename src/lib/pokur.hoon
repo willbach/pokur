@@ -209,10 +209,10 @@
       round-is-over.game-type.table  %.y
         update-message.table
       :_  ~
-      """
+      '''
       Round {<current-round.game-type.table.state>} beginning at next hand.
       New blinds: {<small.blinds>}/{<big.blinds>}
-      """
+      '''
     ==
   ++  award-pots
     |=  winners=(list ship)
@@ -356,7 +356,7 @@
           current-bet.table.state
         =.  players.table.state  (commit-chips who stack.player-info)
         =.  players.table.state  (set-player-as-acted who)
-        =.  update-message.table.state  ["{<who>} is all-in." ~]
+        =.  update-message.table.state  ['{<who>} is all-in.' ~]
         ?.  is-betting-over
           `next-player-turn
         `next-betting-round
@@ -624,18 +624,18 @@
 ::
 ++  hierarchy-to-rank
   |=  h=@ud
-  ^-  tape
-  ?+  h  "-"
-    %9  "Royal Flush"
-    %8  "Straight Flush"
-    %7  "Four of a Kind"
-    %6  "Full House"
-    %5  "Flush"
-    %4  "Straight"
-    %3  "Three of a Kind"
-    %2  "Two Pair"
-    %1  "Pair"
-    %0  "High Card"
+  ^-  @t
+  ?+  h  '-'
+    %9  'Royal Flush'
+    %8  'Straight Flush'
+    %7  'Four of a Kind'
+    %6  'Full House'
+    %5  'Flush'
+    %4  'Straight'
+    %3  'Three of a Kind'
+    %2  'Two Pair'
+    %1  'Pair'
+    %0  'High Card'
   ==
 ::
 ++  card-to-raw

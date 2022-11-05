@@ -50,10 +50,18 @@
   ^-  (quip card _this)
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
-    :_  this  :_  ~
-    :^  %give  %fact  ~
-    :-  %pokur-host-update
-    !>(`host-update`[%lobbies-available ~(val by lobbies.state)])
+    ::  new player using us as host; poke them with our escrow info
+    :_  this
+    :~  :^  %give  %fact  ~
+        :-  %pokur-host-update
+        !>(`host-update`[%lobbies-available ~(val by lobbies.state)])
+      ::
+        :*  %pass  /share-escrow-poke
+            %agent  [src.bowl %pokur]
+            %poke  %pokur-host-action
+            !>([%escrow-info (need my-info.state)])
+        ==
+    ==
   ::
       [%lobby-updates @ ~]
     ::  updates about a specific lobby
@@ -141,7 +149,7 @@
     :: reset that game's turn timer
     =.  turn-timer.u.host-table  *@da
     =.  update-message.table
-      ["{<whose-turn.table>} timed out." ~]
+      ['{<whose-turn.table>} timed out.' ~]
     :_  this(tables.state (~(put by tables.state) table-id u.host-table))
     :_  ~
     :*  %pass  /self-poke-wire
@@ -163,7 +171,7 @@
   |=  action=host-action
   ^-  (quip card _state)
   ?-    -.action
-      %set-escrow-info
+      %escrow-info
     `state(my-info `+.action)
   ==
 ::
@@ -300,7 +308,7 @@
           spectators-allowed.u.lobby
           spectators=~
           hands-played=0
-          update-message=["Pokur game started, hosted by {<our.bowl>}" ~]
+          update-message=['Pokur game started, hosted by {<our.bowl>}' ~]
       ==
     =/  =host-table-state
       :*  hands=~
