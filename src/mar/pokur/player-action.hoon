@@ -24,7 +24,8 @@
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-lobby
       %-  ot
-      :~  [%min-players ni]
+      :~  [%id (se %da)]
+          [%min-players ni]
           [%max-players ni]
           [%game-type parse-game-type]
           [%tokenized ~]  ::  TODO softly

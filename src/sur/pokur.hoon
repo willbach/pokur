@@ -54,17 +54,17 @@
 ::
 ::  the data a pokur-host holds for a given table
 ::
-+$  host-table-state
++$  host-game-state
   $:  hands=(map ship pokur-deck)
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
-      =table
+      =game
   ==
 ::
 ::  the data a pokur player holds for a given table
 ::
-+$  table
++$  game
   $:  id=@da
       game-is-over=?
       =game-type
@@ -86,7 +86,7 @@
       update-message=[@t winning-hand=pokur-deck]  ::  XX
   ==
 ::
-+$  lobby
++$  table
   $:  id=@da
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
@@ -109,23 +109,24 @@
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
-  $%  [%table =table my-hand-rank=@t]
-      [%lobby =lobby]
-      [%lobbies-available lobbies=(list lobby)]
+  $%  [%game =game my-hand-rank=@t]
+      [%table =table]
+      [%lobby tables=(list table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
   ==
 +$  host-update  ::  from host to player
-  $%  [%table table]
-      [%lobby lobby]
-      [%game-starting table-id=@da]
-      [%lobbies-available lobbies=(list lobby)]
+  $%  [%game =game]
+      [%table =table]
+      [%game-starting game-id=@da]
+      [%lobby tables=(list table)]
   ==
 ::
 +$  player-action  ::  to host
   $%  [%join-host host=ship]
       [%leave-host ~]
-      $:  %new-lobby
+      $:  %new-table
+          id=@da  ::  FE can ignore -- populated with now.bowl
           min-players=@ud
           max-players=@ud
           =game-type
@@ -133,11 +134,11 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-lobby id=@da]
-      [%leave-lobby id=@da]
-      [%start-game id=@da]  ::  creator of lobby must perform
+      [%join-table id=@da]
+      [%leave-table id=@da]
+      [%start-game id=@da]  ::  creator of table must perform
       [%leave-game id=@da]
-      [%kick-player id=@da who=ship]  ::  creator of lobby must perform
+      [%kick-player id=@da who=ship]  ::  creator of table must perform
       [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
   ==
 ::
@@ -148,9 +149,9 @@
   ==
 ::
 +$  game-action
-  $%  [%check table-id=@da ~]
-      [%fold table-id=@da ~]
-      [%bet table-id=@da amount=@ud]
+  $%  [%check game-id=@da ~]
+      [%fold game-id=@da ~]
+      [%bet game-id=@da amount=@ud]
   ==
 ::
 +$  host-action  ::  host sets for itself, and pokes players with

@@ -1,9 +1,9 @@
 /+  pokur, *pokur-json
 =,  enjs:format
-|_  upd=update:pokur
+|_  upd=host-update:pokur
 ++  grab
   |%
-  ++  noun  update:pokur
+  ++  noun  host-update:pokur
   --
 ++  grow
   |%

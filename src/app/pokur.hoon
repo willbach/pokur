@@ -6,8 +6,8 @@
 +$  state-0
   $:  %0
       host=(unit [=ship info=(unit host-info)])
+      game=(unit game)
       table=(unit table)
-      lobby=(unit lobby)
       messages=(list [=ship msg=@t])
       muted-players=(set ship)
   ==
@@ -55,16 +55,19 @@
   ?>  =(src.bowl our.bowl)
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
-    ?~  lobby.state  `this
-    :_  this  :_  ~
-    :^  %give  %fact  ~[/lobby-updates]
-    [%pokur-update !>(`update`[%lobby u.lobby.state])]
+    `this  ::  forward available tables from host here
   ::
       [%table-updates ~]
     ?~  table.state  `this
     :_  this  :_  ~
     :^  %give  %fact  ~[/table-updates]
-    [%pokur-update !>(`update`[%table u.table.state '-'])]
+    [%pokur-update !>(`update`[%table u.table.state])]
+  ::
+      [%game-updates ~]
+    ?~  game.state  `this
+    :_  this  :_  ~
+    :^  %give  %fact  ~[/game-updates]
+    [%pokur-update !>(`update`[%game u.game.state '-'])]
   ::
       [%messages ~]
     ::  don't send all messages, rather scry for those and
@@ -76,27 +79,26 @@
   ^-  (quip card _this)
   ::
   ::  all updates are from our subscription(s) to host ship
-  ::  receive updates about lobbies and active table here
+  ::  receive updates about lobbies and active game here
   ::
   ?+    wire  (on-agent:def wire sign)
-      [%start-lobby-poke @ ~]
+      [%start-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
-    ?^  p.sign  !!  ::  TODO new lobby poke failed!
+    ?^  p.sign  !!  ::  TODO new table poke failed!
     :_  this  :_  ~
-    :*  %pass  /lobby-updates/[i.t.wire]
+    :*  %pass  /table-updates/[i.t.wire]
         %agent  [-:(need host.state) %pokur-host]
-        %watch  /lobby-updates/[i.t.wire]
+        %watch  /table-updates/[i.t.wire]
     ==
   ::
-      [%table-updates @ @ ~]
+      [%game-updates @ @ ~]
     ?.  ?=(%fact -.sign)
       ?+    -.sign  (on-agent:def wire sign)
           %watch-ack
         ?~  p.sign
-          ~&  >  "%pokur: watched table hosted by {<src.bowl>}"
+          ~&  >  "%pokur: watched game hosted by {<src.bowl>}"
           `this
-        ~&  >>>  "%pokur: failed to watch table updates path!"
-        ~&  >>>  u.p.sign
+        ~&  >>>  "%pokur: failed to watch game updates path!"
         `this
       ::
           %kick
@@ -104,19 +106,20 @@
         :_  this  :_  ~
         [%pass wire %agent [src.bowl %pokur-host] %watch wire]
       ==
+    ?>  ?=(%pokur-host-update p.cage.sign)
     =/  upd  !<(host-update q.cage.sign)
-    ?>  ?=(%table -.upd)
+    ?>  ?=(%game -.upd)
     =/  my-hand-rank=@t
       %-  hierarchy-to-rank
-      =/  full-hand  (weld my-hand.+.upd board.+.upd)
+      =/  full-hand  (weld my-hand.game.upd board.game.upd)
       ?+  (lent full-hand)  100
         %5  (evaluate-5-card-hand full-hand)
         %6  -:(evaluate-6-card-hand full-hand)
         %7  -:(evaluate-7-card-hand full-hand)
       ==
-    :_  this(table.state `+.upd)  :_  ~
-    :^  %give  %fact  ~[/table-updates]
-    [%pokur-update !>(`update`[%table +.upd my-hand-rank])]
+    :_  this(game.state `game.upd)  :_  ~
+    :^  %give  %fact  ~[/game-updates]
+    [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
   ::
       [%lobby-updates ~]
     ?+    -.sign  (on-agent:def wire sign)
@@ -125,7 +128,6 @@
         ~&  >  "%pokur: joined host {<src.bowl>}"
         `this(host.state `[src.bowl ~])
       ~&  >>>  "%pokur: tried to join host {<src.bowl>}, failed"
-      ~&  >>>  u.p.sign
       `this
     ::
         %kick
@@ -134,21 +136,24 @@
       [%pass wire %agent [src.bowl %pokur-host] %watch wire]
     ::
         %fact
+      ?>  ?=(%pokur-host-update p.cage.sign)
       =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
-          %lobbies-available
+          %lobby
+        ~&  >>  "tables available: {<+.upd>}"
         :_  this  :_  ~
         :^  %give  %fact  ~[/lobby-updates]
         [%pokur-update !>(`update`upd)]
       ==
     ==
   ::
-      [%lobby-updates @ ~]
-    ::  information about a specific lobby we're in
-    =/  lobby-id  (slav %da i.t.wire)
-    ::  ignore updates about lobby we're not in
-    ?~  lobby.state  `this
-    ?.  =(lobby-id id.u.lobby.state)  `this
+      [%table-updates @ ~]
+    ::  information about a specific table we're in
+    =/  table-id  (slav %da i.t.wire)
+    ::  ignore updates about table we're not in, if in one
+    ?.  ?~  table.state  %.y
+        =(table-id id.u.table.state)
+      `this
     ?+    -.sign  (on-agent:def wire sign)
         %watch-ack
       ::  TODO handle acks and nacks if needed
@@ -160,18 +165,22 @@
       [%pass wire %agent [src.bowl %pokur-host] %watch wire]
     ::
         %fact
+      ?>  ?=(%pokur-host-update p.cage.sign)
       =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
-          %lobby
-        :_  this(lobby.state `+.upd)
+          %table
+        :_  this(table.state `table.upd)
         :_  ~
-        :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`[%lobby +.upd])]
+        :^  %give  %fact  ~[/table-updates]
+        [%pokur-update !>(`update`[%table table.upd])]
       ::
           %game-starting
-        =/  path  /table-updates/(scot %da table-id.upd)/(scot %p our.bowl)
-        :_  this(lobby.state ~)  :_  ~
-        [%pass path %agent [src.bowl %pokur-host] %watch path]
+        =/  path  /game-updates/(scot %da game-id.upd)/(scot %p our.bowl)
+        :_  this(table.state ~)
+        :~  [%pass path %agent [src.bowl %pokur-host] %watch path]
+            =+  /table-updates/(scot %da game-id.upd)
+            [%pass - %agent [src.bowl %pokur-host] %leave ~]
+        ==
       ==
     ==
   ==
@@ -180,10 +189,10 @@
   ^-  (unit (unit cage))
   ?.  =(%x -.path)  ~
   ?+    +.path  (on-peek:def path)
+      [%game ~]
+    ``json+!>(?~(game.state ~ (enjs-game:pokur-json u.game.state)))
       [%table ~]
     ``json+!>(?~(table.state ~ (enjs-table:pokur-json u.table.state)))
-      [%lobby ~]
-    ``json+!>(?~(lobby.state ~ (enjs-lobby:pokur-json u.lobby.state)))
       [%messages ~]
     ``json+!>((enjs-messages:pokur-json messages.state))
       [%muted-players ~]
@@ -225,60 +234,63 @@
       %leave-host
     ?~  host.state
       ~|("%pokur: error: can't leave host, don't have one" !!)
-    :_  state(lobby ~, table ~, host ~)
+    :_  state(table ~, game ~, host ~)
     :_  ~
     :*  %pass  /lobby-updates
         %agent  [ship.u.host.state %pokur-host]
         %leave  ~
     ==
   ::
-      %new-lobby
-    ::  start a lobby in our current host, and if game is to be
+      %new-table
+    ::  start a table in our current host, and if game is to be
     ::  tokenized, create a transaction to start a new escrow
     ::  bond with host as custodian of funds
     ?~  host.state
-      ~|("%pokur: error: can't start lobby, no host" !!)
-    ?^  lobby.state
-      ~|("%pokur: error: can't start lobby, already in one" !!)
+      ~|("%pokur: error: can't start table, no host" !!)
     ?^  table.state
-      ~|("%pokur: error: can't start lobby, already in game" !!)
+      ~|("%pokur: error: can't start table, already in one" !!)
+    ?^  game.state
+      ~|("%pokur: error: can't start table, already in game" !!)
+    ::  add our.bowl to time in order to disambiguate the unlikely
+    ::  scenario of two lobbies started at exact same time
+    =.  id.action  (add now.bowl `@ud`our.bowl)
     :_  state
     ::  TODO build transaction poke to %uqbar
     :_  ~
-    :*  %pass  /start-lobby-poke
+    :*  %pass  /start-table-poke/(scot %da id.action)
         %agent  [ship.u.host.state %pokur-host]
         %poke  %pokur-player-action  !>(action)
     ==
   ::
-      %join-lobby
-    ::  join a lobby in our current host
+      %join-table
+    ::  join a table in our current host
     ?~  host.state
-      ~|("%pokur: error: can't join lobby, no host" !!)
-    ?^  lobby.state
-      ~|("%pokur: error: can't join lobby, already in one" !!)
+      ~|("%pokur: error: can't join table, no host" !!)
     ?^  table.state
-      ~|("%pokur: error: can't join lobby, already in game" !!)
+      ~|("%pokur: error: can't join table, already in one" !!)
+    ?^  game.state
+      ~|("%pokur: error: can't join table, already in game" !!)
     :_  state
-    :~  :*  %pass  /lobby-poke
+    :~  :*  %pass  /table-poke
             %agent  [ship.u.host.state %pokur-host]
             %poke  %pokur-player-action  !>(action)
         ==
-        :*  %pass  /lobby-updates/(scot %da id.action)
+        :*  %pass  /table-updates/(scot %da id.action)
             %agent  [ship.u.host.state %pokur-host]
-            %watch  /lobby-updates/(scot %da id.action)
+            %watch  /table-updates/(scot %da id.action)
     ==  ==
   ::
-      %leave-lobby
+      %leave-table
     ?~  host.state
-      ~|("%pokur: error: can't leave lobby, no host" !!)
-    ?~  lobby.state
-      ~|("%pokur: error: can't leave lobby, not in one" !!)
-    :_  state(lobby ~, messages ~)
-    :~  :*  %pass  /lobby-poke
+      ~|("%pokur: error: can't leave table, no host" !!)
+    ?~  table.state
+      ~|("%pokur: error: can't leave table, not in one" !!)
+    :_  state(table ~, messages ~)
+    :~  :*  %pass  /table-poke
             %agent  [ship.u.host.state %pokur-host]
             %poke  %pokur-player-action  !>(action)
         ==
-        :*  %pass  /lobby-updates/(scot %da id.u.lobby.state)
+        :*  %pass  /table-updates/(scot %da id.u.table.state)
             %agent  [ship.u.host.state %pokur-host]
             %leave  ~
     ==  ==
@@ -286,40 +298,41 @@
       %start-game
     ?~  host.state
       ~|("%pokur: error: can't start game, no host" !!)
-    ?~  lobby.state
-      ~|("%pokur: error: can't start game, not in a lobby" !!)
-    ?^  table.state
-      ~|("%pokur: error: can't start game, already in one" !!)
-    :_  state(lobby ~, messages ~)
-    :~  :*  %pass  /lobby-poke
-            %agent  [ship.u.host.state %pokur-host]
-            %poke  %pokur-player-action  !>(action)
-        ==
-        :*  %pass  /lobby-updates/(scot %da id.u.lobby.state)
-            %agent  [ship.u.host.state %pokur-host]
-            %leave  ~
-    ==  ==
-  ::
-      %leave-game
-    ?~  host.state
-      ~|("%pokur: error: can't leave game, no host" !!)
     ?~  table.state
-      ~|("%pokur: error: can't leave game, not in one" !!)
+      ~|("%pokur: error: can't start game, not in a table" !!)
+    ?^  game.state
+      ~|("%pokur: error: can't start game, already in one" !!)
     :_  state(table ~, messages ~)
     :_  ~
-    :*  %pass  /lobby-poke
+    :*  %pass  /table-poke
         %agent  [ship.u.host.state %pokur-host]
         %poke  %pokur-player-action  !>(action)
     ==
   ::
+      %leave-game
+    ?~  host.state
+      ~|("%pokur: error: can't leave game, no host" !!)
+    ?~  game.state
+      ~|("%pokur: error: can't leave game, not in one" !!)
+    :_  state(game ~, messages ~)
+    :~  :*  %pass
+            /game-updates/(scot %da id.action)/(scot %p our.bowl)
+            %agent  [ship.u.host.state %pokur-host]
+            %leave  ~
+        ==
+        :*  %pass  /table-poke
+            %agent  [ship.u.host.state %pokur-host]
+            %poke  %pokur-player-action  !>(action)
+    ==  ==
+  ::
       %kick-player
     ?~  host.state
-      ~|("%pokur: error: can't edit lobby, no host" !!)
-    ?~  lobby.state
-      ~|("%pokur: error: can't edit lobby, not in one" !!)
+      ~|("%pokur: error: can't edit table, no host" !!)
+    ?~  table.state
+      ~|("%pokur: error: can't edit table, not in one" !!)
     :_  state
     :_  ~
-    :*  %pass  /lobby-poke
+    :*  %pass  /table-poke
         %agent  [ship.u.host.state %pokur-host]
         %poke  %pokur-player-action  !>(action)
     ==
@@ -340,15 +353,15 @@
   ::
       %send-message
     ?>  =(src.bowl our.bowl)
-    ::  if in lobby, send to everyone in lobby
+    ::  if in table, send to everyone in table
     ::  if in game, send to everyone in game
     :_  state(messages [[src.bowl msg.action] messages.state])
     %+  turn
-      ?~  table.state
-        ?~  lobby.state
+      ?~  game.state
+        ?~  table.state
           !!
-        ~(tap in players.u.lobby.state)
-      (turn players.u.table.state head)
+        ~(tap in players.u.table.state)
+      (turn players.u.game.state head)
     |=  =ship
     ^-  card
     :*  %pass  /message-poke  %agent  [ship %pokur]
@@ -358,13 +371,13 @@
   ::
       %receive-message
     ::  add to our message store and forward to frontend
-    ::  if in lobby, only accept messages from players in lobby
+    ::  if in table, only accept messages from players in table
     ::  if in game, only accept from players in game
-    ?>  ?~  table.state
-          ?~  lobby.state
+    ?>  ?~  game.state
+          ?~  table.state
             %.n
-          (~(has in players.u.lobby.state) src.bowl)
-        ?=(^ (find [src.bowl]~ (turn players.u.table.state head)))
+          (~(has in players.u.table.state) src.bowl)
+        ?=(^ (find [src.bowl]~ (turn players.u.game.state head)))
     ::  skip messages from muted players
     ?:  (~(has in muted-players.state) src.bowl)  `state
     :_  state(messages [[src.bowl msg.action] messages.state])
@@ -377,15 +390,15 @@
   |=  action=game-action
   ^-  (quip card _state)
   ?>  =(src.bowl our.bowl)
-  ?~  table.state  !!
+  ?~  game.state  !!
   :_  state
   :_  ~
   :^  %pass  /poke-wire  %agent
   :^  [-:(need host.state) %pokur-host]
     %poke  %pokur-game-action
   ?-  -.action
-    %check  !>(`game-action`[%check id.u.table.state ~])
-    %fold   !>(`game-action`[%fold id.u.table.state ~])
-    %bet    !>(`game-action`[%bet id.u.table.state amount.action])
+    %check  !>(`game-action`[%check id.u.game.state ~])
+    %fold   !>(`game-action`[%fold id.u.game.state ~])
+    %bet    !>(`game-action`[%bet id.u.game.state amount.action])
   ==
 --

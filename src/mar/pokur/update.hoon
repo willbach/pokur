@@ -10,20 +10,20 @@
   ++  noun  upd
   ++  json
     ?-    -.upd
-        %table
+        %game
       %-  pairs
-      :~  ['table' (enjs-table table.upd)]
+      :~  ['game' (enjs-game game.upd)]
           ['hand_rank' s+my-hand-rank.upd]
       ==
     ::
-        %lobby
-      (enjs-lobby lobby.upd)
+        %table
+      (enjs-table table.upd)
     ::
-        %lobbies-available
+        %lobby
       %-  pairs
-      %+  turn  lobbies.upd
-      |=  =lobby
-      [(scot %da id.lobby) (enjs-lobby lobby)]
+      %+  turn  tables.upd
+      |=  =table
+      [(scot %da id.table) (enjs-table table)]
     ::
         %new-message
       %-  pairs

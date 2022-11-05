@@ -6,8 +6,8 @@
 +$  state-0
   $:  %0
       my-info=(unit host-info)
-      lobbies=(map @da lobby)
-      tables=(map @da host-table-state)
+      lobbies=(map @da table)
+      games=(map @da host-game-state)
   ==
 --
 %-  agent:dbug
@@ -36,13 +36,13 @@
     ?+    mark  (on-poke:def mark vase)
         %pokur-player-action
       ::  starting lobbies, games, etc
-      (handle-player-action !<(player-action vase))
+      (handle-player-action:hc !<(player-action vase))
         %pokur-game-action
-      ::  checks, bets, folds inside table
-      (handle-game-action !<(game-action vase))
+      ::  checks, bets, folds inside game
+      (handle-game-action:hc !<(game-action vase))
         %pokur-host-action
       ::  internal pokes and host management
-      (handle-host-action !<(host-action vase))
+      (handle-host-action:hc !<(host-action vase))
     ==
   [cards this]
 ++  on-watch
@@ -51,56 +51,57 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ::  new player using us as host; poke them with our escrow info
+    ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
     :_  this
     :~  :^  %give  %fact  ~
         :-  %pokur-host-update
-        !>(`host-update`[%lobbies-available ~(val by lobbies.state)])
+        !>(`host-update`[%lobby ~(val by lobbies.state)])
       ::
         :*  %pass  /share-escrow-poke
             %agent  [src.bowl %pokur]
             %poke  %pokur-host-action
-            !>([%escrow-info (need my-info.state)])
+            !>(`host-action`[%escrow-info (need my-info.state)])
         ==
     ==
   ::
-      [%lobby-updates @ ~]
-    ::  updates about a specific lobby
-    =/  lobby-id  (slav %da i.t.path)
-    ?~  lobby=(~(get by lobbies.state) lobby-id)
+      [%table-updates @ ~]
+    ::  updates about a specific table
+    =/  table-id  (slav %da i.t.path)
+    ?~  table=(~(get by lobbies.state) table-id)
       !!
     :_  this  :_  ~
-    :^  %give  %fact  [path]~
-    [%pokur-host-update !>(`host-update`[%lobby u.lobby])]
+    :^  %give  %fact  ~
+    [%pokur-host-update !>(`host-update`[%table u.table])]
   ::
-      [%table-updates @ @ ~]
+      [%game-updates @ @ ~]
     ::  assert the player is in game and on their path
-    =/  table-id  (slav %da i.t.path)
+    =/  game-id  (slav %da i.t.path)
     =/  player  (slav %p i.t.t.path)
     ?>  =(player src.bowl)
-    ?~  host-table=(~(get by tables.state) table-id)
+    ?~  host-game=(~(get by games.state) game-id)
       :_  this
-      =/  err  "invalid table id {<table-id>}"
+      =/  err  "invalid game id {<game-id>}"
       :~  [%give %watch-ack `~[leaf+err]]
       ==
-    ?~  (find [src.bowl]~ players.table.u.host-table)
-      ?.  spectators-allowed.table.u.host-table
+    ?~  (find [src.bowl]~ players.game.u.host-game)
+      ?.  spectators-allowed.game.u.host-game
         :_  this
         =/  err  "player not in this game"
         :~  [%give %watch-ack `~[leaf+err]]
         ==
-      ::  give table state to a spectator
-      =.  spectators.table.u.host-table
-        (~(put in spectators.table.u.host-table) src.bowl)
-      :_  this(tables.state (~(put by tables.state) table-id u.host-table))
+      ::  give game state to a spectator
+      =.  spectators.game.u.host-game
+        (~(put in spectators.game.u.host-game) src.bowl)
+      :_  this(games.state (~(put by games.state) game-id u.host-game))
       :_  ~
-      :^  %give  %fact  [path]~
-      [%pokur-host-update !>([%table table.u.host-table])]
-    ::  give table state to a player
-    =.  my-hand.table.u.host-table
-      (fall (~(get by hands.u.host-table) src.bowl) ~)
+      :^  %give  %fact  ~
+      [%pokur-host-update !>(`host-update`[%game game.u.host-game])]
+    ::  give game state to a player
+    =.  my-hand.game.u.host-game
+      (fall (~(get by hands.u.host-game) src.bowl) ~)
     :_  this  :_  ~
-    :^  %give  %fact  [path]~
-    [%pokur-host-update !>([%table table.u.host-table])]
+    :^  %give  %fact  ~
+    [%pokur-host-update !>(`host-update`[%game game.u.host-game])]
   ==
 ++  on-arvo
   |=  [=wire =sign-arvo]
@@ -108,54 +109,54 @@
   ?+    wire  (on-arvo:def wire sign-arvo)
       [%timer @ %round-timer ~]
     :: ROUND TIMER wire (for tournaments)
-    =/  table-id  (slav %da i.t.wire)
-    ?~  host-table=(~(get by tables.state) table-id)
+    =/  game-id  (slav %da i.t.wire)
+    ?~  host-game=(~(get by games.state) game-id)
       `this
-    =*  table  table.u.host-table
+    =*  game  game.u.host-game
     :: if no players left in game, end it
-    ?:  %+  levy  players.table
+    ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-table)
+        (end-game u.host-game)
       [cards this]
-    =.  u.host-table
-      ~(increment-current-round modify-table-state u.host-table)
-    :_  this(tables.state (~(put by tables.state) table-id u.host-table))
+    =.  u.host-game
+      ~(increment-current-round modify-game-state u.host-game)
+    :_  this(games.state (~(put by games.state) game-id u.host-game))
     %+  snoc
-      (send-game-updates u.host-table)
+      (send-game-updates u.host-game)
     ::  set new round timer
-    ?>  ?=(%tournament -.game-type.table)
-    :*  %pass  /timer/(scot %da table-id)/round-timer
+    ?>  ?=(%tournament -.game-type.game)
+    :*  %pass  /timer/(scot %da game-id)/round-timer
         %arvo  %b  %wait
-        (add now.bowl round-duration.game-type.table)
+        (add now.bowl round-duration.game-type.game)
     ==
   ::
       [%timer @ ~]
     :: TURN TIMER wire
     :: the timer ran out.. a player didn't make a move in time
-    =/  table-id  (slav %da i.t.wire)
+    =/  game-id  (slav %da i.t.wire)
     ~&  >>>
-    "%pokur-host: player timed out on game {<table-id>} at {<now.bowl>}"
+    "%pokur-host: player timed out on game {<game-id>} at {<now.bowl>}"
     ::  find whose turn it is
-    ?~  host-table=(~(get by tables.state) table-id)
+    ?~  host-game=(~(get by games.state) game-id)
       `this
-    =*  table  table.u.host-table
+    =*  game  game.u.host-game
     ::  if no players left in game, end it
-    ?:  %+  levy  players.table
+    ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-table)
+        (end-game u.host-game)
       [cards this]
     :: reset that game's turn timer
-    =.  turn-timer.u.host-table  *@da
-    =.  update-message.table
-      ['{<whose-turn.table>} timed out.' ~]
-    :_  this(tables.state (~(put by tables.state) table-id u.host-table))
+    =.  turn-timer.u.host-game  *@da
+    =.  update-message.game
+      [(crip "{<whose-turn.game>} timed out.") ~]
+    :_  this(games.state (~(put by games.state) game-id u.host-game))
     :_  ~
     :*  %pass  /self-poke-wire
         %agent  [our.bowl %pokur-host]
         %poke  %pokur-game-action
-        !>([%fold table-id])
+        !>([%fold game-id])
     ==
   ==
 ++  on-peek
@@ -178,61 +179,57 @@
 ++  handle-game-action
   |=  action=game-action
   ^-  (quip card _state)
-  ?~  host-table=(~(get by tables.state) table-id.action)
+  ?~  host-game=(~(get by games.state) game-id.action)
     :_  state
-    ~[[%give %poke-ack `~[leaf+"error: host could not find table"]]]
-  =*  table  table.u.host-table
+    ~[[%give %poke-ack `~[leaf+"error: host could not find game"]]]
+  =*  game  game.u.host-game
   :: validate that move is from right player
   =/  from=ship
     ?:  =(src.bowl our.bowl)
       :: automatic fold from timeout!
-      whose-turn.table
+      whose-turn.game
     src.bowl
-  ?.  =(whose-turn.table from)
+  ?.  =(whose-turn.game from)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   :: poke ourself to set a turn timer
-  =/  new-timer  (add now.bowl turn-time-limit.table)
-  =.  turn-timer.u.host-table  new-timer
-  =.  u.host-table
-    =+  (~(process-player-action modify-table-state u.host-table) from action)
+  =/  new-timer  (add now.bowl turn-time-limit.game)
+  =.  turn-timer.u.host-game  new-timer
+  =.  u.host-game
+    =+  (~(process-player-action modify-game-state u.host-game) from action)
     ?~  -  !!  u.-
-  =.  tables.state  (~(put by tables.state) id.table u.host-table)
+  =.  games.state  (~(put by games.state) id.game u.host-game)
   =^  cards  state
-    ?.  game-is-over.table
-      ?.  hand-is-over.u.host-table
-        (send-game-updates u.host-table)^state
-      (initialize-new-hand u.host-table)
-    (end-game u.host-table)
+    ?.  game-is-over.game
+      ?.  hand-is-over.u.host-game
+        (send-game-updates u.host-game)^state
+      (initialize-new-hand u.host-game)
+    (end-game u.host-game)
   :_  state
   %+  weld  cards
   ^-  (list card)
-  :-  :*  %pass  /timer/(scot %da id.table)
+  :-  :*  %pass  /timer/(scot %da id.game)
           %arvo  %b  %wait
           new-timer
       ==
-  ?~  turn-timer.u.host-table
+  ?~  turn-timer.u.host-game
     :: there's no ongoing timer to cancel, just set new
     ~
   :: there's an ongoing turn timer, cancel it and set fresh one
   :_  ~
-  :*  %pass  /timer/(scot %da id.table)
+  :*  %pass  /timer/(scot %da id.game)
       %arvo  %b  %rest
-      turn-timer.u.host-table
+      turn-timer.u.host-game
   ==
 ::
 ++  handle-player-action
   |=  action=player-action
   ^-  (quip card _state)
   ?+    -.action  !!
-      %new-lobby
-    ::  if lobby is started at *exact* same time as another,
-    ::  add a tiny nonce to disambiguate. never gonna happen!
-    =/  lobby-id
-      ?:  (~(has by lobbies.state) now.bowl)
-      (add now.bowl 1)  now.bowl
-    =/  =lobby
-      :*  lobby-id
+      %new-table
+    ?<  (~(has by lobbies.state) id.action)
+    =/  =table
+      :*  id.action
           src.bowl
           (silt ~[src.bowl])
           min-players.action
@@ -243,60 +240,60 @@
           spectators-allowed.action
           turn-time-limit.action
       ==
-    =+  (~(put by lobbies.state) lobby-id lobby)
+    =+  (~(put by lobbies.state) id.action table)
     :_  state(lobbies -)
     :_  ~
     :^  %give  %fact  ~[/lobby-updates]
-    [%pokur-host-update !>(`host-update`[%lobbies-available ~(val by -)])]
+    [%pokur-host-update !>(`host-update`[%lobby ~(val by -)])]
   ::
-      %join-lobby
-    ::  add player to existing lobby
-    ?~  lobby=(~(get by lobbies.state) id.action)
+      %join-table
+    ::  add player to existing table
+    ?~  table=(~(get by lobbies.state) id.action)
       !!
-    ::  lobby must not be full
-    ?<  =(max-players.u.lobby ~(wyt in players.u.lobby))
-    =.  players.u.lobby
-      (~(put in players.u.lobby) src.bowl)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.lobby))
+    ::  table must not be full
+    ?<  =(max-players.u.table ~(wyt in players.u.table))
+    =.  players.u.table
+      (~(put in players.u.table) src.bowl)
+    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
     :_  ~
-    :^  %give  %fact  ~[/lobby-updates/(scot %da id.u.lobby)]
-    [%pokur-host-update !>(`host-update`[%lobby u.lobby])]
+    :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
+    [%pokur-host-update !>(`host-update`[%table u.table])]
   ::
-      %leave-lobby
-    ::  remove player from existing lobby
-    ?~  lobby=(~(get by lobbies.state) id.action)
+      %leave-table
+    ::  remove player from existing table
+    ?~  table=(~(get by lobbies.state) id.action)
       !!
-    ?.  (~(has in players.u.lobby) src.bowl)
+    ?.  (~(has in players.u.table) src.bowl)
       `state
-    =.  players.u.lobby
-      (~(del in players.u.lobby) src.bowl)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.lobby))
+    =.  players.u.table
+      (~(del in players.u.table) src.bowl)
+    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
     :_  ~
-    :^  %give  %fact  ~[/lobby-updates/(scot %da id.u.lobby)]
-    [%pokur-host-update !>(`host-update`[%lobby u.lobby])]
+    :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
+    [%pokur-host-update !>(`host-update`[%table u.table])]
   ::
       %start-game
-    ::  lobby creator starts game
-    ?~  lobby=(~(get by lobbies.state) id.action)
+    ::  table creator starts game
+    ?~  table=(~(get by lobbies.state) id.action)
       !!
-    ?>  =(leader.u.lobby src.bowl)
-    ?>  (gte ~(wyt in players.u.lobby) min-players.u.lobby)
+    ?>  =(leader.u.table src.bowl)
+    ?>  (gte ~(wyt in players.u.table) min-players.u.table)
     ~&  >  "%pokur-host: starting new game {<id.action>}"
-    =?    game-type.u.lobby
-        ?=(%tournament -.game-type.u.lobby)
-      %=  game-type.u.lobby
+    =?    game-type.u.table
+        ?=(%tournament -.game-type.u.table)
+      %=  game-type.u.table
         current-round  0
         round-is-over  %.n
       ==
-    =/  =table
-      :*  id.u.lobby
+    =/  =game
+      :*  id.u.table
           game-is-over=%.n
-          game-type.u.lobby
-          turn-time-limit.u.lobby
-          %+  turn  ~(tap in players.u.lobby)
+          game-type.u.table
+          turn-time-limit.u.table
+          %+  turn  ~(tap in players.u.table)
           |=  =ship
-          [ship starting-stack.game-type.u.lobby 0 %.n %.n %.n]
-          pots=~[[0 ~(tap in players.u.lobby)]]
+          [ship starting-stack.game-type.u.table 0 %.n %.n %.n]
+          pots=~[[0 ~(tap in players.u.table)]]
           current-bet=0
           last-bet=0
           board=~
@@ -305,97 +302,100 @@
           dealer=*ship
           small-blind=*ship
           big-blind=*ship
-          spectators-allowed.u.lobby
+          spectators-allowed.u.table
           spectators=~
           hands-played=0
-          update-message=['Pokur game started, hosted by {<our.bowl>}' ~]
+          [(crip "Pokur game started, hosted by {<our.bowl>}") ~]
       ==
-    =/  =host-table-state
+    =/  =host-game-state
       :*  hands=~
           deck=(shuffle-deck generate-deck eny.bowl)
           hand-is-over=%.y
-          turn-timer=(add now.bowl turn-time-limit.u.lobby)
-          table
+          turn-timer=(add now.bowl turn-time-limit.u.table)
+          game
       ==
     =^  cards  state
-      (initialize-new-hand host-table-state)
+      (initialize-new-hand host-game-state)
     ^-  (quip card _state)
-    :_  state
+    :_  state(lobbies (~(del by lobbies.state) id.action))
     %+  welp  cards
     %+  welp
-      :~  :*  %pass  /timer/(scot %da id.table)
+      :~  :*  %pass  /timer/(scot %da id.game)
               %arvo  %b  %wait
-              turn-timer.host-table-state
-      ==  ==
-    ?.  ?=(%tournament -.game-type.u.lobby)  ~
-    :~  :*  %pass  /timer/(scot %da id.table)/round-timer
+              turn-timer.host-game-state
+          ==
+          :^  %give  %fact  ~[/table-updates/(scot %da id.action)]
+          [%pokur-host-update !>(`host-update`[%game-starting id.action])]
+      ==
+    ?.  ?=(%tournament -.game-type.u.table)  ~
+    :~  :*  %pass  /timer/(scot %da id.game)/round-timer
             %arvo  %b  %wait
-            (add now.bowl round-duration.game-type.u.lobby)
+            (add now.bowl round-duration.game-type.u.table)
     ==  ==
   ::
       %leave-game
     ::  player leaves game
-    ?~  host-table=(~(get by tables.state) id.action)
+    ?~  host-game=(~(get by games.state) id.action)
       !!
     :: remove sender from their game
-    =.  u.host-table
-      (~(remove-player modify-table-state u.host-table) src.bowl)
-    =*  table  table.u.host-table
+    =.  u.host-game
+      (~(remove-player modify-game-state u.host-game) src.bowl)
+    =*  game  game.u.host-game
     :: remove spectator if they were one
-    =.  spectators.table
-      (~(del in spectators.table) src.bowl)
-    :-  (send-game-updates u.host-table)
-    state(tables (~(put by tables.state) id.action u.host-table))
+    =.  spectators.game
+      (~(del in spectators.game) src.bowl)
+    :-  (send-game-updates u.host-game)
+    state(games (~(put by games.state) id.action u.host-game))
   ::
       %kick-player
-    ::  src must be lobby leader
-    ?~  lobby=(~(get by lobbies.state) id.action)
+    ::  src must be table leader
+    ?~  table=(~(get by lobbies.state) id.action)
       !!
-    ?>  =(leader.u.lobby src.bowl)
-    =.  players.u.lobby
-      (~(del in players.u.lobby) who.action)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.lobby))
+    ?>  =(leader.u.table src.bowl)
+    =.  players.u.table
+      (~(del in players.u.table) who.action)
+    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
     :_  ~
-    :^  %give  %fact  ~[/lobby-updates/(scot %da id.u.lobby)]
-    [%pokur-host-update !>(`host-update`[%lobby u.lobby])]
+    :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
+    [%pokur-host-update !>(`host-update`[%table u.table])]
   ==
 ::
 ::  +send-game-updates: make update cards for players and spectators
 ::
 ++  send-game-updates
-  |=  host-table=host-table-state
+  |=  host-game=host-game-state
   ^-  (list card)
-  =*  table  table.host-table
+  =*  game  game.host-game
   %+  weld
-    %+  turn  ~(tap by hands.host-table)
+    %+  turn  ~(tap by hands.host-game)
     |=  [=ship hand=pokur-deck]
     ^-  card
-    :^  %give  %fact  ~[/table-update/(scot %da id.table)/(scot %p ship)]
-    [%pokur-host-update !>(`host-update`[%table table(my-hand hand)])]
-  %+  turn  ~(tap in spectators.table)
+    :^  %give  %fact  ~[/game-updates/(scot %da id.game)/(scot %p ship)]
+    [%pokur-host-update !>(`host-update`[%game game(my-hand hand)])]
+  %+  turn  ~(tap in spectators.game)
   |=  =ship
   ^-  card
-  :^  %give  %fact  ~[/table-update/(scot %da id.table)/(scot %p ship)]
-  [%pokur-host-update !>(`host-update`[%table table])]
+  :^  %give  %fact  ~[/game-updates/(scot %da id.game)/(scot %p ship)]
+  [%pokur-host-update !>(`host-update`[%game game])]
 ::
 ++  initialize-new-hand
-  |=  host-table=host-table-state
+  |=  host-game=host-game-state
   ^-  (quip card _state)
-  =.  deck.host-table
-    (shuffle-deck deck.host-table eny.bowl)
-  =.  host-table
-    %-  ~(initialize-hand modify-table-state host-table)
-    dealer.table.host-table
-  :-  (send-game-updates host-table)
-  state(tables (~(put by tables.state) id.table.host-table host-table))
+  =.  deck.host-game
+    (shuffle-deck deck.host-game eny.bowl)
+  =.  host-game
+    %-  ~(initialize-hand modify-game-state host-game)
+    dealer.game.host-game
+  :-  (send-game-updates host-game)
+  state(games (~(put by games.state) id.game.host-game host-game))
 ::
 ++  end-game
-  |=  host-table=host-table-state
+  |=  host-game=host-game-state
   ^-  (quip card _state)
-  :_  state(tables (~(del by tables.state) id.table.host-table))
+  :_  state(games (~(del by games.state) id.game.host-game))
   :_  ~
-  :*  %pass  /timer/(scot %da id.table.host-table)
+  :*  %pass  /timer/(scot %da id.game.host-game)
       %arvo  %b  %rest
-      turn-timer.host-table
+      turn-timer.host-game
   ==
 --

@@ -10,8 +10,8 @@
   :~  ['from' (ship shi)]
       ['msg' s+msg]
   ==
-++  enjs-table
-  |=  t=table
+++  enjs-game
+  |=  t=game
   ^-  json
   %-  pairs
   :~  ['id' s+(scot %da id.t)]
@@ -34,8 +34,8 @@
       ['update_message' (enjs-update-message update-message.t)]
   ==
 ::
-++  enjs-lobby
-  |=  l=lobby
+++  enjs-table
+  |=  l=table
   ^-  json
   %-  pairs
   :~  ['id' s+(scot %da id.l)]
