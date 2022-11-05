@@ -515,7 +515,10 @@
     =/  histo  (reap 13 0)
     |-
     ?~  raw-hand  histo
-    $(histo (snap histo -.i.raw-hand +((snag -.i.raw-hand histo))))
+    %=  $
+      raw-hand  t.raw-hand
+      histo  (snap histo -.i.raw-hand +((snag -.i.raw-hand histo)))
+    ==
   ?:  =(histogram ~[4 1])      7  ::  four of a kind
   ?:  =(histogram ~[3 2])      6  ::  full house
   ?:  =(histogram ~[3 1 1])    3  ::  trips

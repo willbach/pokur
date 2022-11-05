@@ -19,12 +19,13 @@ On ship ~bus:
 
 On ~zod:
 ```
-:pokur &pokur-player-action [%join-table table-id]
+:pokur &pokur-player-action [%join-table game-id]
 ```
 
 On ~bus:
 ```
-:pokur &pokur-player-action [%start-game table-id]
+:pokur &pokur-player-action [%start-game game-id]
+:pokur &pokur-game-action [%bet game-id 1]  ::  call big blind
 ```
 
 

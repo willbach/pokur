@@ -109,6 +109,8 @@
     ?>  ?=(%pokur-host-update p.cage.sign)
     =/  upd  !<(host-update q.cage.sign)
     ?>  ?=(%game -.upd)
+    ~&  >  "new game state:"
+    ~&  >  game.upd
     =/  my-hand-rank=@t
       %-  hierarchy-to-rank
       =/  full-hand  (weld my-hand.game.upd board.game.upd)
@@ -169,6 +171,8 @@
       =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
           %table
+        ~&  >  "new table state:"
+        ~&  >  table.upd
         :_  this(table.state `table.upd)
         :_  ~
         :^  %give  %fact  ~[/table-updates]

@@ -156,7 +156,7 @@
     :*  %pass  /self-poke-wire
         %agent  [our.bowl %pokur-host]
         %poke  %pokur-game-action
-        !>([%fold game-id])
+        !>([%fold game-id ~])
     ==
   ==
 ++  on-peek
@@ -203,7 +203,9 @@
     ?.  game-is-over.game
       ?.  hand-is-over.u.host-game
         (send-game-updates u.host-game)^state
-      (initialize-new-hand u.host-game)
+      =.  u.host-game  (initialize-new-hand u.host-game)
+      :-  (send-game-updates u.host-game)
+      state(games (~(put by games.state) id.game u.host-game))
     (end-game u.host-game)
   :_  state
   %+  weld  cards
@@ -308,17 +310,18 @@
           [(crip "Pokur game started, hosted by {<our.bowl>}") ~]
       ==
     =/  =host-game-state
+      %-  initialize-new-hand
       :*  hands=~
-          deck=(shuffle-deck generate-deck eny.bowl)
+          deck=generate-deck
           hand-is-over=%.y
           turn-timer=(add now.bowl turn-time-limit.u.table)
           game
       ==
-    =^  cards  state
-      (initialize-new-hand host-game-state)
-    ^-  (quip card _state)
-    :_  state(lobbies (~(del by lobbies.state) id.action))
-    %+  welp  cards
+    :_  %=  state
+          lobbies  (~(del by lobbies.state) id.action)
+          games    (~(put by games.state) id.action host-game-state)
+        ==
+    %+  welp  (send-game-updates host-game-state)
     %+  welp
       :~  :*  %pass  /timer/(scot %da id.game)
               %arvo  %b  %wait
@@ -380,14 +383,10 @@
 ::
 ++  initialize-new-hand
   |=  host-game=host-game-state
-  ^-  (quip card _state)
-  =.  deck.host-game
-    (shuffle-deck deck.host-game eny.bowl)
-  =.  host-game
-    %-  ~(initialize-hand modify-game-state host-game)
-    dealer.game.host-game
-  :-  (send-game-updates host-game)
-  state(games (~(put by games.state) id.game.host-game host-game))
+  ^-  host-game-state
+  =.  deck.host-game  (shuffle-deck deck.host-game eny.bowl)
+  %-  ~(initialize-hand modify-game-state host-game)
+  dealer.game.host-game
 ::
 ++  end-game
   |=  host-game=host-game-state
