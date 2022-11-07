@@ -6,7 +6,7 @@
 +$  state-0
   $:  %0
       my-info=(unit host-info)
-      lobbies=(map @da table)
+      tables=(map @da table)
       games=(map @da host-game-state)
   ==
 --
@@ -35,7 +35,7 @@
   =^  cards  state
     ?+    mark  (on-poke:def mark vase)
         %pokur-player-action
-      ::  starting lobbies, games, etc
+      ::  starting tables, games, etc
       (handle-player-action:hc !<(player-action vase))
         %pokur-game-action
       ::  checks, bets, folds inside game
@@ -55,7 +55,7 @@
     :_  this
     :~  :^  %give  %fact  ~
         :-  %pokur-host-update
-        !>(`host-update`[%lobby ~(val by lobbies.state)])
+        !>(`host-update`[%lobby (public-tables tables.state)])
       ::
         :*  %pass  /share-escrow-poke
             %agent  [src.bowl %pokur]
@@ -67,7 +67,7 @@
       [%table-updates @ ~]
     ::  updates about a specific table
     =/  table-id  (slav %da i.t.path)
-    ?~  table=(~(get by lobbies.state) table-id)
+    ?~  table=(~(get by tables.state) table-id)
       !!
     :_  this  :_  ~
     :^  %give  %fact  ~
@@ -229,7 +229,7 @@
   ^-  (quip card _state)
   ?+    -.action  !!
       %new-table
-    ?<  (~(has by lobbies.state) id.action)
+    ?<  (~(has by tables.state) id.action)
     =/  =table
       :*  id.action
           src.bowl
@@ -239,45 +239,44 @@
           game-type.action
           tokenized.action
           ~  ::  TODO bond id
+          public.action
           spectators-allowed.action
           turn-time-limit.action
       ==
-    =+  (~(put by lobbies.state) id.action table)
-    :_  state(lobbies -)
+    =+  (~(put by tables.state) id.action table)
+    :_  state(tables -)
     :_  ~
     :^  %give  %fact  ~[/lobby-updates]
-    [%pokur-host-update !>(`host-update`[%lobby ~(val by -)])]
+    [%pokur-host-update !>(`host-update`[%lobby (public-tables -)])]
   ::
       %join-table
     ::  add player to existing table
-    ?~  table=(~(get by lobbies.state) id.action)
+    ?~  table=(~(get by tables.state) id.action)
       !!
     ::  table must not be full
     ?<  =(max-players.u.table ~(wyt in players.u.table))
     =.  players.u.table
       (~(put in players.u.table) src.bowl)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
+    :_  state(tables (~(put by tables.state) id.action u.table))
     :_  ~
     :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
     [%pokur-host-update !>(`host-update`[%table u.table])]
   ::
       %leave-table
     ::  remove player from existing table
-    ?~  table=(~(get by lobbies.state) id.action)
-      !!
+    ?~  table=(~(get by tables.state) id.action)  !!
     ?.  (~(has in players.u.table) src.bowl)
       `state
     =.  players.u.table
       (~(del in players.u.table) src.bowl)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
+    :_  state(tables (~(put by tables.state) id.action u.table))
     :_  ~
     :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
     [%pokur-host-update !>(`host-update`[%table u.table])]
   ::
       %start-game
     ::  table creator starts game
-    ?~  table=(~(get by lobbies.state) id.action)
-      !!
+    ?~  table=(~(get by tables.state) id.action)  !!
     ?>  =(leader.u.table src.bowl)
     ?>  (gte ~(wyt in players.u.table) min-players.u.table)
     ~&  >  "%pokur-host: starting new game {<id.action>}"
@@ -318,7 +317,7 @@
           game
       ==
     :_  %=  state
-          lobbies  (~(del by lobbies.state) id.action)
+          tables  (~(del by tables.state) id.action)
           games    (~(put by games.state) id.action host-game-state)
         ==
     %+  welp  (send-game-updates host-game-state)
@@ -351,13 +350,15 @@
     state(games (~(put by games.state) id.action u.host-game))
   ::
       %kick-player
-    ::  src must be table leader
-    ?~  table=(~(get by lobbies.state) id.action)
+    ?~  table=(~(get by tables.state) id.action)
       !!
-    ?>  =(leader.u.table src.bowl)
+    ::  src must be table leader
+    ?>  =(src.bowl leader.u.table)
+    ::  table must be private
+    ?>  =(%.n public.u.table)
     =.  players.u.table
       (~(del in players.u.table) who.action)
-    :_  state(lobbies (~(put by lobbies.state) id.action u.table))
+    :_  state(tables (~(put by tables.state) id.action u.table))
     :_  ~
     :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
     [%pokur-host-update !>(`host-update`[%table u.table])]
@@ -397,4 +398,12 @@
       %arvo  %b  %rest
       turn-timer.host-game
   ==
+::
+++  public-tables
+  |=  m=(map @da table)
+  ^-  (list table)
+  %+  murn  ~(val by m)
+  |=  =table
+  ?.  public.table  ~
+  `table
 --

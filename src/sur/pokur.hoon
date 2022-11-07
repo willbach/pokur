@@ -95,6 +95,7 @@
       =game-type
       tokenized=(unit [metadata=@ux amount=@ud])
       bond-id=(unit @ux)
+      public=?
       spectators-allowed=?
       ::  represented in cord as number between 1 and 999,
       ::  parsed into @ud or @dr depending on context
@@ -131,6 +132,7 @@
           max-players=@ud
           =game-type
           tokenized=(unit [metadata=@ux amount=@ud])
+          public=?  ::  private means need the link to join
           spectators-allowed=?
           turn-time-limit=@dr
       ==
@@ -138,7 +140,7 @@
       [%leave-table id=@da]
       [%start-game id=@da]  ::  creator of table must perform
       [%leave-game id=@da]
-      [%kick-player id=@da who=ship]  ::  creator of table must perform
+      [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
       [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
   ==
 ::
