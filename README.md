@@ -12,7 +12,7 @@ On ship ~zod:
 On ship ~bus:
 ```
 :pokur &pokur-player-action [%join-host ~zod]
-:pokur &pokur-player-action [%new-table *@da 2 8 [%cash 1.000 1 2] ~ %.y ~m10]
+:pokur &pokur-player-action [%new-table *@da 2 8 [%cash 1.000 1 2] ~ %.y %.y ~m10]
 ```
 
 [look at print to find table-id]
@@ -25,8 +25,10 @@ On ~zod:
 On ~bus:
 ```
 :pokur &pokur-player-action [%start-game game-id]
-:pokur &pokur-game-action [%bet game-id 1]  ::  call big blind
+:pokur|bet 1  ::  call big blind
 ```
+
+can play game from here using format `:pokur|[bet/check/fold]` where only bet takes any further input
 
 
 New program flow:

@@ -112,6 +112,7 @@
 +$  update  ::  from app to frontend
   $%  [%game =game my-hand-rank=@t]
       [%table =table]
+      [%game-starting game-id=@da]
       [%lobby tables=(list table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
@@ -145,7 +146,8 @@
   ==
 ::
 +$  message-action
-  $%  [%mute-player who=ship]    ::  from frontend to app
+  $%  [%mute who=ship]    ::  from frontend to app
+      [%unmute who=ship]
       [%send-message msg=@t]     ::  from frontend to app
       [%receive-message msg=@t]  ::  from our app to their app
   ==

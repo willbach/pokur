@@ -179,11 +179,13 @@
         [%pokur-update !>(`update`[%table table.upd])]
       ::
           %game-starting
-        =/  path  /game-updates/(scot %da game-id.upd)/(scot %p our.bowl)
         :_  this(table.state ~)
-        :~  [%pass path %agent [src.bowl %pokur-host] %watch path]
+        :~  =+  /game-updates/(scot %da game-id.upd)/(scot %p our.bowl)
+            [%pass - %agent [src.bowl %pokur-host] %watch -]
             =+  /table-updates/(scot %da game-id.upd)
             [%pass - %agent [src.bowl %pokur-host] %leave ~]
+            :^  %give  %fact  ~[/table-updates]
+            [%pokur-update !>(`update`[%game-starting game-id.upd])]
         ==
       ==
     ==
@@ -193,6 +195,8 @@
   ^-  (unit (unit cage))
   ?.  =(%x -.path)  ~
   ?+    +.path  (on-peek:def path)
+      [%game-id ~]
+    ``noun+!>(?~(game.state ~ `id.u.game.state))
       [%game ~]
     ``json+!>(?~(game.state ~ (enjs-game:pokur-json u.game.state)))
       [%table ~]
@@ -351,9 +355,13 @@
   |=  action=message-action
   ^-  (quip card _state)
   ?-    -.action
-      %mute-player
+      %mute
     ?>  =(src.bowl our.bowl)
     `state(muted-players (~(put in muted-players.state) who.action))
+  ::
+      %unmute
+    ?>  =(src.bowl our.bowl)
+    `state(muted-players (~(del in muted-players.state) who.action))
   ::
       %send-message
     ?>  =(src.bowl our.bowl)

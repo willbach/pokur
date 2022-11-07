@@ -75,15 +75,15 @@
   ::
       [%game-updates @ @ ~]
     ::  assert the player is in game and on their path
-    =/  game-id  (slav %da i.t.path)
-    =/  player  (slav %p i.t.t.path)
+    =/  game-id    (slav %da i.t.path)
+    =/  player=@p  (slav %p i.t.t.path)
     ?>  =(player src.bowl)
     ?~  host-game=(~(get by games.state) game-id)
       :_  this
       =/  err  "invalid game id {<game-id>}"
       :~  [%give %watch-ack `~[leaf+err]]
       ==
-    ?~  (find [src.bowl]~ players.game.u.host-game)
+    ?~  (find [player]~ (turn players.game.u.host-game head))
       ?.  spectators-allowed.game.u.host-game
         :_  this
         =/  err  "player not in this game"
@@ -91,14 +91,14 @@
         ==
       ::  give game state to a spectator
       =.  spectators.game.u.host-game
-        (~(put in spectators.game.u.host-game) src.bowl)
+        (~(put in spectators.game.u.host-game) player)
       :_  this(games.state (~(put by games.state) game-id u.host-game))
       :_  ~
       :^  %give  %fact  ~
       [%pokur-host-update !>(`host-update`[%game game.u.host-game])]
     ::  give game state to a player
     =.  my-hand.game.u.host-game
-      (fall (~(get by hands.u.host-game) src.bowl) ~)
+      (fall (~(get by hands.u.host-game) player) ~)
     :_  this  :_  ~
     :^  %give  %fact  ~
     [%pokur-host-update !>(`host-update`[%game game.u.host-game])]
@@ -197,7 +197,7 @@
   =.  turn-timer.u.host-game  new-timer
   =.  u.host-game
     =+  (~(process-player-action modify-game-state u.host-game) from action)
-    ?~  -  !!  u.-
+    ?~  -  ~|("%pokur-host: invalid action received!" !!)  u.-
   =.  games.state  (~(put by games.state) id.game u.host-game)
   =^  cards  state
     ?.  game-is-over.game
@@ -318,9 +318,8 @@
       ==
     :_  %=  state
           tables  (~(del by tables.state) id.action)
-          games    (~(put by games.state) id.action host-game-state)
+          games   (~(put by games.state) id.action host-game-state)
         ==
-    %+  welp  (send-game-updates host-game-state)
     %+  welp
       :~  :*  %pass  /timer/(scot %da id.game)
               %arvo  %b  %wait
@@ -369,18 +368,23 @@
 ++  send-game-updates
   |=  host-game=host-game-state
   ^-  (list card)
-  =*  game  game.host-game
+  ~&  >>>  "sending game updates"
   %+  weld
     %+  turn  ~(tap by hands.host-game)
     |=  [=ship hand=pokur-deck]
     ^-  card
-    :^  %give  %fact  ~[/game-updates/(scot %da id.game)/(scot %p ship)]
-    [%pokur-host-update !>(`host-update`[%game game(my-hand hand)])]
-  %+  turn  ~(tap in spectators.game)
+    ~&  >>>  "hand: {<hand>}"
+    ~&  >>>  "player: {<ship>}"
+    =.  my-hand.game.host-game  hand
+    :^  %give  %fact
+      ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+    [%pokur-host-update !>(`host-update`[%game game.host-game])]
+  %+  turn  ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
-  :^  %give  %fact  ~[/game-updates/(scot %da id.game)/(scot %p ship)]
-  [%pokur-host-update !>(`host-update`[%game game])]
+  :^  %give  %fact
+    ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+  [%pokur-host-update !>(`host-update`[%game game.host-game])]
 ::
 ++  initialize-new-hand
   |=  host-game=host-game-state
