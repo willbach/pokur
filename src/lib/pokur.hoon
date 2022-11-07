@@ -216,6 +216,7 @@
       New blinds: {<small.blinds>}/{<big.blinds>}
       """
     ==
+  ::
   ++  award-pots
     |=  winners=(list ship)
     ^-  host-game-state
@@ -245,7 +246,7 @@
         ::  award entire pot to single winner
         %+  turn  players.game.state
         |=  [p=ship player-info]
-        ?.  =(p -.-.winners-in-pot)
+        ?.  =(p -.winners-in-pot)
           [p stack 0 %.n %.n left]
         [p (add stack amount.pot) 0 %.n %.n left]
       ::  split pot evenly between multiple winners
