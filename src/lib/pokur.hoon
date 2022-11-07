@@ -29,6 +29,7 @@
     ?.  =(5 n)            pokur-flop
     ::  handle end of hand
     %-  process-win
+    %-  turn  :_  head
     %-  determine-winner
     %+  murn  players.game.state
     |=  [who=ship player-info]
@@ -222,11 +223,16 @@
     ?~  pots.game.state  state
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list ship)
-      =-  ?^  -  -
-      %+  skim  winners
+      %+  skip  winners
       |=  =ship
-      ?=(^ (find [ship]~ in.pot))
+      =(~ (find [ship]~ in.pot))
+    =?    winners-in-pot
+        =(~ winners-in-pot)
       ::  no winners in this pot, find the relative winner(s) present
+      ::  this must only occur at showdown, if the best hand went all-in
+      ::  prior to this side-pot and therefore doesn't deserve it
+      ::  if a pot is to be awarded before showdown, the player that
+      ::  was folded to will be in all pots.
       %-  turn  :_  head
       %-  determine-winner
       %+  skim  ~(tap by hands.state)
@@ -254,11 +260,11 @@
   ::  for next hand by clearing board, hands and bets, reset fold status,
   ::  and incrementing hands-played.
   ++  process-win
-    |=  winners=(list [ship [@ud pokur-deck]])
+    |=  winners=(list ship)
     ^-  host-game-state
     ::  sends any extra committed chips to pot
     =.  state  committed-chips-to-pot
-    =.  state  (award-pots (turn winners head))
+    =.  state  (award-pots winners)
     =?    state
         ?&  ?=(%tournament -.game-type.game.state)
             round-is-over.game-type.game.state
@@ -328,7 +334,7 @@
         %+  skip  players.game.state
         |=([ship ^player-info] folded)
       ?:  =(1 (lent players-left))
-        `(process-win [-.-.players-left [10 ~]]~)
+        `(process-win [-.-.players-left]~)
       :: otherwise continue game
       ?.  is-betting-over
         `next-player-turn
@@ -466,7 +472,10 @@
     ?~  removal-pairs  ranked-hands
     =+  %+  oust  [-.i.removal-pairs 1]
         (oust [+.i.removal-pairs 1] hand)
-    $(ranked-hands [[(evaluate-5-card-hand -) -] ranked-hands])
+    %=  $
+      removal-pairs  t.removal-pairs
+      ranked-hands  [[(evaluate-5-card-hand -) -] ranked-hands]
+    ==
   ::  elimate any hand without a score that matches top hand
   ::  if there are multiple, sort them by break-ties
   =/  best-hand-rank  -.-.rank-sorted-5-card-hands
