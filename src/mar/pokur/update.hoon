@@ -32,6 +32,8 @@
       ==
     ::
         %left-game  ~
+    ::
+        %game-starting  ~
     ==
   --
 ++  grad  %noun

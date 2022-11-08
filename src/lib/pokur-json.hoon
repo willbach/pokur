@@ -20,11 +20,11 @@
       ['turn_time_limit' s+(scot %dr turn-time-limit.t)]
       ['players' (enjs-players players.t)]
       ['pots' (enjs-pots pots.t)]
-      ['current-bet' s+(scot %ud current-bet.t)]
-      ['last-bet' s+(scot %ud last-bet.t)]
+      ['current_bet' s+(scot %ud current-bet.t)]
+      ['last_bet' s+(scot %ud last-bet.t)]
       ['board' (enjs-cards board.t)]
-      ['my-hand' (enjs-cards my-hand.t)]
-      ['whose-turn' s+(scot %p whose-turn.t)]
+      ['hand' (enjs-cards my-hand.t)]
+      ['current_turn' s+(scot %p whose-turn.t)]
       ['dealer' s+(scot %p dealer.t)]
       ['small_blind' s+(scot %p small-blind.t)]
       ['big_blind' s+(scot %p big-blind.t)]
@@ -43,7 +43,7 @@
       ['players' a+(turn ~(tap in players.l) ship)]
       ['min_players' s+(scot %ud min-players.l)]
       ['max_players' s+(scot %ud max-players.l)]
-      ['game-type' (enjs-game-type game-type.l)]
+      ['game_type' (enjs-game-type game-type.l)]
       ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
       ['bond_id' ?~(bond-id.l ~ s+(scot %ux u.bond-id.l))]
       ['spectators_allowed' b+spectators-allowed.l]
@@ -130,5 +130,12 @@
   %-  pairs
   :~  ['text' s+tex]
       ['winning_hand' (enjs-cards winning-hand)]
+  ==
+
+++  enjs-host-ship
+  |=  host-ship=@p
+  ^-  json
+  %-  pairs
+  :~  ['host' (ship host-ship)]
   ==
 --

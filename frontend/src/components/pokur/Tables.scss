@@ -1,0 +1,16 @@
+@use '../../styles/colors.scss' as colors;
+@use '../../styles/border.scss' as border;
+
+.tables {
+  flex-wrap: wrap;
+  margin-top: 16px;
+
+  .table-tile {
+    width: 160px;
+    background: gray;
+    border-radius: 4px;
+    padding: 8px;
+    color: white;
+    cursor: pointer;
+  }
+}
