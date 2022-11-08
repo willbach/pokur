@@ -128,7 +128,7 @@
   $%  [%join-host host=ship]
       [%leave-host ~]
       $:  %new-table
-          id=@da  ::  FE can ignore -- populated with now.bowl
+          id=@da  ::  FE can bunt -- populated with now.bowl
           min-players=@ud
           max-players=@ud
           =game-type

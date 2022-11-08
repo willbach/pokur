@@ -55,7 +55,18 @@
   ?>  =(src.bowl our.bowl)
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
-    `this  ::  forward available tables from host here
+    ::  forward available tables from host here
+    ?~  host.state  `this
+    ::  resub to get initial listing
+    :_  this
+    :~  :*  %pass  /lobby-updates
+            %agent  [-.u.host.state %pokur-host]
+            %leave  ~
+        ==
+        :*  %pass  /lobby-updates
+            %agent  [-.u.host.state %pokur-host]
+            %watch  /lobby-updates
+    ==  ==
   ::
       [%table-updates ~]
     ?~  table.state  `this
