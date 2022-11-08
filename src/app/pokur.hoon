@@ -206,6 +206,8 @@
   ^-  (unit (unit cage))
   ?.  =(%x -.path)  ~
   ?+    +.path  (on-peek:def path)
+      [%host ~]
+    ``json+!>(?~(host.state ~ (enjs-host-ship:pokur-json ship.u.host.state)))
       [%game-id ~]
     ``noun+!>(?~(game.state ~ `id.u.game.state))
       [%game ~]
@@ -272,7 +274,7 @@
       ~|("%pokur: error: can't start table, already in game" !!)
     ::  add our.bowl to time in order to disambiguate the unlikely
     ::  scenario of two lobbies started at exact same time
-    =.  id.action  (add now.bowl `@ud`our.bowl)
+    =.  id.action  now.bowl
     :_  state
     ::  TODO build transaction poke to %uqbar
     :_  ~

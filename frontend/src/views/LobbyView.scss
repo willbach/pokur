@@ -1,0 +1,71 @@
+@use '../styles/colors.scss' as colors;
+@use '../styles/border.scss' as border;
+
+.lobby-view {
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+
+  .background {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: url('../assets/img/lobby-pink.jpeg');
+    background-size: cover;
+    opacity: 0.6;
+    z-index: 0;
+  }
+
+  .content {
+    z-index: 1;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.8);
+    max-width: 800px;
+    min-width: 400px;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+
+    form {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        width: 165.5px;
+      }
+    }
+
+    h2, h3 {
+      font-weight: 500;
+      // color: colors.$charcoal;
+      text-align: center;
+      margin: 12px 0 0;
+    }
+  }
+}
+
+form.create-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .row {
+    margin-top: 8px;
+
+    label {
+      width: 160px;
+    }
+  }
+
+  button {
+    align-self: center;
+    margin-top: 16px;
+    width: 120px;
+  }
+}

@@ -1,8 +1,4 @@
-node_modules
-.vscode
-src/app/pokur/js/index.js
-src/install.sh
-src/app/pokur/index.html
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 urbitrc-sample
 

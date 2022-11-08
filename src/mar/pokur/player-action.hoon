@@ -13,22 +13,23 @@
       %-  of
       :~  [%join-host (ot ~[[%host (se %p)]])]
           [%leave-host ul]
-          [%new-lobby parse-lobby]
-          [%join-lobby parse-id]
-          [%leave-lobby parse-id]
+          [%new-table parse-table]
+          [%join-table parse-id]
+          [%leave-table parse-id]
           [%start-game parse-id]
           [%leave-game parse-id]
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
           [%add-escrow ul]  ::  TODO
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
-    ++  parse-lobby
+    ++  parse-table
       %-  ot
       :~  [%id (se %da)]
           [%min-players ni]
           [%max-players ni]
           [%game-type parse-game-type]
-          [%tokenized ~]  ::  TODO softly
+          [%tokenized ul]  ::  TODO softly
+          [%public bo]
           [%spectators-allowed bo]
           [%turn-time-limit (se %dr)]
       ==
