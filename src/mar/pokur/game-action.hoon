@@ -1,5 +1,5 @@
 /-  pokur
-=,  format
+=,  dejs:format
 |_  act=game-action:pokur
 ++  grab
   |%
@@ -10,19 +10,10 @@
     =<  (game-action jon)
     |%
     ++  game-action
-      %-  of:dejs
-      :~  [%check get-id]
-          [%fold get-id]
-          [%bet get-id-and-amount]
-      ==
-    ++  get-id
-      %-  ot:dejs
-      :~  [%game-id (se:dejs %da)]
-      ==
-    ++  get-id-and-amount
-      %-  ot:dejs
-      :~  [%game-id (se:dejs %da)]
-          [%amount ni:dejs]
+      %-  of
+      :~  [%check (ot ~[[%game-id (se %da)]])]
+          [%fold (ot ~[[%game-id (se %da)]])]
+          [%bet (ot ~[[%game-id (se %da)] [%amount ni]])]
       ==
     --
   --
