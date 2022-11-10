@@ -230,6 +230,8 @@
   ?+    -.action  !!
       %new-table
     ?<  (~(has by tables.state) id.action)
+    ?>  (lte turn-time-limit.action ~s999)
+    ?>  (gte turn-time-limit.action ~s10)
     =/  =table
       :*  id.action
           src.bowl

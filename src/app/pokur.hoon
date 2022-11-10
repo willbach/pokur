@@ -1,11 +1,12 @@
-/-  *pokur
-/+  default-agent, dbug, *pokur, pokur-json
+/-  *pokur, indexer=zig-indexer, wallet=zig-wallet
+/+  default-agent, dbug, *pokur, pokur-json, smart=zig-sys-smart
 |%
 +$  card  card:agent:gall
 +$  versioned-state  $%(state-0)
 +$  state-0
   $:  %0
       host=(unit [=ship info=(unit host-info)])
+      our-address=(unit @ux)
       game=(unit game)
       table=(unit table)
       messages=(list [=ship msg=@t])
@@ -23,7 +24,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 ~ ~ ~ ~ ~])  ::  TODO add default host ~bacrys here
+  `this(state [%0 ~ ~ ~ ~ ~ ~])  ::  TODO add default host ~bacrys here
 ++  on-save
   ^-  vase
   !>(state)
@@ -358,9 +359,54 @@
         %poke  %pokur-player-action  !>(action)
     ==
   ::
+      %set-our-address
+    `state(our-address `address.action)
+  ::
       %add-escrow
     ::  TODO poke wallet with transaction to escrow contract
-    !!
+    ?~  host.state
+      ~|("%pokur: error: can't add escrow, no host" !!)
+    ?~  info.u.host.state
+      ~|("%pokur: error: can't add escrow, don't know host escrow info" !!)
+    =,  u.info.u.host.state
+    ?~  table.state
+      ~|("%pokur: error: can't add escrow, not at a table" !!)
+    ?~  tokenized.u.table.state
+      ~|("%pokur: error: can't add escrow, table isn't tokenized" !!)
+    ?~  bond-id.u.table.state
+      ~|("%pokur: error: can't add escrow, don't have escrow bond ID" !!)
+    ?~  our-address.state
+      ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
+    ::  scry indexer for token metadata so we can find our token account
+    =/  metadata  -.u.tokenized.u.table.state
+    =/  found=(unit asset-metadata:wallet)
+      .^  (unit asset-metadata:wallet)  %gx
+          /(scot %p our.bowl)/wallet/(scot %da now.bowl)/metadata/(scot %ux metadata)/noun
+      ==
+    ~|  "%pokur: error: can't find metadata for escrow token"
+    ?~  found  !!
+    ?>  ?=(%token -.u.found)
+    ::  generate ID of our token account
+    =/  our-account-id=@ux
+      (hash-data:smart contract.u.found u.our-address.state town.escrow-contract salt.u.found)
+    ::  transaction looks like:
+    ::  [%deposit bond-id=id amount=@ud account=id]
+    ::  :uqbar &wallet-poke [%transaction
+    ::  from=0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
+    ::  contract=0x74.6361.7274.6e6f.632d.7367.697a town=0x0
+    ::  action=[%noun [%deposit bond-id=id amount=@ud account=id]]]
+    :_  state  :_  ~
+    :*  %pass  /pokur-wallet-poke
+        %agent  [our.bowl %uqbar]
+        %poke  %wallet-poke
+        !>
+        :*  %transaction
+            from=u.our-address.state
+            contract=id.escrow-contract
+            town=town.escrow-contract
+            action=[%noun [%deposit u.bond-id.u.table.state amount.u.tokenized.u.table.state our-account-id]]
+        ==
+    ==
   ::
   ==
 ::

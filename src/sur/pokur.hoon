@@ -97,8 +97,8 @@
       bond-id=(unit @ux)
       public=?
       spectators-allowed=?
-      ::  represented in cord as number between 1 and 999,
-      ::  parsed into @ud or @dr depending on context
+      ::  between 10 and 999 seconds, enforced by frontend parsing
+      ::  and by host
       turn-time-limit=@dr
   ==
 ::
@@ -142,7 +142,11 @@
       [%start-game id=@da]  ::  creator of table must perform
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
-      [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
+      ::  choose which wallet address we wish to use to pay escrow
+      [%set-our-address address=@ux]
+      ::  if game is tokenized, generate a transaction
+      ::  that sends amount of specified token needed to play game
+      [%add-escrow id=@da]
   ==
 ::
 +$  message-action
