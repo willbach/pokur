@@ -380,7 +380,7 @@
     ?>  =(src.bowl our.bowl)
     ::  if in table, send to everyone in table
     ::  if in game, send to everyone in game
-    :_  state(messages [[src.bowl msg.action] messages.state])
+    :_  state
     %+  turn
       ?~  game.state
         ?~  table.state
