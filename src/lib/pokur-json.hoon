@@ -60,7 +60,10 @@
   |=  card=pokur-card
   ^-  json
   %-  pairs
-  :~  ['val' s+(scot %tas -.card)]
+  :~  :-  'val'
+      ?:  (lte `@`-.card 10)
+        s+`@t`~(rent co %$ %ud `@`-.card)
+      s+(scot %tas -.card)
       ['suit' s+(scot %tas +.card)]
   ==
 ::

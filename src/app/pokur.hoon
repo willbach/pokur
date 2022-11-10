@@ -190,6 +190,12 @@
         :^  %give  %fact  ~[/table-updates]
         [%pokur-update !>(`update`[%table table.upd])]
       ::
+          %table-closed
+        ~&  >>>  "our table closed :("
+        :_  this(table.state ~)  :_  ~
+        :^  %give  %fact  ~[/table-updates]
+        [%pokur-update !>(`update`[%table-closed table-id.upd])]
+      ::
           %game-starting
         :_  this(table.state ~)
         :~  =+  /game-updates/(scot %da game-id.upd)/(scot %p our.bowl)
@@ -198,6 +204,48 @@
             [%pass - %agent [src.bowl %pokur-host] %leave ~]
             :^  %give  %fact  ~[/table-updates]
             [%pokur-update !>(`update`[%game-starting game-id.upd])]
+        ==
+      ==
+    ==
+  ::
+      [%thread @ @ ~]
+    ::  receive eth block from thread, generate escrow transaction
+    ?+    -.sign  (on-agent:def wire sign)
+        %fact
+      ?+    p.cage.sign  (on-agent:def wire sign)
+          %thread-fail
+        =/  err  !<  (pair term tang)  q.cage.sign
+        %.  `this
+        %+  slog
+          leaf+"%pokur: get-eth-block thread failed: {(trip p.err)}"
+        q.err
+          %thread-done
+        =/  height=@ud  !<(@ud q.cage.sign)
+        ~&  >  "eth-block-height: {<height>}"
+        ::  [%new-bond custodian=address timelock=@ud asset-metadata=id]
+        ?~  host.state  !!
+        ?~  our-address.state  !!
+        ?~  info.u.host.state  !!
+        =,  u.host.state
+        =/  default-timelock=@ud  ::  roughly 48 hours
+          (add height 14.400)
+        =/  asset-metadata=@ux
+          (slav %ux i.t.t.wire)
+        :_  this  :_  ~
+        :*  %pass  /pokur-wallet-poke
+            %agent  [our.bowl %uqbar]
+            %poke  %wallet-poke
+            !>
+            :*  %transaction
+                from=u.our-address.state
+                contract=id.escrow-contract.u.info
+                town=town.escrow-contract.u.info
+                :-  %noun
+                :^    %new-bond
+                    uqbar-address.u.info
+                  default-timelock
+                asset-metadata
+            ==
         ==
       ==
     ==
@@ -273,16 +321,37 @@
       ~|("%pokur: error: can't start table, already in one" !!)
     ?^  game.state
       ~|("%pokur: error: can't start table, already in game" !!)
-    ::  add our.bowl to time in order to disambiguate the unlikely
-    ::  scenario of two lobbies started at exact same time
     =.  id.action  now.bowl
+    ?~  tokenized.action
+      :_  state
+      ::  TODO build transaction poke to %uqbar
+      :_  ~
+      :*  %pass  /start-table-poke/(scot %da id.action)
+          %agent  [ship.u.host.state %pokur-host]
+          %poke  %pokur-player-action  !>(action)
+      ==
+    ::  generate new escrow bond with host
+    ::  [%new-bond custodian=address timelock=@ud asset-metadata=id]
+    ?~  info.u.host.state
+      ~|("%pokur: error: can't start tokenized table, no host escrow info" !!)
+    ::  fetch latest ETH block height to produce timelock
+    =/  tid  `@ta`(cat 3 'thread_' (scot %uv (sham eny.bowl)))
+    =/  ta-now  `@ta`(scot %da now.bowl)
+    =/  ta-metadata  `@ta`(scot %ux metadata.u.tokenized.action)
+    =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %get-eth-block !>(~)]
     :_  state
-    ::  TODO build transaction poke to %uqbar
-    :_  ~
-    :*  %pass  /start-table-poke/(scot %da id.action)
-        %agent  [ship.u.host.state %pokur-host]
-        %poke  %pokur-player-action  !>(action)
-    ==
+    :~  :*  %pass  /thread/[ta-now]/[ta-metadata]
+            %agent  [our.bowl %spider]
+            %watch  /thread-result/[tid]
+        ==
+        :*  %pass  /thread/[ta-now]
+            %agent  [our.bowl %spider]
+            %poke  %spider-start  !>(start-args)
+        ==
+        :*  %pass  /start-table-poke/(scot %da id.action)
+            %agent  [ship.u.host.state %pokur-host]
+            %poke  %pokur-player-action  !>(action)
+    ==  ==
   ::
       %join-table
     ::  join a table in our current host
@@ -381,20 +450,20 @@
     =/  metadata  -.u.tokenized.u.table.state
     =/  found=(unit asset-metadata:wallet)
       .^  (unit asset-metadata:wallet)  %gx
-          /(scot %p our.bowl)/wallet/(scot %da now.bowl)/metadata/(scot %ux metadata)/noun
+          (scot %p our.bowl)  %wallet  (scot %da now.bowl)
+          %metadata  (scot %ux metadata)  %noun
       ==
     ~|  "%pokur: error: can't find metadata for escrow token"
     ?~  found  !!
     ?>  ?=(%token -.u.found)
     ::  generate ID of our token account
     =/  our-account-id=@ux
-      (hash-data:smart contract.u.found u.our-address.state town.escrow-contract salt.u.found)
-    ::  transaction looks like:
-    ::  [%deposit bond-id=id amount=@ud account=id]
-    ::  :uqbar &wallet-poke [%transaction
-    ::  from=0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
-    ::  contract=0x74.6361.7274.6e6f.632d.7367.697a town=0x0
-    ::  action=[%noun [%deposit bond-id=id amount=@ud account=id]]]
+      %:  hash-data:smart
+          contract.u.found
+          u.our-address.state
+          town.escrow-contract
+          salt.u.found
+      ==
     :_  state  :_  ~
     :*  %pass  /pokur-wallet-poke
         %agent  [our.bowl %uqbar]
@@ -404,7 +473,11 @@
             from=u.our-address.state
             contract=id.escrow-contract
             town=town.escrow-contract
-            action=[%noun [%deposit u.bond-id.u.table.state amount.u.tokenized.u.table.state our-account-id]]
+            :-  %noun
+            :^    %deposit
+                u.bond-id.u.table.state
+              amount.u.tokenized.u.table.state
+            our-account-id
         ==
     ==
   ::

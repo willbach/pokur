@@ -271,7 +271,13 @@
       `state
     =.  players.u.table
       (~(del in players.u.table) src.bowl)
-    :_  state(tables (~(put by tables.state) id.action u.table))
+    ::  if table creator left / all players left, delete table
+    ?:  =(src.bowl leader.u.table)
+      :_  state(tables (~(del by tables.state) id.u.table u.table))
+      :_  ~
+      :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
+      [%pokur-host-update !>(`host-update`[%table-closed id.u.table])]
+    :_  state(tables (~(put by tables.state) id.u.table u.table))
     :_  ~
     :^  %give  %fact  ~[/table-updates/(scot %da id.u.table)]
     [%pokur-host-update !>(`host-update`[%table u.table])]

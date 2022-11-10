@@ -112,6 +112,7 @@
 +$  update  ::  from app to frontend
   $%  [%game =game my-hand-rank=@t]
       [%table =table]
+      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       [%lobby tables=(list table)]
       [%new-message from=ship msg=@t]
@@ -120,6 +121,7 @@
 +$  host-update  ::  from host to player
   $%  [%game =game]
       [%table =table]
+      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       [%lobby tables=(list table)]
   ==
