@@ -7,7 +7,7 @@
   ++  json
     |=  jon=^json
     %-  game-action:pokur
-    =<  (game-action jon)
+    =<  [(game-action jon) ~]
     |%
     ++  game-action
       %-  of
