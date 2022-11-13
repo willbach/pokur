@@ -6,9 +6,14 @@
   ++  noun  game-action:pokur
   ++  json
     |=  jon=^json
+    |^
     %-  game-action:pokur
-    =<  [(game-action jon) ~]
-    |%
+    =/  ac  `*`(game-action jon)
+    ?+  -.ac  !!
+      %bet    ac
+      %check  [-.ac +.ac ~]
+      %fold   [-.ac +.ac ~]
+    ==
     ++  game-action
       %-  of
       :~  [%check (ot ~[[%game-id (se %da)]])]
