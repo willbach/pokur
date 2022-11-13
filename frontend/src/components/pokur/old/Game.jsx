@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GameInfo, GameAction, Chat } from '../components';
+import GameAction from "./GameAction";
+import GameInfo from "./GameInfo";
+import Chat from "./Chat";
 import styles from './Game.module.css';
 
 const Game = ({ urb, game, spectating, myBet, setMyBet, setSentChallenge, gameMessages, chatMessages }) => {

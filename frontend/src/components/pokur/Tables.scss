@@ -12,5 +12,10 @@
     padding: 8px;
     color: white;
     cursor: pointer;
+    margin: 0 0 8px 8px;
+
+    &:hover {
+      background: darkgreen;
+    }
   }
 }

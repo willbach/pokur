@@ -1,6 +1,45 @@
 @use '../styles/colors.scss' as colors;
 @use '../styles/border.scss' as border;
 
+$players-circle-size: min(70vw, 70vh);
+$players-circle-radius: min(35vw, 35vh);
+$bets-circle-size: calc(min(64vw, 64vh) - 108px);
+$bets-circle-radius: calc(min(32vw, 32vh) - 54px);
+
+@mixin on-circle($item-count, $circ-size, $circ-radius, $item-size) {
+  position: relative;
+  width:  calc($circ-size - 32px);
+  height: calc($circ-size - 32px);
+  margin-bottom: 32px;
+  padding: 0;
+  border-radius: 50%; 
+  list-style: none;
+  
+  > * {
+    display: block;
+    position: absolute;
+    top:  50%; 
+    left: 50%;
+    width:  $item-size;
+    height: $item-size;
+    margin: -($item-size / 2);
+  
+    $angle: (360 / $item-count);
+    $rot: 90;
+
+    @for $i from 1 through $item-count {
+      &:nth-of-type(#{$i}) {
+        transform: 
+          rotate($rot * 1deg) 
+          translate($circ-radius) 
+          rotate($rot * -1deg);
+      }
+
+      $rot: $rot + $angle;
+    }
+  }
+}
+
 .game-view {
   justify-content: center;
   align-items: center;
@@ -8,15 +47,32 @@
   width: 100%;
   position: relative;
 
+  .top-nav {
+    position: fixed;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    z-index: 1;
+
+    .game-id {
+      color: white;
+      border-radius: 4px;
+      padding: 8px 16px;
+      position: absolute;
+      top: 8px;
+      left: calc(50% - 160px);
+      font-weight: bold;
+    }
+  }
+
   .background {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    background: url('../assets/img/lobby-pink.jpeg');
+    background: url('../assets/img/poker-table.webp');
     background-size: cover;
-    opacity: 0.6;
     z-index: 0;
   }
 
@@ -25,6 +81,145 @@
     border-radius: 8px;
     background: rgba(255,255,255,0.8);
     max-width: 800px;
-    min-width: 400px;
+    min-width: 500px;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+
+    h2, h3, h4 {
+      font-weight: 500;
+      text-align: center;
+      margin: 0;
+    }
+  }
+
+  .game {
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding-top: 120px;
+
+    .center-table {
+      position: absolute;
+      top: calc(min(35vw, 35vh) + 40px);
+      height: 160px;
+      justify-content: center;
+
+      .pots {
+        .pot {
+          text-align: center;
+          font-weight: bold;
+          font-size: 20px;
+          color: white;
+        }
+      }
+    }
+
+    .game-actions {
+      margin: 3em auto 8px;
+      height: 28.5px;
+
+      input {
+        width: 80px;
+      }
+
+      button {
+        margin-left: 8px;
+        padding: 4px 16px;
+      }
+    }
+
+    .bets-container {
+      position: absolute;
+      top: calc(120px + 6em);
+
+      .bets {
+        .bet {
+          .bet-text {
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+          }
+        }
+  
+        &.p2 {
+          @include on-circle(2, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p3 {
+          @include on-circle(3, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p4 {
+          @include on-circle(4, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p5 {
+          @include on-circle(5, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p6 {
+          @include on-circle(6, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p7 {
+          @include on-circle(7, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+        &.p8 {
+          @include on-circle(8, $bets-circle-size, $bets-circle-radius, 3em);
+        }
+      }
+    }
+
+    .players {
+      height: 100%;
+      width: 100%;
+
+      &.p2 {
+        @include on-circle(2, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p3 {
+        @include on-circle(3, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p4 {
+        @include on-circle(4, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p5 {
+        @include on-circle(5, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p6 {
+        @include on-circle(6, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p7 {
+        @include on-circle(7, $players-circle-size, $players-circle-radius, 5em);
+      }
+      &.p8 {
+        @include on-circle(8, $players-circle-size, $players-circle-radius, 5em);
+      }
+
+      .player {
+        justify-content: space-between;
+
+        .player-name {
+          &.current {
+            background-color: white;
+            border-radius: 4px;
+            padding: 2px 4px;
+            width: fit-content;
+          }
+        }
+
+        .blank-card {
+          height: 50px;
+          width: 35px;
+          background: url('../assets/img/card-back-red.png');
+          background-size: cover;
+          margin-bottom: 4px;
+          border-radius: 2px;
+
+          &:first-of-type {
+            margin-right: 4px;
+          }
+        }
+      }
+    }
   }
 }
