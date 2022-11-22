@@ -1,0 +1,18 @@
+@use '../../styles/colors.scss' as colors;
+@use '../../styles/border.scss' as border;
+
+.player {
+  &.mt-8 {
+    margin-top: 8px;
+  }
+
+  .ship {
+    font-size: 16px;
+    font-weight: 600;
+    margin-left: 6px;
+
+    &.alt {
+      color: white;
+    }
+  }
+}

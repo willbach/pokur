@@ -84,14 +84,10 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (redirectPath) {
-      nav(redirectPath)
-    }
-  }, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const changeTableForm = useCallback((key: string, isNumeric = false) => (e: any) => {
-    setTableForm({ ...tableForm, [key]: isNumeric ? e.target.value.replace(/[^0-9]/g, '') : e.target.value })
+    setTableForm({ ...tableForm, [key]: isNumeric ? Number(e.target.value.replace(/[^0-9]/g, '')) : e.target.value })
   }, [tableForm, setTableForm])
 
   const submitNewTable = useCallback(async (e: any) => {
@@ -101,7 +97,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       await createTable(tableForm)
       setTableForm(BLANK_TABLE)
 
-      nav('/table')
+      nav('/table?new=true')
     } catch (err) {}
   }, [tableForm, createTable, nav])
 
@@ -123,10 +119,10 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
         return (
           <Select value={tableForm[k]} onChange={(e) => {
             const gameSpecificInfo = e.target.value === 'cash' ?
-              { ...tableForm, 'small-blind': 1, 'big-blind': 2, 'round-duration': undefined, 'blinds-schedule': undefined } :
-              { ...tableForm, 'small-blind': undefined, 'big-blind': undefined, 'round-duration': '~m10', 'blinds-schedule': [{ big: 2, small: 1 }]  }
-            setTableForm(gameSpecificInfo)
-            changeTableForm(key)(e)
+              { ...tableForm, 'game-type': 'cash', 'small-blind': 1, 'big-blind': 2, 'round-duration': undefined, 'blinds-schedule': undefined } :
+              { ...tableForm, 'game-type': 'tournament', 'small-blind': undefined, 'big-blind': undefined, 'round-duration': '~m10', 'blinds-schedule': [{ big: 2, small: 1 }]  }
+            setTableForm(gameSpecificInfo as any)
+            // changeTableForm(key)(e)
           }}>
             {['cash', 'tournament'].map(gt => <option key={gt} value={gt}>{gt}</option>)}
           </Select>
@@ -153,9 +149,44 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       case 'min-players':
       case 'max-players':
         return (
-          <Select value={tableForm[k]} onChange={changeTableForm(k)}>
+          <Select value={tableForm[k]} onChange={changeTableForm(k, true)}>
             {numberOfPlayers.map(nop => <option key={nop} value={nop}>{nop}</option>)}
           </Select>
+        )
+      case 'blinds-schedule':
+        const changeSchedule = (round: number, blind: 'big' | 'small') => (e: any) => {
+          const newVals = { ...tableForm }
+          newVals['blinds-schedule']![round][blind] = Number(e.target.value.replace(/[^0-9]/g, ''))
+          setTableForm(newVals)
+        }
+
+        const addRound = (e: any) => {
+          e.preventDefault()
+          e.stopPropagation()
+          const newVals = { ...tableForm }
+          newVals['blinds-schedule']!.push({ big: 2, small: 1 })
+          setTableForm(newVals)
+        }
+
+        return (
+          <>
+            {tableForm['blinds-schedule']!.map((bs, i) => (
+              <Col key={`round${i}`} style={{ marginTop: 8 }}>
+                <Text bold>Round {i + 1}</Text>
+                <Row>
+                  <label>Big Blind</label>
+                  <Input value={tableForm['blinds-schedule']![i].big} onChange={changeSchedule(i, 'big')} />
+                </Row>
+                <Row>
+                  <label>Small Blind</label>
+                  <Input value={tableForm['blinds-schedule']![i].small} onChange={changeSchedule(i, 'small')} />
+                </Row>
+              </Col>
+            ))}
+            <Button variant='dark' style={{ padding: '2px 4px', alignSelf: 'flex-start' }} onClick={addRound}>
+              Add Round
+            </Button>
+          </>
         )
       default:
         const value = tableForm[k]?.toString()
@@ -214,12 +245,12 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           <form className="create-table" onSubmit={submitNewTable}>
             {Object.keys(tableForm).map(key => (
               tableForm[key as CreateTableKey] === undefined ? null :
-              <Row key={key}>
+              <Row key={key} style={key === 'blinds-schedule' ? { flexDirection: 'column', alignItems: 'flex-start' } : {}}>
                 <label>{capitalizeSpine(key)}</label>
                 {renderInput(key)}
               </Row>
             ))}
-            <Button type='submit' variant='dark'>Create</Button>
+            <Button type='submit' variant='dark' style={{ marginBottom: 24 }}>Create</Button>
           </form>
         </Col>
       </Modal>

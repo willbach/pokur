@@ -25,28 +25,28 @@ const Tables = ({ tables }: TablesProps) => {
 
   return (
     <>
-      <h3>Tables</h3>
+      <h3>Tables ({tables.length})</h3>
       <Row className='tables'>
         {tables.map(t => (
           <Col key={t.id} className='table-tile' onClick={join(t.id)}>
             <Row>
-              <Text>Creator:</Text>
+              <Text style={{ marginRight: 4 }}>Creator:</Text>
               <Text>{t.leader}</Text>
             </Row>
             <Row>
-              <Text>Type:</Text>
+              <Text style={{ marginRight: 4 }}>Type:</Text>
               <Text>{t.game_type.type}</Text>
             </Row>
             <Row>
-              <Text>Stack:</Text>
+              <Text style={{ marginRight: 4 }}>Stack:</Text>
               <Text>{t.game_type.starting_stack}</Text>
             </Row>
             <Row>
-              <Text>Player Min/Max:</Text>
-              <Text>{t.min_players} / {t.max_players}</Text>
+              <Text style={{ marginRight: 4 }}>Players:</Text>
+              <Text>{t.players.length}/{t.max_players} (min {t.min_players})</Text>
             </Row>
             <Row>
-              <Text>Turn Time:</Text>
+              <Text style={{ marginRight: 4 }}>Turn Time:</Text>
               <Text>{formatTimeLimit(t.turn_time_limit)}</Text>
             </Row>
           </Col>

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Card } from '../../types/Card'
-import { rawCardToVal } from '../../utils/cards'
-import { SUIT_DISPLAY } from '../../utils/constants'
+import { SUIT_DISPLAY, VAL_DISPLAY } from '../../utils/constants'
 import './Card.scss'
 
 interface CardProps {
@@ -11,7 +10,7 @@ interface CardProps {
 
 const CardDisplay = ({ card: { suit, val }, size }: CardProps) => {
   const color = SUIT_DISPLAY[suit][1]
-  const value = rawCardToVal(Number(val))
+  const value = VAL_DISPLAY[val]
   const suitIcon = SUIT_DISPLAY[suit][0]
 
   return (

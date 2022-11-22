@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../api'
 import Button from '../components/form/Button'
+import Player from '../components/pokur/Player'
 import Col from '../components/spacing/Col'
 import Row from '../components/spacing/Row'
 import Text from '../components/text/Text'
@@ -10,16 +11,23 @@ import { formatTimeLimit } from '../utils/format'
 
 import './TableView.scss'
 
-const TableView = () => {
+interface TableViewProps {
+  redirectPath: string
+}
+
+const TableView = ({ redirectPath }: TableViewProps) => {
   const { table, leaveTable, startGame, subscribeToPath } = usePokurStore()
   const nav = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
-    // const tableSub = subscribeToPath('/table-updates')
-    // return () => {
-    //   tableSub.then((sub: number) => api.unsubscribe(sub))
-    // }
+    const tableSub = subscribeToPath('/table-updates', nav)
+    return () => {
+      tableSub.then((sub: number) => api.unsubscribe(sub))
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Col className='table-view'>
@@ -27,7 +35,12 @@ const TableView = () => {
       <Col className='content'>
         {!table ? (
           <>
-            <h3>Table Not Found</h3>
+            <h3>
+              {location.search.includes('new=true') ?
+                'Table is being set up...' :
+                'Table Cancelled or Not Found'
+              }
+            </h3>
             <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
               Return to Lobby
             </Button>
@@ -44,9 +57,9 @@ const TableView = () => {
                   <h4>ID:</h4>
                   <Text>{table.id}</Text>
                 </Row> */}
-                <Row className='table-info'>
+                <Row className='table-info' style={{ alignItems: 'center' }}>
                   <h4>Leader:</h4>
-                  <Text>{table.leader}</Text>
+                  <Player ship={table.leader} />
                 </Row>
                 <Row className='table-info'>
                   <h4>Type:</h4>
@@ -62,7 +75,13 @@ const TableView = () => {
                 </Row>}
                 {'blinds_schedule' in table.game_type && <Row className='table-info'>
                   <h4>Blinds Schedule:</h4>
-                  <Text>{JSON.stringify(table.game_type.blinds_schedule)}</Text>
+                  <Col style={{ alignItems: 'flex-start' }}>
+                    {table.game_type.blinds_schedule.map(([big, small], i) => (
+                      <Text key={big + i} style={{ whiteSpace: 'nowrap' }}>
+                        Round {i + 1}: {big} / {small}
+                      </Text>
+                    ))}
+                  </Col>
                 </Row>}
                 {'small_blind' in table.game_type && <Row className='table-info'>
                   <h4>Small Blind:</h4>
@@ -92,9 +111,7 @@ const TableView = () => {
               <Col style={{ width: '50%', alignItems: 'flex-start' }}>
                 <div className='players'>
                   <h4>Players: {table.players.length}/{table.max_players} (min {table.min_players})</h4>
-                  {table.players.map(p => (
-                    <div key={p} className='player'>~{p}</div>
-                  ))}
+                  {table.players.map(ship => <Player key={ship} ship={ship} className='mt-8' />)}
                 </div>
                 <div className='table-menu'>
 
@@ -107,7 +124,7 @@ const TableView = () => {
                   Start Game
                 </Button>
               )}
-              <Button variant='dark' onClick={async () => { nav('/'); leaveTable(table.id) }}>
+              <Button onClick={async () => { nav('/'); leaveTable(table.id) }}>
                 Leave Table
               </Button>
             </Row>

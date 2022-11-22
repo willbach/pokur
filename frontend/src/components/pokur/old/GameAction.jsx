@@ -1,7 +1,8 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
-import { Card, TurnTimer } from '.';
 import styles from './GameAction.module.css';
+import TurnTimer from './TurnTimer';
+import Card from './Card';
 
 const GameAction = ({ urb, game, myBet, setMyBet }) => {
 
@@ -48,7 +49,7 @@ const GameAction = ({ urb, game, myBet, setMyBet }) => {
       <div className={styles.hand}>
         {game.hand.map(card => (
           <Card key={card.val+card.suit} val={card.val} suit={card.suit} size="large" />
-          ))}
+        ))}
         <p>Your hand: {game.my_hand_rank}</p>
       </div>
       <div className={styles.bet_input}>
