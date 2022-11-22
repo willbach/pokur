@@ -21,7 +21,7 @@ const Chat = () => {
   }, [sendMessage, newMsg, setNewMsg])
 
   return (
-    <Col className='chat'>
+    <Col className={`chat ${hide ? 'hidden' : 'shown'}`}>
       <Row className='hide' onClick={() => setHide(!hide)}>
         <Text>{hide ? 'Show' : 'Hide'} chat</Text>
         {hide ? <FaChevronUp /> : <FaChevronDown />}

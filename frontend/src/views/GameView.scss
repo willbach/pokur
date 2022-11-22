@@ -1,10 +1,8 @@
 @use '../styles/colors.scss' as colors;
 @use '../styles/border.scss' as border;
 
-$players-circle-size: min(70vw, 70vh);
-$players-circle-radius: min(35vw, 35vh);
-$bets-circle-size: calc(min(64vw, 64vh) - 108px);
-$bets-circle-radius: calc(min(32vw, 32vh) - 54px);
+$players-circle-size: calc(min(74vw, 74vh) - 60px);
+$players-circle-radius: calc(min(37vw, 37vh) - 30px);
 
 @mixin on-circle($item-count, $circ-size, $circ-radius, $item-size) {
   position: relative;
@@ -46,6 +44,13 @@ $bets-circle-radius: calc(min(32vw, 32vh) - 54px);
   height: 100%;
   width: 100%;
   position: relative;
+  background: radial-gradient(circle at center, #000000 0, #535353);
+
+  .game-actions {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+  }
 
   .top-nav {
     position: fixed;
@@ -53,14 +58,12 @@ $bets-circle-radius: calc(min(32vw, 32vh) - 54px);
     padding: 8px;
     width: 100%;
     z-index: 1;
+    justify-content: space-between;
 
     .game-id {
       color: white;
       border-radius: 4px;
-      padding: 8px 16px;
-      position: absolute;
-      top: 8px;
-      left: calc(50% - 160px);
+      padding: 8px;
       font-weight: bold;
     }
   }
@@ -100,15 +103,40 @@ $bets-circle-radius: calc(min(32vw, 32vh) - 54px);
     align-items: center;
     justify-content: flex-start;
     position: relative;
-    padding-top: 120px;
+    padding-top: 80px;
 
     .center-table {
       position: absolute;
-      top: calc(min(35vw, 35vh) + 40px);
-      height: 160px;
+      top: 14%;
       justify-content: center;
+      left: 30%;
+      z-index: 1;
+      width: 40%;
+      height: 60%;
+      align-items: center;
+
+      .branding {
+        height: 30%;
+        opacity: 0.8;
+        position: absolute;
+        top: 40%;
+        z-index: 0;
+
+        img {
+          height: 100%;
+          margin-right: 16px;
+        }
+        span {
+          color: white;
+          font-weight: 500;
+          font-size: 6vw;
+        }
+      }
 
       .pots {
+        min-height: 80px;
+        z-index: 1;
+
         .pot {
           text-align: center;
           font-weight: bold;
@@ -116,87 +144,205 @@ $bets-circle-radius: calc(min(32vw, 32vh) - 54px);
           color: white;
         }
       }
-    }
 
-    .game-actions {
-      margin: 3em auto 8px;
-      height: 28.5px;
-
-      input {
-        width: 80px;
-      }
-
-      button {
-        margin-left: 8px;
-        padding: 4px 16px;
-      }
-    }
-
-    .bets-container {
-      position: absolute;
-      top: calc(120px + 6em);
-
-      .bets {
-        .bet {
-          .bet-text {
-            color: white;
-            font-weight: 600;
-            white-space: nowrap;
-          }
+      .cards {
+        display: flex;
+        flex-direction: row;
+        width: 95%;
+        z-index: 1;
+        
+        .card-container {
+          width: 100%;
         }
-  
-        &.p2 {
-          @include on-circle(2, $bets-circle-size, $bets-circle-radius, 3em);
+    
+        .card-container-enter {
+          opacity: 0;
+          transform: translateX(100%);
         }
-        &.p3 {
-          @include on-circle(3, $bets-circle-size, $bets-circle-radius, 3em);
+        .card-container-enter-active {
+          opacity: 1;
+          transform: translateX(0);
+          transition: all 700ms ease-in-out;
         }
-        &.p4 {
-          @include on-circle(4, $bets-circle-size, $bets-circle-radius, 3em);
+        .card-container-exit {
+    
         }
-        &.p5 {
-          @include on-circle(5, $bets-circle-size, $bets-circle-radius, 3em);
-        }
-        &.p6 {
-          @include on-circle(6, $bets-circle-size, $bets-circle-radius, 3em);
-        }
-        &.p7 {
-          @include on-circle(7, $bets-circle-size, $bets-circle-radius, 3em);
-        }
-        &.p8 {
-          @include on-circle(8, $bets-circle-size, $bets-circle-radius, 3em);
+        .card-container-exit-active {
+          opacity: 0;
+          transition: all 1000ms ease-out;
         }
       }
     }
 
     .players {
-      height: 100%;
-      width: 100%;
+      width: calc(100vw - 160px);
+      max-height: calc(100vh - 200px);
+      aspect-ratio: 2/1;
+      position: relative;
+      border: 6px solid #353535;
+      border-radius: 25vw;
+      background: url('../assets/img/poker-table.webp');
+      background-size: cover;
 
-      &.p2 {
-        @include on-circle(2, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p3 {
-        @include on-circle(3, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p4 {
-        @include on-circle(4, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p5 {
-        @include on-circle(5, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p6 {
-        @include on-circle(6, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p7 {
-        @include on-circle(7, $players-circle-size, $players-circle-radius, 5em);
-      }
-      &.p8 {
-        @include on-circle(8, $players-circle-size, $players-circle-radius, 5em);
-      }
-
-      .player {
+      .player-display {
         justify-content: space-between;
+        width: 64px;
+        position: absolute;
+        align-items: center;
+
+        .bet {
+          color: white;
+          font-weight: bold;
+          position: absolute;
+          white-space: nowrap;
+
+          .button-indicator {
+            background: #353535;
+            border: 1px solid gold;
+            color: gold;
+            font-size: 12px;
+            border-radius: 50%;
+            padding: 4px;
+            margin-right: 4px;
+          }
+        }
+
+        &.pp-1 {
+          top: -50px;
+          right: calc(24% - 32px);
+          flex-direction: row-reverse;
+          .player-info {
+            box-shadow: -1px 3px 5px rgb(15, 15, 15);
+          }
+
+          .bet {
+            bottom: -40px;
+            left: 6px;
+          }
+        }
+        &.pp-2 {
+          top: calc(18% - 55px);
+          right: calc(7% - 44px);
+
+          .bet {
+            bottom: -20px;
+            left: -80px;
+          }
+        }
+        &.pp-3 {
+          right: -50px;
+          top: calc(50% - 30px);
+
+          .bet {
+            bottom: 50px;
+            left: -110px;
+          }
+        }
+        &.pp-4 {
+          top: calc(88% - 32px);
+          right: calc(7% - 44px);
+
+          .bet {
+            bottom: 110px;
+            left: -60px;
+          }
+        }
+        &.pp-5 {
+          top: calc(100% - 16px);
+          right: calc(24% - 32px);
+          flex-direction: row-reverse;
+
+          .player-info {
+            box-shadow: -1px 3px 5px rgb(15, 15, 15);
+          }
+
+          .bet {
+            bottom: 80px;
+            left: 6px;
+          }
+        }
+        &.pp-6 {
+          top: calc(100% - 16px);
+          left: calc(24% - 32px);
+          flex-direction: row;
+
+          .bet {
+            bottom: 80px;
+          }
+        }
+        &.pp-7 {
+          top: calc(88% - 32px);
+          left: calc(7% - 44px);
+
+          .bet {
+            bottom: 110px;
+            right: -50px;
+          }
+        }
+        &.pp-8 {
+          left: -48px;
+          top: calc(50% - 30px);
+
+          .bet {
+            bottom: 50px;
+            right: -110px;
+          }
+        }
+        &.pp-9 {
+          top: calc(18% - 55px);
+          left: calc(7% - 44px);
+
+          .bet {
+            bottom: -20px;
+            right: -54px;
+          }
+        }
+        &.pp-10 {
+          top: -50px;
+          left: calc(24% - 32px);
+          flex-direction: row;
+
+          .bet {
+            bottom: -40px;
+            left: 6px;
+          }
+        }
+
+        .avatar-sigil {
+          height: 64px !important;
+          width: 64px !important;
+          border-radius: 60px;
+          border: 3px solid #545454;
+          box-shadow: 3px 3px 5px rgb(36, 36, 36);
+        }
+
+        .player-info {
+          border-radius: 4px;
+          text-align: center;
+          color: white;
+          background: linear-gradient(90deg, #868686, #686868 50%, #868686);
+          padding: 2px 8px;
+          height: fit-content;
+          box-shadow: 3px 3px 5px rgb(36, 36, 36);
+
+          .player {
+            border-bottom: 1px solid white;
+
+            .ship {
+              margin: 0;
+              text-align: center;
+              width: 100%;
+              font-weight: 500;
+              font-size: 12px;
+              white-space: nowrap;
+            }
+          }
+
+          .stack {
+            text-align: center;
+            width: 100%;
+          }
+        }
 
         .player-name {
           &.current {
@@ -217,6 +363,12 @@ $bets-circle-radius: calc(min(32vw, 32vh) - 54px);
 
           &:first-of-type {
             margin-right: 4px;
+          }
+        }
+
+        .bet {
+          .bet-text {
+            color: white;
           }
         }
       }

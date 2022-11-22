@@ -5,21 +5,20 @@
   margin-bottom: 2px;
 
   &.large {
-    min-width: 64px;
-    height: 106px;
+    width: calc(20% - 8px);
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid black;
     margin: 4px;
-    padding: 4px;
+    padding: 0 4px;
   }
   
   &.small {
     flex-direction: row;
     width: 38px;
-    min-height: 52px;
+    min-height: 60px;
     background-color: #fff;
-    border-radius: 4px;
+    border-radius: 3px;
     border: 1px solid black;
     padding: 2px;
     margin-right: 0;
@@ -47,27 +46,32 @@
   }
     
   .card-value.large {
-    font-size: 24px;
+    font-size: 4vw;
   }
     
   .card-suit.large {
-    font-size: 18px;
+    font-size: 4vw;
+    margin-top: -4px;
+    align-self: flex-end;
   }
   
   .card-value.small {
-    font-size: 14px;
+    font-size: 24px;
     text-align: left;
   }
     
   .card-suit.small {
-    font-size: 11px;
+    font-size: 24px;
     text-align: left;
+    margin-top: -2px;
+    align-self: flex-end;
   }
     
   .card-top {
     display: flex;
     flex-flow: column nowrap;
     align-items: flex-start;
+    width: 100%;
   }
     
   .card-bottom {
