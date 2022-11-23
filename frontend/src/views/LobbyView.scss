@@ -2,11 +2,31 @@
 @use '../styles/border.scss' as border;
 
 .lobby-view {
-  justify-content: center;
-  align-items: center;
   height: 100%;
   width: 100%;
   position: relative;
+
+  .header {
+    height: 80px;
+    background: linear-gradient(0deg, #868686, #686868);
+    justify-content: space-between;
+
+    .branding {
+      img {
+        height: 48px;
+        margin: auto 16px;
+      }
+      span {
+        color: white;
+        font-size: 40px;
+      }
+    }
+
+    .host {
+      color: white;
+      margin: auto 16px;
+    }
+  }
 
   .background {
     position: fixed;
@@ -22,19 +42,15 @@
 
   .content {
     z-index: 1;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.8);
-    max-width: 800px;
-    min-width: 400px;
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
+    height: calc(100% - 80px);
+    width: 100%;
 
     form {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      margin-top: -60px;
 
       button {
         width: 165.5px;

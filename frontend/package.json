@@ -12,6 +12,7 @@
     "@types/node": "^18.11.9",
     "@types/react": "^17.0.20",
     "@types/react-dom": "^17.0.9",
+    "@types/react-transition-group": "^4.4.5",
     "@urbit/http-api": "^2.1.1",
     "moment": "^2.29.3",
     "react": "^17.0.2",
@@ -19,12 +20,13 @@
     "react-icons": "^4.3.1",
     "react-router-dom": "^6.2.2",
     "react-scripts": "5.0.0",
+    "react-transition-group": "^4.4.5",
     "sass": "^1.52.1",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0",
     "zustand": "^3.7.1"
   },
-  "proxy": "http://localhost:8081",
+  "proxy": "http://localhost:8080",
   "scripts": {
     "start": "sed -i.bak -e 's/compress: true/compress: false/' ./node_modules/react-scripts/config/webpackDevServer.config.js && react-scripts start",
     "start:mock": "REACT_APP_MOCK_DATA=true yarn start",

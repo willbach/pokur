@@ -19,10 +19,10 @@ const CardDisplay = ({ card: { suit, val }, size }: CardProps) => {
           <div className={`card-value ${size}`}>{value}</div>
           <div className={`card-suit ${size}`}>{suitIcon}</div>
         </div>
-        <div className='card-bottom'>
+        {/* <div className='card-bottom'>
           <div className={`card-value ${size}`}>{value}</div>
           <div className={`card-suit ${size}`}>{suitIcon}</div>
-        </div>
+        </div> */}
       </div>
   )
 }

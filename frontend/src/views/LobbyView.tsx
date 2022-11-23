@@ -13,6 +13,7 @@ import usePokurStore from '../store/pokurStore'
 import { CreateTableValues } from '../types/Table';
 import { capitalizeSpine } from '../utils/format';
 import { numToUd } from '../utils/number';
+import logo from '../assets/img/logo192.png'
 
 import './LobbyView.scss'
 
@@ -199,23 +200,42 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
   return (
     <>
       <Col className='lobby-view'>
-        <div className='background' />
+        <Row className='header'>
+          <Row className='branding'>
+            <img src={logo} alt='uqbar logo' />
+            <Text mono>POKUR</Text>
+          </Row>
+          <Row>
+            {Boolean(host) && (
+              <Button style={{ margin: 'auto 16px' }} onClick={() => setShowNewTableModal(true)}>
+                Create Table
+              </Button>
+            )}
+            <Col>
+              {Boolean(host) ? (
+                <>
+                  <h3 className='host'>Host: ~{host} {host === (window as any).ship ? '(you)' : ''}</h3>
+                  <Button onClick={leaveHost} style={{ margin: '8px 16px 8px', padding: '4px 10px', fontSize: 16 }}>
+                    Change Host
+                  </Button>
+                </>
+                ) : (
+                <>
+                  <h3 className='host'>Host: ~{host} {host === (window as any).ship ? '(you)' : ''}</h3>
+                </>
+              )}
+            </Col>
+          </Row>
+        </Row>
+
         <Col className='content'>
-          <h2>Welcome to Pokur</h2>
           {Boolean(host) ? (
             <>
-              <h3 style={{ marginRight: 8 }}>Host: ~{host} {host === (window as any).ship ? '(you)' : ''}</h3>
-              <Button onClick={leaveHost} variant='dark' style={{ margin: '8px 0 16px', padding: '3px 8px', fontSize: 14 }}>
-                Change Host
-              </Button>
               {Object.keys(lobby).length > 0 ? (
                 <Tables tables={Object.values(lobby)} />
               ) : (
                 <Text>No tables under this host</Text>
               )}
-              <Button variant='dark' style={{ marginTop: 16 }} onClick={() => setShowNewTableModal(true)}>
-                Create Table
-              </Button>
             </>
           ) : (
             <>

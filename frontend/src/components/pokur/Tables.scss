@@ -2,9 +2,54 @@
 @use '../../styles/border.scss' as border;
 
 .tables {
-  flex-wrap: wrap;
-  margin-top: 16px;
+  height: 100%;
+  width: 100%;
+  border: 2px solid gray;
+  display: flex;
+  flex-direction: row;
 
+  .grid-display {
+    width: 75%;
+    height: fit-content;
+
+    .fields {
+      .field {
+        background: radial-gradient(circle at center, #d4d4d4 0, #e7e7e7);
+      }
+    }
+
+    .field {
+      padding: 4px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      height: 20px;
+      text-align: center;
+      &:nth-of-type(9) {
+        width: 40%;
+      }
+    }
+
+    .table {
+      cursor: pointer;
+
+      &:hover {
+        background-color: rgba(250, 250, 250);
+      }
+    }
+  }
+
+  .table-details {
+    width: calc(25% - 2px);
+    height: 100%;
+    border-left: 2px solid gray;
+    align-items: flex-start;
+    padding: 16px 16px 40px;
+
+    h4 {
+      margin: 4px 4px 4px 0;
+    }
+  }
+  
   .table-tile {
     width: 160px;
     background: gray;

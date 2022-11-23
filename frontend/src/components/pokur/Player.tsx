@@ -9,14 +9,15 @@ interface PlayerProps {
   ship: string;
   className?: string;
   alt?: boolean
+  hideSigil?: boolean
 }
 
-const Player = ({ ship, className, alt = false }: PlayerProps) => {
+const Player = ({ ship, className, alt = false, hideSigil = false }: PlayerProps) => {
   return (
     <Row key={ship} className={`player ${className || ''}`}>
-      <div className='sigil-container'>
+      {!hideSigil && <div className='sigil-container'>
         {sigil({ patp: ship, renderer: reactRenderer, size: 24, colors: alt ? ['white', 'black'] : ['black', 'white'] })}
-      </div>
+      </div>}
       <Text key={ship} className={`ship ${alt ? 'alt' : ''}`}>~{ship.replace(/~/, '')}</Text>
     </Row>
   )
