@@ -1,70 +1,84 @@
-.card.large {
+.card {
+  flex-direction: column;
+  justify-content: space-between;
   display: flex;
-  width: 60px;
-  height: 100px;
-  background-color: #fff;
-  border-radius: 8px;
-  border: 1px solid black;
-  margin: 4px;
-  padding: 4px;
-}
+  margin-bottom: 2px;
 
-.card.small {
-  display: inline-block;
-  width: 30px;
-  height: 50px;
-  background-color: #fff;
-  border-radius: 4px;
-  border: 1px solid black;
-  margin: 1px;
-  padding: 2px;
-}
+  &.large {
+    width: calc(20% - 8px);
+    background-color: #fff;
+    border-radius: 6px;
+    border: 1px solid black;
+    margin: 4px;
+    padding: 0 4px;
+  }
   
-.black {
-  color: black;
-}
-  
-.red {
-  color: red;
-}
+  &.small {
+    flex-direction: row;
+    width: 38px;
+    min-height: 60px;
+    background-color: #fff;
+    border-radius: 3px;
+    border: 1px solid black;
+    padding: 2px;
+    margin-right: 0;
 
-.green {
-  color: green;
-}
+    &:first-of-type {
+      margin-right: 2px;
+      margin-left: -1px;
+    }
+  }
+    
+  &.black {
+    color: black;
+  }
+    
+  &.red {
+    color: red;
+  }
   
-.blue {
-  color: blue;
-}
+  &.green {
+    color: green;
+  }
+    
+  &.blue {
+    color: blue;
+  }
+    
+  .card-value.large {
+    font-size: 4vw;
+  }
+    
+  .card-suit.large {
+    font-size: 4vw;
+    margin-top: -4px;
+    align-self: flex-end;
+  }
   
-.card-value.large {
-  font-size: 24px;
-}
-  
-.card-suit.large {
-  font-size: 18px;
-}
-
-.card-value.small {
-  font-size: 14px;
-  text-align: left;
-}
-  
-.card-suit.small {
-  font-size: 11px;
-  text-align: left;
-}
-  
-.card-top {
-  display: flex;
-  flex-grow: 1;
-  flex-flow: column nowrap;
-  align-items: flex-start;
-}
-  
-.card-bottom {
-  display: flex;
-  flex-grow: 1;
-  flex-flow: column nowrap;
-  justify-content: flex-start;
-  transform:rotate(-180deg);
+  .card-value.small {
+    font-size: 24px;
+    text-align: left;
+  }
+    
+  .card-suit.small {
+    font-size: 24px;
+    text-align: left;
+    margin-top: -2px;
+    align-self: flex-end;
+  }
+    
+  .card-top {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: flex-start;
+    width: 100%;
+  }
+    
+  .card-bottom {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    transform:rotate(-180deg);
+  }
 }

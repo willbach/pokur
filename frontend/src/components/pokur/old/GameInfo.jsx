@@ -1,7 +1,9 @@
 import React from 'react';
 import { sigil, reactRenderer } from '@tlon/sigil-js';
-import { Card, TurnTimer, GameUpdates } from '../components';
 import styles from './GameInfo.module.css';
+import GameUpdates from './GameUpdates';
+import Card from './Card';
+import TurnTimer from './TurnTimer';
 
 const GameInfo = ({ game, gameMessages }) => {
 

@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/apps/uqbar-explorer/static/css/main.95550936.css",
+    "main.js": "/apps/uqbar-explorer/static/js/main.d994d326.js",
+    "static/js/787.133cfcde.chunk.js": "/apps/uqbar-explorer/static/js/787.133cfcde.chunk.js",
+    "static/media/roadmap-bg.png": "/apps/uqbar-explorer/static/media/roadmap-bg.f5a7d95c2ad5d7d68eba.png",
+    "static/media/uqbar-logo-text.png": "/apps/uqbar-explorer/static/media/uqbar-logo-text.1f0106151f96c0395ebd.png",
+    "index.html": "/apps/uqbar-explorer/index.html",
+    "main.95550936.css.map": "/apps/uqbar-explorer/static/css/main.95550936.css.map",
+    "main.d994d326.js.map": "/apps/uqbar-explorer/static/js/main.d994d326.js.map",
+    "787.133cfcde.chunk.js.map": "/apps/uqbar-explorer/static/js/787.133cfcde.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.95550936.css",
+    "static/js/main.d994d326.js"
+  ]
+}

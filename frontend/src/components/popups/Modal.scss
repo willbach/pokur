@@ -28,5 +28,7 @@
     font-size: 14px;
     line-height: 24px;
     max-width: calc(100vw - 80px);
+    max-height: 80vh;
+    overflow-y: scroll;
   }
 }

@@ -1,3 +1,4 @@
+import { NavigateFunction } from "react-router-dom"
 import create from "zustand"
 import api from "../api"
 import { HardwareWallet, HardwareWalletType, HotWallet, processAccount, RawAccount } from "../types/Accounts"
@@ -22,11 +23,12 @@ export interface PokurStore {
   messages: Message[]
   mutedPlayers: string[]
 
-  init: () => Promise<'/table' | '/game' | void>
+  init: () => Promise<'/table' | '/game' | '/' | void>
   getMessages: () => Promise<void>
   getTable: () => Promise<void>
+  getGame: () => Promise<Game | undefined>
   getMutedPlayers: () => Promise<void>
-  subscribeToPath: (path: SubscriptionPath) => Promise<number>
+  subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => Promise<number>
   setLoading: (loadingText: string | null) => void
   getAccounts: () => Promise<void>
 
@@ -43,7 +45,7 @@ export interface PokurStore {
   
   // pokur-message-action
   mutePlayer: (player: string) => Promise<void>
-  sendMessage: (message: string) => Promise<void>
+  sendMessage: (msg: string) => Promise<void>
 
   // pokur-game-action
   check: (table: string) => Promise<void>
@@ -82,14 +84,14 @@ const usePokurStore = create<PokurStore>((set, get) => ({
         // getAccounts(),
       ])
 
-      console.log('game & table:', game, table)
-
       set({ loadingText: null, host: host?.host, game, table })
 
       if (game) {
         return '/game'
       } else if (table) {
         return '/table'
+      } else {
+        return '/'
       }
 
     } catch (err) {
@@ -105,16 +107,21 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     const table = await api.scry({ app: 'pokur', path: '/table' })
     set({ table })
   },
+  getGame: async () => {
+    const game = await api.scry<Game | undefined>({ app: 'pokur', path: '/game' })
+    set({ game })
+    return game
+  },
   getMutedPlayers: async () => {
     const mutedPlayers = await api.scry({ app: 'pokur', path: '/muted-players' })
     set({ mutedPlayers })
   },
-  subscribeToPath: (path: SubscriptionPath) => {
+  subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => {
     switch (path) {
       case '/lobby-updates':
         return api.subscribe(createSubscription('pokur', path, handleLobbyUpdate(get, set)))
       case '/table-updates':
-        return api.subscribe(createSubscription('pokur', path, handleTableUpdate(get, set)))
+        return api.subscribe(createSubscription('pokur', path, handleTableUpdate(get, set, nav)))
       case '/game-updates':
         return api.subscribe(createSubscription('pokur', path, handleGameUpdate(get, set)))
       case '/messages':
@@ -165,17 +172,16 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     if (values['game-type'] === 'cash') {
       json['new-table']['game-type'] = { cash: {...values, type: values['game-type'] } }
     } else {
-      json['new-table']['game-type'] = { tournament: {...values, type: values['game-type'] } }
+      json['new-table']['game-type'] = { tournament: {...values, type: values['game-type'], 'current-round': 0, 'round-is-over': false } }
     }
 
-    console.log(1)
+    console.log('CREATE TABLE:', json)
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
-    console.log(2)
     setTimeout(async () => {
       const table = await api.scry({ app: 'pokur', path: '/table' })
-      console.log(3, table)
-      set({ table, loadingText: null })
-    }, 500)
+      set({ table })
+      setTimeout(() => set({ loadingText: null }), 200)
+    }, 200)
   },
   joinTable: async (table: string) => {
     const json = { 'join-table': { id: table } }
@@ -188,9 +194,12 @@ const usePokurStore = create<PokurStore>((set, get) => ({
   },
   startGame: async (table: string) => {
     const json = { 'start-game': { id: table } }
+    console.log(1, json)
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
+    console.log(2)
   },
   leaveGame: async (table: string) => {
+    console.log(1, table)
     const json = { 'leave-game': { id: table } }
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
     set({ game: undefined })
@@ -207,20 +216,23 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     const json = { 'mute-player': { who: player } }
     await api.poke({ app: 'pokur', mark: 'pokur-message-action', json })
   },
-  sendMessage: async (message: string) => {
-    const json = { 'send-message': { message } }
+  sendMessage: async (msg: string) => {
+    const json = { 'send-message': { msg } }
     await api.poke({ app: 'pokur', mark: 'pokur-message-action', json })
   },
   check: async (table: string) => {
-    const json = { 'check': { 'game-id': table } }
+    const json = { check: { 'game-id': table } }
+    console.log('CHECK:', json)
     await api.poke({ app: 'pokur', mark: 'pokur-game-action', json })
   },
   fold: async (table: string) => {
-    const json = { 'fold': { 'game-id': table } }
+    const json = { fold: { 'game-id': table } }
+    console.log('FOLD:', json)
     await api.poke({ app: 'pokur', mark: 'pokur-game-action', json })
   },
   bet: async (table: string, amount: number) => {
-    const json = { 'bet': { 'game-id': table, amount } }
+    const json = { bet: { 'game-id': table, amount } }
+    console.log('BET:', json)
     await api.poke({ app: 'pokur', mark: 'pokur-game-action', json })
   },
 }))

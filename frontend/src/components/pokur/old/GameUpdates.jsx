@@ -1,6 +1,6 @@
 import React from 'react';
+import Card from './Card';
 import styles from './GameUpdates.module.css';
-import { Card } from '../components';
 
 const GameUpdates = ({ messages }) => {
 

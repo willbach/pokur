@@ -1,28 +1,24 @@
 /-  pokur
-=,  format
+=,  dejs:format
 |_  act=game-action:pokur
 ++  grab
   |%
   ++  noun  game-action:pokur
   ++  json
     |=  jon=^json
+    |^
     %-  game-action:pokur
-    =<  (game-action jon)
-    |%
+    =/  ac  `*`(game-action jon)
+    ?+  -.ac  !!
+      %bet    ac
+      %check  [-.ac +.ac ~]
+      %fold   [-.ac +.ac ~]
+    ==
     ++  game-action
-      %-  of:dejs
-      :~  [%check get-id]
-          [%fold get-id]
-          [%bet get-id-and-amount]
-      ==
-    ++  get-id
-      %-  ot:dejs
-      :~  [%game-id (se:dejs %da)]
-      ==
-    ++  get-id-and-amount
-      %-  ot:dejs
-      :~  [%game-id (se:dejs %da)]
-          [%amount ni:dejs]
+      %-  of
+      :~  [%check (ot ~[[%game-id (se %da)]])]
+          [%fold (ot ~[[%game-id (se %da)]])]
+          [%bet (ot ~[[%game-id (se %da)] [%amount ni]])]
       ==
     --
   --

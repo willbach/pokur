@@ -17,6 +17,7 @@ function App() {
   useEffect(() => {
     (async () => {
       const initialRoute = await init()
+      console.log(initialRoute)
       setRedirectPath(initialRoute || '')
       setRedirectPath('')
     })()
@@ -27,8 +28,8 @@ function App() {
       {/* <Navbar /> */}
       <Routes>
         <Route path="/" element={<LobbyView redirectPath={redirectPath} />} />
-        <Route path="/table" element={<TableView />} />
-        <Route path="/game" element={<GameView />} />
+        <Route path="/table" element={<TableView redirectPath={redirectPath} />} />
+        <Route path="/game" element={<GameView redirectPath={redirectPath} />} />
         <Route
           path="*"
           element={
