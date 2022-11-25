@@ -36,7 +36,7 @@
     ++  parse-game-type
       %-  of
       :~  [%cash parse-cash-type]
-          [%tournament parse-tournament-type]
+          [%sng parse-sng-type]
       ==
     ++  parse-cash-type
       %-  ot
@@ -44,7 +44,7 @@
           [%small-blind ni]
           [%big-blind ni]
       ==
-    ++  parse-tournament-type
+    ++  parse-sng-type
       %-  ot
       :~  [%starting-stack ni]
           [%round-duration (se %dr)]

@@ -202,7 +202,7 @@
   ::  and sets an update message in the game state
   ++  increment-current-round
     ^-  host-game-state
-    ?>  ?=(%tournament -.game-type.game.state)
+    ?>  ?=(%sng -.game-type.game.state)
     =/  blinds=[small=@ud big=@ud]
       %+  snag  current-round.game-type.game.state
       blinds-schedule.game-type.game.state
@@ -267,7 +267,7 @@
     =.  state  committed-chips-to-pot
     =.  state  (award-pots winners)
     =?    state
-        ?&  ?=(%tournament -.game-type.game.state)
+        ?&  ?=(%sng -.game-type.game.state)
             round-is-over.game-type.game.state
         ==
       %=    state

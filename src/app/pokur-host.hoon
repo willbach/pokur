@@ -125,7 +125,7 @@
     %+  snoc
       (send-game-updates u.host-game)
     ::  set new round timer
-    ?>  ?=(%tournament -.game-type.game)
+    ?>  ?=(%sng -.game-type.game)
     :*  %pass  /timer/(scot %da game-id)/round-timer
         %arvo  %b  %wait
         (add now.bowl round-duration.game-type.game)
@@ -289,7 +289,7 @@
     ?>  (gte ~(wyt in players.u.table) min-players.u.table)
     ~&  >  "%pokur-host: starting new game {<id.action>}"
     =?    game-type.u.table
-        ?=(%tournament -.game-type.u.table)
+        ?=(%sng -.game-type.u.table)
       %=  game-type.u.table
         current-round  0
         round-is-over  %.n
@@ -336,7 +336,7 @@
           :^  %give  %fact  ~[/table-updates/(scot %da id.action)]
           [%pokur-host-update !>(`host-update`[%game-starting id.action])]
       ==
-    ?.  ?=(%tournament -.game-type.u.table)  ~
+    ?.  ?=(%sng -.game-type.u.table)  ~
     :~  :*  %pass  /timer/(scot %da id.game)/round-timer
             %arvo  %b  %wait
             (add now.bowl round-duration.game-type.u.table)

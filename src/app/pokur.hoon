@@ -323,9 +323,7 @@
       ~|("%pokur: error: can't start table, already in game" !!)
     =.  id.action  now.bowl
     ?~  tokenized.action
-      :_  state
-      ::  TODO build transaction poke to %uqbar
-      :_  ~
+      :_  state  :_  ~
       :*  %pass  /start-table-poke/(scot %da id.action)
           %agent  [ship.u.host.state %pokur-host]
           %poke  %pokur-player-action  !>(action)

@@ -30,14 +30,14 @@
 ::
 +$  game-type
   $%  [%cash cash-spec]
-      [%tournament tournament-spec]
+      [%sng sng-spec]
   ==
 +$  cash-spec
   $:  starting-stack=@ud
       small-blind=@ud
       big-blind=@ud
   ==
-+$  tournament-spec
++$  sng-spec
   $:  starting-stack=@ud
       round-duration=@dr
       blinds-schedule=(list [small=@ud big=@ud])

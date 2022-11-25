@@ -103,7 +103,7 @@
         ['small_blind' s+(scot %ud small-blind.g)]
         ['big_blind' s+(scot %ud big-blind.g)]
     ==
-  :~  ['type' s+'tournament']
+  :~  ['type' s+'sng']
       ['starting_stack' s+(scot %ud starting-stack.g)]
       ['round_duration' s+(scot %dr round-duration.g)]
       ['blinds_schedule' (enjs-blinds-schedule blinds-schedule.g)]
