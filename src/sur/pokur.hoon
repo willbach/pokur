@@ -82,7 +82,7 @@
       spectators-allowed=?
       spectators=(set ship)
       hands-played=@ud
-      update-message=[@t winning-hand=pokur-deck]  ::  XX
+      update-message=@t
   ==
 ::
 +$  table

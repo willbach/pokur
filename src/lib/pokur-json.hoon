@@ -31,7 +31,7 @@
       ['spectators_allowed' b+spectators-allowed.t]
       ['spectators' a+(turn ~(tap in spectators.t) ship)]
       ['hands_played' s+(scot %ud hands-played.t)]
-      ['update_message' (enjs-update-message update-message.t)]
+      ['update_message' s+update-message.t]
   ==
 ::
 ++  enjs-table
@@ -129,14 +129,6 @@
       ['bond_id' s+(scot %ux bond-id)]
   ==
 ::
-++  enjs-update-message
-  |=  [tex=@t winning-hand=pokur-deck]
-  ^-  json
-  %-  pairs
-  :~  ['text' s+tex]
-      ['winning_hand' (enjs-cards winning-hand)]
-  ==
-
 ++  enjs-host-info
   |=  h=host-info
   ^-  json

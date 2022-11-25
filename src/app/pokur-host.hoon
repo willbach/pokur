@@ -141,7 +141,7 @@
     :: reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
     =.  update-message.game
-      [(crip "{<whose-turn.game>} timed out.") ~]
+      (crip "{<whose-turn.game>} timed out.")
     :_  this(games.state (~(put by games.state) game-id u.host-game))
     :_  ~
     :*  %pass  /self-poke-wire
@@ -299,7 +299,7 @@
           spectators-allowed.u.table
           spectators=~
           hands-played=0
-          [(crip "Pokur game started, hosted by {<our.bowl>}") ~]
+          (crip "Pokur game started, hosted by {<our.bowl>}")
       ==
     =/  =host-game-state
       %-  initialize-new-hand
