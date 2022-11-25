@@ -51,7 +51,6 @@
 +$  player-info
   [stack=@ud committed=@ud acted=? folded=? left=?]
 ::
-::
 ::  the data a pokur-host holds for a given table
 ::
 +$  host-game-state
@@ -88,13 +87,13 @@
 ::
 +$  table
   $:  id=@da
+      =host-info
+      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
       max-players=@ud
       =game-type
-      tokenized=(unit [metadata=@ux amount=@ud])
-      bond-id=(unit @ux)
       public=?
       spectators-allowed=?
       ::  between 10 and 999 seconds, enforced by frontend parsing
@@ -103,45 +102,40 @@
   ==
 ::
 +$  host-info
-  $:  escrow-contract=[id=@ux town=@ux]
-      uqbar-address=@ux
-  ==
+  [=ship address=@ux contract=[id=@ux town=@ux]]
 ::
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
   $%  [%game =game my-hand-rank=@t]
-      [%table =table]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%lobby tables=(list table)]
+      [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
   ==
-+$  host-update  ::  from host to player
++$  host-update  ::  from host to player app
   $%  [%game =game]
-      [%table =table]
-      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%lobby tables=(list table)]
+      ::  [%game-over game-id=@da]
+      [%lobby tables=(map @da table)]
   ==
 ::
-+$  player-action  ::  to host
-  $%  [%join-host host=ship]
-      [%leave-host ~]
-      $:  %new-table
++$  player-action
+  $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
+          host=ship
+          tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
           min-players=@ud
           max-players=@ud
           =game-type
-          tokenized=(unit [metadata=@ux amount=@ud])
           public=?  ::  private means need the link to join
           spectators-allowed=?
           turn-time-limit=@dr
       ==
       [%join-table id=@da]
       [%leave-table id=@da]
-      [%start-game id=@da]  ::  creator of table must perform
+      [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
       ::  choose which wallet address we wish to use to pay escrow
@@ -164,7 +158,8 @@
       [%bet game-id=@da amount=@ud]
   ==
 ::
-+$  host-action  ::  host sets for itself, and pokes players with
-  $%  [%escrow-info host-info]
++$  host-action
+  $%  [%host-info host-info]
+      [%start-game-with-host =table]  ::  from player to host
   ==
 --

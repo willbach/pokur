@@ -39,13 +39,14 @@
   ^-  json
   %-  pairs
   :~  ['id' s+(scot %da id.l)]
+      ['host_info' (enjs-host-info host-info.l)]
+      ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
       ['leader' s+(scot %p leader.l)]
       ['players' a+(turn ~(tap in players.l) ship)]
       ['min_players' s+(scot %ud min-players.l)]
       ['max_players' s+(scot %ud max-players.l)]
       ['game_type' (enjs-game-type game-type.l)]
-      ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
-      ['bond_id' ?~(bond-id.l ~ s+(scot %ux u.bond-id.l))]
+      ['public' b+public.l]
       ['spectators_allowed' b+spectators-allowed.l]
       ['turn_time_limit' s+(scot %dr turn-time-limit.l)]
   ==
@@ -120,11 +121,12 @@
   [%a ~[s+(scot %ud s) s+(scot %ud b)]]
 ::
 ++  enjs-tokenized
-  |=  [metadata=@ux amount=@ud]
+  |=  [metadata=@ux amount=@ud bond-id=@ux]
   ^-  json
   %-  pairs
   :~  ['metadata' s+(scot %ux metadata)]
       ['amount' s+(scot %ud amount)]
+      ['bond_id' s+(scot %ux bond-id)]
   ==
 ::
 ++  enjs-update-message
@@ -135,10 +137,13 @@
       ['winning_hand' (enjs-cards winning-hand)]
   ==
 
-++  enjs-host-ship
-  |=  host-ship=@p
+++  enjs-host-info
+  |=  h=host-info
   ^-  json
   %-  pairs
-  :~  ['host' (ship host-ship)]
+  :~  ['ship' (ship ship.h)]
+      ['address' s+(scot %ux address.h)]
+      ['contract_id' s+(scot %ux id.contract.h)]
+      ['contract_town' s+(scot %ux town.contract.h)]
   ==
 --
