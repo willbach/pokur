@@ -39,12 +39,17 @@
     ::  adjust asset, add caller as depositor
     =.  amount.escrow-asset.noun.bond
       (add amount.escrow-asset.noun.bond amount.act)
-    ::  assert caller is not yet a depositor
-    ?<  (~(has py depositors.noun.bond) id.caller.context)
     =.  depositors.noun.bond
+      ?:  (~(has py depositors.noun.bond) id.caller.context)
+        ::  if already a depositor, add amount to previous
+        %+  ~(jab py depositors.noun.bond)
+          id.caller.context
+        |=  [=ship amount=@ud account=id]
+        [ship (add amount amount.act) account]
+      ::  otherwise add new depositor
       %+  ~(put py depositors.noun.bond)
         id.caller.context
-      [amount.act account.act]
+      [ship.act amount.act account.act]
     ::  return result bond + make %take call to token
     :_  (result [%&^bond ~] ~ ~ ~)
     :~  :+  contract.escrow-asset.noun.bond
@@ -61,27 +66,34 @@
     =/  bond
       =+  (need (scry-state bond-id.act))
       (husk bond:lib - `this.context `this.context)
-    ::  assert awarded tokens add up to total amount in escrow
-    ?>  .=  amount.escrow-asset.noun.bond
-        =+  total=0
-        |-
-        ?~  to.act  total
-        $(to.act t.to.act, total (add total amount.i.to.act))
-    ::  zero out and destroy the bond item
-    =:  amount.escrow-asset.noun.bond  0
-        depositors.noun.bond           ~
-    ==
-    :_  (result ~ ~ [%&^bond ~] ~)
-    %+  turn  to.act
-    |=  [=address amount=@ud account=(unit id)]
-    ^-  call
-    :+  contract.escrow-asset.noun.bond
-      town.context
-    :*  %give
-        address
-        amount
-        (need account.escrow-asset.noun.bond)
-        account
+    ::  give asset
+    :-  :_  ~
+        :+  contract.escrow-asset.noun.bond
+          town.context
+        :*  %give
+            to.act
+            amount.act
+            (need account.escrow-asset.noun.bond)
+            account.act
+        ==
+    ::  if award adds up to total amount in escrow, destroy bond here
+    ?:  =(amount.escrow-asset.noun.bond amount.act)
+      ::  zero out and destroy the bond item
+      =:  amount.escrow-asset.noun.bond  0
+          depositors.noun.bond           ~
+      ==
+      (result ~ ~ [%&^bond ~] ~)
+    ::  if award is partial, bond is modified and not destroyed
+    =:  amount.escrow-asset.noun.bond
+      (sub amount.escrow-asset.noun.bond amount.act)
+    ::  if awarded to a depositor, subtract their claim
+        depositors.noun.bond
+      ?.  (~(has py depositors.noun.bond) id.caller.context)
+        depositors.noun.bond
+      %+  ~(jab py depositors.noun.bond)
+        id.caller.context
+      |=  [=ship amount=@ud account=id]
+      [ship (sub amount amount.act) account]
     ==
   ::
       %release

@@ -133,16 +133,13 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da]
-      [%leave-table id=@da]
+      [%join-table id=@da]  ::  pokes to the HOST, must first pay escrow!
+      [%leave-table id=@da]  ::  the host notifies lobby leader
       [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
       ::  choose which wallet address we wish to use to pay escrow
       [%set-our-address address=@ux]
-      ::  if game is tokenized, generate a transaction
-      ::  that sends amount of specified token needed to play game
-      [%add-escrow id=@da]
   ==
 ::
 +$  message-action
