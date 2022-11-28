@@ -2,6 +2,8 @@
 /+  smart=zig-sys-smart
 |%
 +$  signature   [p=@ux q=ship r=life]
+::  for app-generated transactions to be notified of their txn results
++$  origin  (unit (pair term wire))
 ::
 ::  book: the primary map of assets that we track
 ::  supports fungibles and NFTs
@@ -19,16 +21,23 @@
       [%nft town=@ux contract=id:smart nft-metadata]
   ==
 ::
+::  keyed by message hash
+::
++$  signed-message-store
+  (map @ux [=typed-message:smart =sig:smart])
+::
 +$  unfinished-transaction-store
-  (list [hash=@ux tx=transaction:smart action=supported-actions])
+  (map @ux [=origin =transaction:smart action=supported-actions])
+::
+::  inner maps keyed by transaction hash
 ::
 +$  transaction-store
   %+  map  address:smart
-  (map @ux [=transaction:smart action=supported-actions =output:eng])
+  (map @ux [=origin =transaction:smart action=supported-actions =output:eng])
 ::
 +$  pending-store
   %+  map  address:smart
-  (map @ux [=transaction:smart action=supported-actions])
+  (map @ux [=origin =transaction:smart action=supported-actions])
 ::
 +$  transaction-status-code
   $?  %100  ::  100: transaction pending in wallet
@@ -58,12 +67,14 @@
       [%metadata asset-metadata]
       [%account =caller:smart]  ::  tuple of [address nonce zigs-account]
       [%addresses saved=(set address:smart)]
-      [%signatures sigs=(list [=typed-message:smart =sig:smart])]
+      [%signed-message =typed-message:smart =sig:smart]
       $:  %unfinished-transaction
+          =origin
           =transaction:smart
           action=supported-actions
       ==
       $:  %finished-transaction
+          =origin
           =transaction:smart
           action=supported-actions
           =output:eng
@@ -92,7 +103,7 @@
       [%derive-new-address hdpath=tape nick=@t]
       [%delete-address address=@ux]
       [%edit-nickname address=@ux nick=@t]
-      [%sign-typed-message from=address:smart =typed-message:smart]
+      [%sign-typed-message from=address:smart domain=id:smart type=json msg=*]
       [%add-tracked-address address=@ux nick=@t]
       ::  testing and internal
       [%set-nonce address=@ux town=@ux new=@ud]
@@ -120,6 +131,7 @@
       ==
       ::
       $:  %transaction
+          =origin
           from=address:smart
           contract=id:smart
           town=@ux

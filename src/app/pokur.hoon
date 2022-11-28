@@ -14,6 +14,8 @@
       game-host=(unit ship)
       messages=(list [=ship msg=@t])
       muted-players=(set ship)
+      ::  used for delaying tokenized actions until we get txn confirmation
+      pending-poke=(unit player-action)
   ==
 --
 %-  agent:dbug
@@ -27,7 +29,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~])
+  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
   :_  ~
   :*  %pass  /lobby-updates
       %agent  [fixed-lobby-source %pokur-host]
@@ -62,6 +64,8 @@
       (handle-game-action:hc !<(game-action vase))
         %pokur-host-action
       (handle-host-action:hc !<(host-action vase))
+        %wallet-update
+      (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
 ++  on-watch
@@ -211,12 +215,14 @@
           (add height 14.400)
         =/  asset-metadata=@ux
           (slav %ux i.t.wire)
+        ::  we'll get a pokeback from %wallet when this transaction goes through
         :_  this  :_  ~
         :*  %pass  /pokur-wallet-poke
             %agent  [our.bowl %uqbar]
             %poke  %wallet-poke
             !>
             :*  %transaction
+                origin=`[%pokur /new-bond-confirmation]
                 from=u.our-address.state
                 contract=id.contract.u.host-info
                 town=town.contract.u.host-info
@@ -270,6 +276,7 @@
     ?>  =(src.bowl ship.host-info.action)
     `state(known-hosts (~(put by known-hosts.state) src.bowl +.action))
   ==
+::
 ++  handle-player-action
   |=  action=player-action
   ^-  (quip card _state)
@@ -298,7 +305,8 @@
     =/  ta-metadata  (scot %ux metadata.u.tokenized.action)
     =/  ta-host      (scot %p host.action)
     =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %get-eth-block !>(~)]
-    :_  state
+    ::  set pending poke
+    :_  state(pending-poke `action)
     :~  :*  %pass  /thread/[ta-metadata]/[ta-host]
             %agent  [our.bowl %spider]
             %watch  /thread-result/[tid]
@@ -317,10 +325,11 @@
     ::  if table is tokenized, generate escrow transaction, otherwise just join
     ::  host will add us to queue but not enter us to table if tokenized, until
     ::  transaction is received
-    :_  state(our-table `id.action)
     ?~  tokenized.table
+      :_  state(our-table `id.action)
       (poke-pass-through ship.host-info.table action)^~
-    ::  escrow work
+    ::  escrow work -- set pending join poke
+    :_  state(our-table `id.action, pending-poke `action)
     ?~  our-address.state
       ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
     ::  scry indexer for token metadata so we can find our token account
@@ -340,12 +349,14 @@
           town.contract.host-info.table
           salt.u.found
       ==
+    =/  host-ta  (scot %p ship.host-info.table)
     :~  (poke-pass-through ship.host-info.table action)
         :*  %pass  /pokur-wallet-poke
             %agent  [our.bowl %uqbar]
             %poke  %wallet-poke
             !>
             :*  %transaction
+                origin=`[%pokur /deposit-confirmation/[host-ta]]
                 from=u.our-address.state
                 contract=id.contract.host-info.table
                 town=town.contract.host-info.table
@@ -461,6 +472,45 @@
     %check  !>(`game-action`[%check id.u.game.state ~])
     %fold   !>(`game-action`[%fold id.u.game.state ~])
     %bet    !>(`game-action`[%bet id.u.game.state amount.action])
+  ==
+::
+++  handle-wallet-update
+  |=  update=wallet-update:wallet
+  ^-  (quip card _state)
+  ?+    -.update  !!
+  ::  only ever expecting a %finished-transaction notification
+      %finished-transaction
+    ::  wallet announcing that either our %new-bond has been started,
+    ::  meaning we've successfully created a tokenized table, or that
+    ::  our %deposit has gone through, meaning we've joined a tokenized table
+    ?>  ?=(^ origin.update)
+    ?~  pending-poke.state  !!
+    ?+    q.u.origin.update  !!
+        [%new-bond-confirmation ~]
+      ::  send bond info to host with a %new-table poke, finally
+      ?>  ?=(%new-table -.u.pending-poke.state)
+      ?~  tokenized.u.pending-poke.state  !!
+      ::  make sure txn succeeded
+      ?>  =(%200 status.transaction.update)
+      ::  modify bond-id with txn output
+      ::  should be in events.output.update
+      =/  event=contract-event:eng:wallet
+        (head events.output.update)
+      ?>  =(%new-bond label.event)
+      =.  bond-id.u.tokenized.u.pending-poke.state
+        ((se:dejs:format %ux) json.event)
+      :_  state(pending-poke ~)
+      (poke-pass-through host.u.pending-poke.state u.pending-poke.state)^~
+    ::
+        [%deposit-confirmation @ ~]
+      ?>  ?=(%join-table -.u.pending-poke.state)
+      ::  request to %join-table on host
+      ::  don't need any data other than the fact that the txn succeeded
+      ?>  =(%200 status.transaction.update)
+      =/  host=ship  (slav %p i.t.q.u.origin.update)
+      :_  state(pending-poke ~)
+      (poke-pass-through host u.pending-poke.state)^~
+    ==
   ==
 ::
 ++  poke-pass-through

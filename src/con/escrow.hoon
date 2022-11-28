@@ -18,9 +18,8 @@
       i=(hash-data source.p.meta this.context town.context salt.p.meta)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
-    =-  `(result ~ [- ~] ~ ~)
-    :*  %&
-        (hash-data this.context this.context town.context bond-salt)
+    =-  `(result ~ [%&^- ~] ~ [[%new-bond s+(scot %ux id.-)]]^~)
+    :*  id=(hash-data this.context this.context town.context bond-salt)
         this.context
         this.context
         town.context
@@ -95,6 +94,7 @@
       |=  [=ship amount=@ud account=id]
       [ship (sub amount amount.act) account]
     ==
+    (result [%&^bond ~] ~ ~ ~)
   ::
       %release
     =/  bond
@@ -111,7 +111,7 @@
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
-    |=  [=address amount=@ud account=id]
+    |=  [=address =ship amount=@ud account=id]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context
