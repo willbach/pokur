@@ -6,8 +6,8 @@
 +$  state-0
   $:  %0
       our-info=host-info
-      tables=(map @da table)
-      games=(map @da host-game-state)
+      tables=(map @da table)  ::  host *may* hold some tables, not yet gossiping with other hosts
+      games=(map @da host-game-state)  ::  host holds all active games they are running
   ==
 --
 %-  agent:dbug
@@ -50,13 +50,13 @@
   ^-  (quip card _this)
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
-    ::  new player using us as host; poke them with our escrow info
+    ::  new player using us as lobby; poke them with our escrow info
     ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
     :_  this
     :~  :^  %give  %fact  ~
         :-  %pokur-host-update
         !>(`host-update`[%lobby (public-tables tables.state)])
-      ::
+    ::
         :*  %pass  /share-escrow-poke
             %agent  [src.bowl %pokur]
             %poke  %pokur-host-action
@@ -166,9 +166,21 @@
       %host-info
     `state(our-info +.action)
   ::
-      %start-game-with-host
-    ::  used when we are not hosting lobbies, only game
-    !!
+      %share-table
+    ::  get table from other host, add to our lobby
+    ?>  =(src.bowl ship.host-info.table.action)
+    =.  tables.state
+      (~(put by tables.state) id.table.action table.action)
+    [(lobby-update-card tables.state)^~ state]
+  ::
+      %closed-table
+    ::  remove table by other host from our lobby
+    ?~  table=(~(get by tables.state) id.action)
+      `state
+    ?>  =(src.bowl ship.host-info.u.table)
+    =.  tables.state
+      (~(del by tables.state) id.u.table)
+    [(lobby-update-card tables.state)^~ state]
   ==
 ::
 ++  handle-game-action
@@ -227,21 +239,24 @@
     ?<  (~(has by tables.state) id.action)
     ?>  (lte turn-time-limit.action ~s999)
     ?>  (gte turn-time-limit.action ~s10)
-    =-  [(lobby-update-card -)^~ state(tables -)]
-    %+  ~(put by tables.state)  id.action
-    ^-  table
-    :*  id.action
-        ::  insert our host info
-        our-info.state
-        tokenized.action
-        src.bowl
-        (silt ~[src.bowl])
-        min-players.action
-        max-players.action
-        game-type.action
-        public.action
-        spectators-allowed.action
-        turn-time-limit.action
+    =/  =table
+      :*  id.action
+          ::  insert our host info
+          our-info.state
+          tokenized.action
+          src.bowl
+          (silt ~[src.bowl])
+          min-players.action
+          max-players.action
+          game-type.action
+          public.action
+          spectators-allowed.action
+          turn-time-limit.action
+      ==
+    =+  (~(put by tables.state) id.action table)
+    :_  state(tables -)
+    :~  (lobby-update-card -)
+        (table-share-card table)
     ==
   ::
       %join-table
@@ -249,9 +264,12 @@
     ?~  table=(~(get by tables.state) id.action)  !!
     ::  table must not be full
     ?<  =(max-players.u.table ~(wyt in players.u.table))
-    =-  [(lobby-update-card -)^~ state(tables -)]
-    %+  ~(put by tables.state)  id.action
-    u.table(players (~(put in players.u.table) src.bowl))
+    =.  players.u.table  (~(put in players.u.table) src.bowl)
+    =+  (~(put by tables.state) id.action u.table)
+    :_  state(tables -)
+    :~  (lobby-update-card -)
+        (table-share-card u.table)
+    ==
   ::
       %leave-table
     ::  remove player from existing table
@@ -260,12 +278,18 @@
       `state
     =.  players.u.table
       (~(del in players.u.table) src.bowl)
-    ::  if table creator left / all players left, delete table
-    =.  tables.state
-      ?:  =(src.bowl leader.u.table)
-        (~(del by tables.state) id.action u.table)
-      (~(put by tables.state) id.action u.table)
-    [(lobby-update-card tables.state)^~ state]
+    ::  if all players left, close table
+    ?:  =(0 ~(wyt in players.u.table))
+      =+  (~(del by tables.state) id.action u.table)
+      :_  state(tables -)
+      :~  (lobby-update-card -)
+          (closed-table-card id.action)
+      ==
+    =+  (~(put by tables.state) id.action u.table)
+    :_  state(tables -)
+    :~  (lobby-update-card -)
+        (table-share-card u.table)
+    ==
   ::
       %start-game
     ::  table creator starts game
@@ -319,7 +343,9 @@
               turn-timer.host-game-state
           ==
           (lobby-update-card tables.state)
+          (closed-table-card id.u.table)
       ==
+    ::  initialize first round timer, if tournament style game
     ?.  ?=(%sng -.game-type.u.table)  ~
     :~  :*  %pass  /timer/(scot %da id.game)/round-timer
             %arvo  %b  %wait
@@ -341,15 +367,16 @@
     state(games (~(put by games.state) id.action u.host-game))
   ::
       %kick-player
-    ?~  table=(~(get by tables.state) id.action)
-      !!
-    ::  src must be table leader
-    ?>  =(src.bowl leader.u.table)
-    ::  table must be private
-    ?>  =(%.n public.u.table)
-    =-  [(lobby-update-card -)^~ state(tables -)]
-    %+  ~(put by tables.state)  id.action
-    u.table(players (~(del in players.u.table) who.action))
+    !!
+    ::  ?~  table=(~(get by tables.state) id.action)
+    ::    !!
+    ::  ::  src must be table leader
+    ::  ?>  =(src.bowl leader.u.table)
+    ::  ::  table must be private
+    ::  ?>  =(%.n public.u.table)
+    ::  =-  [(lobby-update-card -)^~ state(tables -)]
+    ::  %+  ~(put by tables.state)  id.action
+    ::  u.table(players (~(del in players.u.table) who.action))
   ==
 ::
 ::  +send-game-updates: make update cards for players and spectators
@@ -388,6 +415,26 @@
   :*  %pass  /timer/(scot %da id.game.host-game)
       %arvo  %b  %rest
       turn-timer.host-game
+  ==
+::
+++  table-share-card
+  |=  =table
+  ^-  card
+  ::  TODO put gossip here, for now just share with central ship
+  :*  %pass   /table-share
+      %agent  [fixed-lobby-source %pokur-host]
+      %poke   %pokur-host-action
+      !>(`host-action`[%share-table table])
+  ==
+::
+++  closed-table-card
+  |=  id=@da
+  ^-  card
+  ::  TODO put gossip here, for now just share with central ship
+  :*  %pass   /table-share
+      %agent  [fixed-lobby-source %pokur-host]
+      %poke   %pokur-host-action
+      !>(`host-action`[%closed-table id])
   ==
 ::
 ++  lobby-update-card

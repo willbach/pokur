@@ -3,8 +3,6 @@
 |%
 +$  card  card:agent:gall
 +$  versioned-state  $%(state-0)
-::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
-++  fixed-lobby-source  ~zod
 +$  state-0
   $:  %0
       known-hosts=(map ship host-info)
@@ -269,7 +267,7 @@
   ?+    -.action  !!
       %host-info
     ::  receive host-info from host
-    ?>  =(src.bowl ship.+.action)
+    ?>  =(src.bowl ship.host-info.action)
     `state(known-hosts (~(put by known-hosts.state) src.bowl +.action))
   ==
 ++  handle-player-action

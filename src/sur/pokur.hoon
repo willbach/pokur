@@ -1,4 +1,6 @@
 |%
+::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
+++  fixed-lobby-source  ~zod
 ::
 ::  basic poker concepts
 ::
@@ -134,7 +136,7 @@
           turn-time-limit=@dr
       ==
       [%join-table id=@da]  ::  pokes to the HOST, must first pay escrow!
-      [%leave-table id=@da]  ::  the host notifies lobby leader
+      [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
@@ -156,7 +158,8 @@
   ==
 ::
 +$  host-action
-  $%  [%host-info host-info]
-      [%start-game-with-host =table]  ::  from player to host
+  $%  [%host-info =host-info]
+      [%share-table =table]  ::  for lobby gossip
+      [%closed-table id=@da]
   ==
 --
