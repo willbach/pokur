@@ -253,6 +253,7 @@
           spectators-allowed.action
           turn-time-limit.action
       ==
+    ::  TODO HERE if game is tokenized, find bond on chain and start tracking
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
     :~  (lobby-update-card -)
@@ -264,6 +265,8 @@
     ?~  table=(~(get by tables.state) id.action)  !!
     ::  table must not be full
     ?<  =(max-players.u.table ~(wyt in players.u.table))
+    ::  TODO HERE if game is tokenized,
+    ::  check against bond to see if player has paid in
     =.  players.u.table  (~(put in players.u.table) src.bowl)
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)

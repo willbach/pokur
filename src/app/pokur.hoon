@@ -193,7 +193,7 @@
       ==
     ==
   ::
-      [%thread @ @ ~]
+      [%new-table-thread ~]
     ::  receive eth block from thread, generate escrow transaction
     ?+    -.sign  (on-agent:def wire sign)
         %fact
@@ -204,17 +204,25 @@
         %+  slog
           leaf+"%pokur: get-eth-block thread failed: {(trip p.err)}"
         q.err
+      ::
           %thread-done
+        ?~  pending-poke.state  !!
+        ?>  ?=(%new-table -.u.pending-poke.state)
+        ?~  tokenized.u.pending-poke.state  !!
         =/  height=@ud  !<(@ud q.cage.sign)
         ~&  >  "eth-block-height: {<height>}"
-        =/  host=ship  (slav %p i.t.t.wire)
-        ::  [%new-bond custodian=address timelock=@ud asset-metadata=id]
-        ?~  host-info=(~(get by known-hosts.state) host)  !!
+        ?~  host-info=(~(get by known-hosts.state) host.u.pending-poke.state)
+          !!
         ?~  our-address.state  !!
         =/  default-timelock=@ud  ::  roughly 48 hours
           (add height 14.400)
-        =/  asset-metadata=@ux
-          (slav %ux i.t.wire)
+        ::  generate ID of our token account
+        =/  our-account-id=@ux
+          %:  get-token-account-id
+              metadata.u.tokenized.u.pending-poke.state
+              (need our-address.state)
+              town.contract.u.host-info
+          ==
         ::  we'll get a pokeback from %wallet when this transaction goes through
         :_  this  :_  ~
         :*  %pass  /pokur-wallet-poke
@@ -227,10 +235,14 @@
                 contract=id.contract.u.host-info
                 town=town.contract.u.host-info
                 :-  %noun
-                :^    %new-bond
+                :*  %new-bond-with-deposit
                     address.u.host-info
-                  default-timelock
-                asset-metadata
+                    default-timelock
+                    metadata.u.tokenized.u.pending-poke.state
+                    our.bowl
+                    amount.u.tokenized.u.pending-poke.state
+                    our-account-id
+                ==
             ==
         ==
       ==
@@ -302,12 +314,10 @@
     ::  fetch latest ETH block height to produce timelock
     =/  tid          `@ta`(cat 3 'thread_' (scot %uv (sham eny.bowl)))
     =/  ta-now       (scot %da now.bowl)
-    =/  ta-metadata  (scot %ux metadata.u.tokenized.action)
-    =/  ta-host      (scot %p host.action)
     =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %get-eth-block !>(~)]
     ::  set pending poke
     :_  state(pending-poke `action)
-    :~  :*  %pass  /thread/[ta-metadata]/[ta-host]
+    :~  :*  %pass  /new-table-thread
             %agent  [our.bowl %spider]
             %watch  /thread-result/[tid]
         ==
@@ -333,21 +343,11 @@
     ?~  our-address.state
       ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
     ::  scry indexer for token metadata so we can find our token account
-    =/  found=(unit asset-metadata:wallet)
-      .^  (unit asset-metadata:wallet)  %gx
-          (scot %p our.bowl)  %wallet  (scot %da now.bowl)
-          %metadata  (scot %ux metadata.u.tokenized.table)  %noun
-      ==
-    ~|  "%pokur: error: can't find metadata for escrow token"
-    ?~  found  !!
-    ?>  ?=(%token -.u.found)
-    ::  generate ID of our token account
     =/  our-account-id=@ux
-      %:  hash-data:smart
-          contract.u.found
-          u.our-address.state
+      %:  get-token-account-id
+          metadata.u.tokenized.table
+          (need our-address.state)
           town.contract.host-info.table
-          salt.u.found
       ==
     =/  host-ta  (scot %p ship.host-info.table)
     :~  (poke-pass-through ship.host-info.table action)
@@ -520,5 +520,23 @@
   :*  %pass   /table-poke
       %agent  [host %pokur-host]
       %poke   %pokur-player-action  !>(action)
+  ==
+::
+++  get-token-account-id
+  |=  [metadata=@ux our-addr=@ux town=@ux]
+  =/  found=(unit asset-metadata:wallet)
+    .^  (unit asset-metadata:wallet)  %gx
+        (scot %p our.bowl)  %wallet  (scot %da now.bowl)
+        %metadata  (scot %ux metadata)  %noun
+    ==
+  ~|  "%pokur: error: can't find metadata for escrow token"
+  ?~  found  !!
+  ?>  ?=(%token -.u.found)
+  ::  generate ID of our token account
+  %:  hash-data:smart
+      contract.u.found
+      our-addr
+      town
+      salt.u.found
   ==
 --

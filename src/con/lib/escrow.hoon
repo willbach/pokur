@@ -22,6 +22,11 @@
       ::  set appropriate allowance for this contract
       ::  can deposit multiple times
       [%deposit bond-id=id =ship amount=@ud account=id]
+      ::  combo of above two used for %pokur
+      $:  %new-bond-with-deposit
+          custodian=address  timelock=@ud  asset-metadata=id
+          =ship  amount=@ud  account=id
+      ==
       ::  as a custodian, award tokens held in escrow to chosen address
       ::  note that addresses do *not* need to have been depositors
       ::  can award multiple times before timelock is reached
