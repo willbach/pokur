@@ -219,8 +219,9 @@
         =/  our-account-id=@ux
           %:  get-token-account-id
               metadata.u.tokenized.u.pending-poke.state
-              (need our-address.state)
+              u.our-address.state
               town.contract.u.host-info
+              now.bowl
           ==
         ::  we'll get a pokeback from %wallet when this transaction goes through
         :_  this  :_  ~
@@ -347,25 +348,28 @@
           metadata.u.tokenized.table
           (need our-address.state)
           town.contract.host-info.table
+          now.bowl
       ==
     =/  host-ta  (scot %p ship.host-info.table)
-    :~  (poke-pass-through ship.host-info.table action)
-        :*  %pass  /pokur-wallet-poke
-            %agent  [our.bowl %uqbar]
-            %poke  %wallet-poke
-            !>
-            :*  %transaction
-                origin=`[%pokur /deposit-confirmation/[host-ta]]
-                from=u.our-address.state
-                contract=id.contract.host-info.table
-                town=town.contract.host-info.table
-                :-  %noun
-                :^    %deposit
-                    bond-id.u.tokenized.table
-                  amount.u.tokenized.table
+    :_  ~
+    :*  %pass  /pokur-wallet-poke
+        %agent  [our.bowl %uqbar]
+        %poke  %wallet-poke
+        !>
+        :*  %transaction
+            origin=`[%pokur /deposit-confirmation/[host-ta]]
+            from=u.our-address.state
+            contract=id.contract.host-info.table
+            town=town.contract.host-info.table
+            :-  %noun
+            :*  %deposit
+                bond-id.u.tokenized.table
+                our.bowl
+                amount.u.tokenized.table
                 our-account-id
             ==
-    ==  ==
+        ==
+    ==
   ::
       %leave-table
     ?~  our-table.state
@@ -490,6 +494,7 @@
       ?>  ?=(%new-table -.u.pending-poke.state)
       ?~  tokenized.u.pending-poke.state  !!
       ::  make sure txn succeeded
+      ~|  "%pokur: transaction failed!!"
       ?>  =(%200 status.transaction.update)
       ::  modify bond-id with txn output
       ::  should be in events.output.update
@@ -505,6 +510,7 @@
       ?>  ?=(%join-table -.u.pending-poke.state)
       ::  request to %join-table on host
       ::  don't need any data other than the fact that the txn succeeded
+      ~|  "%pokur: transaction failed!!"
       ?>  =(%200 status.transaction.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
       :_  state(pending-poke ~)
@@ -522,20 +528,20 @@
   ==
 ::
 ++  get-token-account-id
-  |=  [metadata=@ux our-addr=@ux town=@ux]
-  =/  found=(unit asset-metadata:wallet)
-    .^  (unit asset-metadata:wallet)  %gx
-        (scot %p our.bowl)  %wallet  (scot %da now.bowl)
-        %metadata  (scot %ux metadata)  %noun
-    ==
+  |=  [metadata=@ux our-addr=@ux town=@ux now=@da]
   ~|  "%pokur: error: can't find metadata for escrow token"
-  ?~  found  !!
-  ?>  ?=(%token -.u.found)
+  =/  found=wallet-update:wallet
+    .^  wallet-update:wallet  %gx
+        /(scot %p our.bowl)/wallet/(scot %da now)/metadata/(scot %ux metadata)/noun
+    ==
+  ?:  ?=(~ found)  !!
+  ?>  ?=(%metadata -.found)
+  ?>  ?=(%token -.+.found)
   ::  generate ID of our token account
   %:  hash-data:smart
-      contract.u.found
+      contract.found
       our-addr
       town
-      salt.u.found
+      salt.found
   ==
 --

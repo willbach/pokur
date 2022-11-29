@@ -35,9 +35,10 @@
     ::  get token metadata
     =/  meta  (need (scry-state asset-metadata.act))
     ?>  ?=(%& -.meta)
+    =/  i=id
+      (hash-data source.p.meta this.context town.context salt.p.meta)
     =/  our-account=(unit id)
-      =-  ?~((scry-state i) ~ `i)
-      i=(hash-data source.p.meta this.context town.context salt.p.meta)
+      ?~((scry-state i) ~ `i)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
     :-  :_  ~
@@ -59,7 +60,7 @@
         %bond
         :^    custodian.act
             timelock.act
-          [source.p.meta asset-metadata.act amount.act our-account]
+          [source.p.meta asset-metadata.act amount.act i]
         (make-pmap ~[[id.caller.context ship.act amount.act account.act]])
     ==
   ::

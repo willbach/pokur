@@ -21,7 +21,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 [our.bowl 0x0 [0x0 0x0]] ~ ~])
+  `this(state [%0 [our.bowl 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 [0xabcd.abcd 0x0]] ~ ~])
 ++  on-save
   ^-  vase
   !>(state)
