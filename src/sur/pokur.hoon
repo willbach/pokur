@@ -118,6 +118,7 @@
   ==
 +$  host-update  ::  from host to player app
   $%  [%game =game]
+      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       ::  [%game-over game-id=@da]
       [%lobby tables=(map @da table)]

@@ -286,6 +286,7 @@
       =+  (~(del by tables.state) id.action u.table)
       :_  state(tables -)
       :~  (lobby-update-card -)
+          (table-closed-card id.action)
           (closed-table-card id.action)
       ==
     =+  (~(put by tables.state) id.action u.table)
@@ -336,17 +337,15 @@
           turn-timer=(add now.bowl turn-time-limit.u.table)
           game
       ==
-    :_  %=  state
-          tables  (~(del by tables.state) id.action)
-          games   (~(put by games.state) id.action host-game-state)
-        ==
+    =.  tables.state  (~(del by tables.state) id.action)
+    :_  state(games (~(put by games.state) id.action host-game-state))
     %+  welp
       :~  :*  %pass  /timer/(scot %da id.game)
               %arvo  %b  %wait
               turn-timer.host-game-state
           ==
+          (game-starting-card id.u.table)
           (lobby-update-card tables.state)
-          (closed-table-card id.u.table)
       ==
     ::  initialize first round timer, if tournament style game
     ?.  ?=(%sng -.game-type.u.table)  ~
@@ -439,6 +438,20 @@
       %poke   %pokur-host-action
       !>(`host-action`[%closed-table id])
   ==
+::
+++  game-starting-card
+  |=  id=@da
+  ^-  card
+  :^  %give  %fact  ~[/lobby-updates]
+  :-  %pokur-host-update
+  !>(`host-update`[%game-starting id])
+::
+++  table-closed-card
+  |=  id=@da
+  ^-  card
+  :^  %give  %fact  ~[/lobby-updates]
+  :-  %pokur-host-update
+  !>(`host-update`[%table-closed id])
 ::
 ++  lobby-update-card
   |=  m=(map @da table)

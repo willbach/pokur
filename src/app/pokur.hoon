@@ -163,29 +163,28 @@
       ?+    -.upd  (on-agent:def wire sign)
           %lobby
         ~&  >>  "tables available: {<tables.upd>}"
-        ?.  ?&  ?=(^ our-table.state)
-                !(~(has by tables.upd) u.our-table.state)
-            ==
-          :_  this(lobby.state tables.upd)  :_  ~
-          :^  %give  %fact  ~[/lobby-updates]
-          [%pokur-update !>(`update`upd)]
-        ::  if we're in a table and it's no longer in lobby,
-        ::  it closed
-        :_  this(our-table.state ~, lobby.state tables.upd)
-        :~  :^  %give  %fact  ~[/lobby-updates]
-            [%pokur-update !>(`update`upd)]
-            :^  %give  %fact  ~[/lobby-updates]
-            [%pokur-update !>(`update`[%table-closed u.our-table.state])]
-        ==
+        :_  this(lobby.state tables.upd)  :_  ~
+        :^  %give  %fact  ~[/lobby-updates]
+        [%pokur-update !>(`update`upd)]
+      ::
+          %table-closed
+        ::  if our table closed, clear
+        ?~  our-table.state  `this
+        ?.  =(u.our-table.state table-id.upd)  `this
+        :_  this(our-table.state ~)
+        :_  ~
+        :^  %give  %fact  ~[/lobby-updates]
+        [%pokur-update !>(`update`[%table-closed table-id.upd])]
       ::
           %game-starting
         ::  check if it's our game, if so, sub to path and notify FE
         ?~  our-table.state  `this
         ?.  =(game-id.upd u.our-table.state)  `this
         =/  =table  (~(got by lobby.state) u.our-table.state)
-        :_  this
+        :_  this(our-table.state ~, game-host.state `ship.host-info.table)
         :~  :^  %give  %fact  ~[/game-updates]
             [%pokur-update !>(`update`upd)]
+        ::
             :*  %pass  /game-updates/(scot %da id.table)/(scot %p our.bowl)
                 %agent  [ship.host-info.table %pokur-host]
                 %watch  /game-updates/(scot %da id.table)/(scot %p our.bowl)
@@ -381,7 +380,7 @@
     ?^  game.state
       ~|("%pokur: error: can't start game, already in one" !!)
     =/  =table  (~(got by lobby.state) u.our-table.state)
-    :_  state(our-table ~, messages ~)
+    :_  state(messages ~)
     (poke-pass-through ship.host-info.table action)^~
   ::
       %leave-game

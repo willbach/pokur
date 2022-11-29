@@ -3,28 +3,27 @@ Urbit Texas Hold'em app
 
 **under construction**
 
+Fake monies game:
+
 On ship ~zod:
 ```
-:pokur-host &pokur-host-action [%escrow-info [0x0 0x0] 0xcafe.babe]
-:pokur &pokur-player-action [%join-host ~zod]
+:pokur &pokur-player-action [%new-table *@da ~zod ~ 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n] %.y %.y ~m10]
 ```
+
+(look at "lobbies available" print to find table id -- this prints twice, is ok)
 
 On ship ~bus:
 ```
-:pokur &pokur-player-action [%join-host ~zod]
-:pokur &pokur-player-action [%new-table *@da 2 8 [%cash 1.000 1 2] ~ %.y %.y ~m10]
+:pokur &pokur-player-action [%join-table <id>]
 ```
-
-[look at print to find table-id]
 
 On ~zod:
 ```
-:pokur &pokur-player-action [%join-table game-id]
+:pokur &pokur-player-action [%start-game <id>]
 ```
 
 On ~bus:
 ```
-:pokur &pokur-player-action [%start-game game-id]
 :pokur|bet 1  ::  call big blind
 ```
 

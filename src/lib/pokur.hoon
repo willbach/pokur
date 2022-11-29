@@ -243,9 +243,16 @@
     ::
         update-message.game.state
       ?:  =(1 (lent winners-in-pot))
-        :((cury cat 3) (scot %p -.winners-in-pot) ' wins pot of ' (scot %da amount.pot))
+        ;:  (cury cat 3)
+            (scot %p -.winners-in-pot)
+            ' wins pot of '
+            (scot %ud amount.pot)
+        ==
       =+  (roll (turn winners-in-pot |=(a=@ (scot %p a))) (cury cat 3))
-      :((cury cat 3) - ' split pot of ' (scot %da amount.pot))
+      ;:  (cury cat 3)
+          -  ' split pot of '
+          (scot %ud amount.pot)
+      ==
         players.game.state
       ?:  =(1 (lent winners-in-pot))
         ::  award entire pot to single winner
