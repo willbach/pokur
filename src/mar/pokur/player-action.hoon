@@ -25,10 +25,11 @@
     ++  parse-table
       %-  ot
       :~  [%id (se %da)]
+          [%host (se %p)]
+          [%tokenized parse-tokenized]
           [%min-players ni]
           [%max-players ni]
           [%game-type parse-game-type]
-          [%tokenized ul]  ::  TODO softly
           [%public bo]
           [%spectators-allowed bo]
           [%turn-time-limit (se %dr)]
@@ -51,6 +52,14 @@
           [%blinds-schedule (ar (ot ~[[%small ni] [%big ni]]))]
           [%current-round ni]
           [%round-is-over bo]
+      ==
+    ++  parse-tokenized
+      |=  jon=^json
+      ?~  jon  ~
+      %-  ot
+      :~  [%metadata (se %ux)]
+          [%amount (se %ud)]
+          [%bond-id (se %ux)]
       ==
     --
   --

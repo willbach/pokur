@@ -99,6 +99,8 @@
     =/  bond
       =+  (need (scry-state bond-id.act))
       (husk bond:lib - `this.context `this.context)
+    ::  caller must be custodian
+    ?>  =(custodian.noun.bond id.caller.context)
     ::  give asset
     :-  :_  ~
         :+  contract.escrow-asset.noun.bond
@@ -128,6 +130,30 @@
       [address amount account]
     ==
     (result [%&^bond ~] ~ ~ ~)
+  ::
+      %refund
+    =/  bond
+      =+  (need (scry-state bond-id.act))
+      (husk bond:lib - `this.context `this.context)
+    ::  caller must be custodian
+    ?>  =(custodian.noun.bond id.caller.context)
+    ::  all tokens returned to depositors
+    ::  zero out and destroy the bond item
+    =:  amount.escrow-asset.noun.bond  0
+        depositors.noun.bond           ~
+    ==
+    :_  (result ~ ~ [%&^bond ~] ~)
+    %+  turn  ~(tap py depositors.noun.bond)
+    |=  [=ship =address amount=@ud account=id]
+    ^-  call
+    :+  contract.escrow-asset.noun.bond
+      town.context
+    :*  %give
+        address
+        amount
+        (need account.escrow-asset.noun.bond)
+        `account
+    ==
   ::
       %release
     =/  bond

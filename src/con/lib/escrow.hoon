@@ -31,6 +31,8 @@
       ::  note that addresses do *not* need to have been depositors
       ::  can award multiple times before timelock is reached
       [%award bond-id=id to=address amount=@ud account=(unit id)]
+      ::  as a custodian, nullify the bond before its timelock
+      [%refund bond-id=id]
       ::  anyone can submit -- returns all funds to depositors
       ::  if the bond's timelock has passed and not all tokens
       ::  have been awarded.

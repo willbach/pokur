@@ -290,12 +290,29 @@
     =.  players.u.table
       (~(del in players.u.table) src.bowl)
     ::  if all players left, close table
+    ::  if table was tokenized, refund all depositors
     ?:  =(0 ~(wyt in players.u.table))
       =+  (~(del by tables.state) id.action u.table)
       :_  state(tables -)
-      :~  (lobby-update-card -)
+      :^    (lobby-update-card -)
           (table-closed-card id.action)
-          (closed-table-card id.action)
+        (closed-table-card id.action)
+      ?~  tokenized.u.table  ~
+      :_  ~
+      :*  %pass  /pokur-wallet-poke
+          %agent  [our.bowl %uqbar]
+          %poke  %wallet-poke
+          !>
+          :*  %transaction
+              origin=~
+              from=address.our-info.state
+              contract=id.contract.host-info.u.table
+              town=town.contract.host-info.u.table
+              :-  %noun
+              :*  %refund
+                  bond-id.u.tokenized.u.table
+              ==
+          ==
       ==
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
