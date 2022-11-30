@@ -1,5 +1,6 @@
 /-  *pokur, indexer=zig-indexer, wallet=zig-wallet
-/+  default-agent, dbug, *pokur, pokur-json, smart=zig-sys-smart
+/+  default-agent, dbug, smart=zig-sys-smart,
+    *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
 +$  versioned-state  $%(state-0)

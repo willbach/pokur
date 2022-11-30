@@ -61,7 +61,7 @@
         :^    custodian.act
             timelock.act
           [source.p.meta asset-metadata.act amount.act i]
-        (make-pmap ~[[id.caller.context ship.act amount.act account.act]])
+        (make-pmap ~[[ship.act id.caller.context amount.act account.act]])
     ==
   ::
       %deposit
@@ -72,16 +72,17 @@
     =.  amount.escrow-asset.noun.bond
       (add amount.escrow-asset.noun.bond amount.act)
     =.  depositors.noun.bond
-      ?:  (~(has py depositors.noun.bond) id.caller.context)
+      ?:  (~(has py depositors.noun.bond) ship.act)
         ::  if already a depositor, add amount to previous
         %+  ~(jab py depositors.noun.bond)
-          id.caller.context
-        |=  [=ship amount=@ud account=id]
-        [ship (add amount amount.act) account]
+          ship.act
+        |=  [=address amount=@ud account=id]
+        ?>  =(address id.caller.context)
+        [address (add amount amount.act) account]
       ::  otherwise add new depositor
       %+  ~(put py depositors.noun.bond)
-        id.caller.context
-      [ship.act amount.act account.act]
+        ship.act
+      [id.caller.context amount.act account.act]
     ::  return result bond + make %take call to token
     :_  (result [%&^bond ~] ~ ~ ~)
     :~  :+  contract.escrow-asset.noun.bond
@@ -120,12 +121,11 @@
       (sub amount.escrow-asset.noun.bond amount.act)
     ::  if awarded to a depositor, subtract their claim
         depositors.noun.bond
-      ?.  (~(has py depositors.noun.bond) id.caller.context)
-        depositors.noun.bond
-      %+  ~(jab py depositors.noun.bond)
-        id.caller.context
-      |=  [=ship amount=@ud account=id]
-      [ship (sub amount amount.act) account]
+      %-  ~(urn py depositors.noun.bond)
+      |=  [=ship =address amount=@ud account=id]
+      ?:  =(address to.act)
+        [address (sub amount amount.act) account]
+      [address amount account]
     ==
     (result [%&^bond ~] ~ ~ ~)
   ::
@@ -144,7 +144,7 @@
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
-    |=  [=address =ship amount=@ud account=id]
+    |=  [=ship =address amount=@ud account=id]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context

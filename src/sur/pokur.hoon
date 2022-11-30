@@ -1,3 +1,4 @@
+/=  escrow  /con/lib/escrow
 |%
 ::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
 ++  fixed-lobby-source  ~zod
