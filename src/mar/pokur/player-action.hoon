@@ -11,15 +11,13 @@
     |%
     ++  player-action
       %-  of
-      :~  [%join-host (ot ~[[%host (se %p)]])]
-          [%leave-host ul]
-          [%new-table parse-table]
+      :~  [%new-table parse-table]
           [%join-table parse-id]
           [%leave-table parse-id]
           [%start-game parse-id]
           [%leave-game parse-id]
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
-          [%add-escrow ul]  ::  TODO
+          [%set-our-address (ot ~[[%address (se %ux)]])]
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-table

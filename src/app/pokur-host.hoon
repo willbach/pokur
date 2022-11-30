@@ -213,6 +213,7 @@
       =.  u.host-game  (initialize-new-hand u.host-game)
       :-  (send-game-updates u.host-game)
       state(games (~(put by games.state) id.game u.host-game))
+    ::  TODO handle paying winner(s) here
     (end-game u.host-game)
   :_  state
   %+  weld  cards
