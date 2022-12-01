@@ -10,8 +10,8 @@
     %-  player-action:pokur
     =/  res  (player-action jon)
     ?.  ?=(%new-table -.res)  res
-    ?:  =(0 -.+.-.+.+.res)
-      res(-.+.-.+.+ ~)
+    ?:  =(0 -.+.-.+.+.+.res)
+      res(-.+.-.+.+.+. ~)
     res
     ++  player-action
       %-  of
