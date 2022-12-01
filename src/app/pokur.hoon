@@ -107,6 +107,11 @@
     ?^  p.sign  !!  ::  TODO new table poke failed!
     `this(our-table.state `(slav %da i.t.wire))
   ::
+      [%join-table-poke @ ~]
+    ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
+    ?^  p.sign  !!  ::  TODO join table poke failed!
+    `this(our-table.state `(slav %da i.t.wire))
+  ::
       [%game-updates @ @ ~]
     ?.  ?=(%fact -.sign)
       ?+    -.sign  (on-agent:def wire sign)
@@ -340,7 +345,7 @@
       :_  state(our-table `id.action)
       (poke-pass-through ship.host-info.table action)^~
     ::  escrow work -- set pending join poke
-    :_  state(our-table `id.action, pending-poke `action)
+    :_  state(pending-poke `action)
     ?~  our-address.state
       ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
     ::  scry indexer for token metadata so we can find our token account
@@ -505,7 +510,11 @@
       =.  bond-id.u.tokenized.u.pending-poke.state
         ((se:dejs:format %ux) json.event)
       :_  state(pending-poke ~)
-      (poke-pass-through host.u.pending-poke.state u.pending-poke.state)^~
+      :_  ~
+      :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
+          %agent  [host.u.pending-poke.state %pokur-host]
+          %poke   %pokur-player-action  !>(u.pending-poke.state)
+      ==
     ::
         [%deposit-confirmation @ ~]
       ?>  ?=(%join-table -.u.pending-poke.state)
@@ -515,7 +524,11 @@
       ?>  =(%200 status.transaction.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
       :_  state(pending-poke ~)
-      (poke-pass-through host u.pending-poke.state)^~
+      :_  ~
+      :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
+          %agent  [host %pokur-host]
+          %poke   %pokur-player-action  !>(u.pending-poke.state)
+      ==
     ==
   ==
 ::

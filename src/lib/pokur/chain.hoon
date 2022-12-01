@@ -15,7 +15,6 @@
           %+  weld  i-scry
           /newest/item/(scot %ux town.contract)/(scot %ux bond-id)/noun
       ==
-    ~&  update
     ?@  update  ~
     ::  parse single bond
     ?.  ?=(%newest-item -.update)  ~
@@ -23,7 +22,7 @@
     ((soft bond:escrow) noun.p.item.update)
   ::
   ++  valid-new-table
-    |=  [bond-id=id:smart src=^ship]
+    |=  [src=^ship bond-id=id:smart token-amount=@ud]
     ^-  ?
     ::  find bond information from indexer
     =/  bond=(unit bond:escrow)  (bond-state bond-id)
@@ -31,23 +30,19 @@
     ::  assert bond info is legit
     ?.  =(address custodian.u.bond)  %.n
     ::  TODO assert timelock is acceptable
-    =/  leader-payment=[=^ship addr=@ux amt=@ud acct=@ux]
-      -:~(tap by depositors.u.bond)
-    ?.  =(ship.leader-payment src)  %.n
-    ?.  =(amt.leader-payment amount.escrow-asset.u.bond)  %.n
+    ?~  leader-payment=(~(get by depositors.u.bond) src)  %.n
+    ?.  (gte amount.u.leader-payment token-amount)  %.n
     ::  all good!
     %.y
   ::
   ++  valid-new-player
-    |=  [bond-id=id:smart src=^ship]
+    |=  [src=^ship bond-id=id:smart token-amount=@ud]
     ^-  ?
     ::  find bond information from indexer
     =/  bond=(unit bond:escrow)  (bond-state bond-id)
     ?~  bond  %.n  ::  need bond, reject action
-    =/  player-payment=[=^ship addr=@ux amt=@ud acct=@ux]
-      -:~(tap by depositors.u.bond)
-    ?.  =(ship.player-payment src)  %.n
-    ?.  =(amt.player-payment amount.escrow-asset.u.bond)  %.n
+    ?~  player-payment=(~(get by depositors.u.bond) src)  %.n
+    ?.  (gte amount.u.player-payment token-amount)  %.n
     ::  all good!
     %.y
   --

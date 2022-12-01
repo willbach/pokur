@@ -256,8 +256,8 @@
       ==
     ::  if game is tokenized, find bond on chain and validate
     ?>  ?|  ?=(~ tokenized.action)
-            %+  ~(valid-new-table fetch now.bowl our-info.state)
-            bond-id.u.tokenized.action  src.bowl
+            %-  ~(valid-new-table fetch now.bowl our-info.state)
+            [src.bowl [bond-id amount]:u.tokenized.action]
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
@@ -273,8 +273,8 @@
     ::  if game is tokenized, check against
     ::  bond to see if player has paid in
     ?>  ?|  ?=(~ tokenized.u.table)
-            %+  ~(valid-new-player fetch now.bowl our-info.state)
-            bond-id.u.tokenized.u.table  src.bowl
+            %-  ~(valid-new-player fetch now.bowl our-info.state)
+            [src.bowl [bond-id amount]:u.tokenized.u.table]
         ==
     =.  players.u.table  (~(put in players.u.table) src.bowl)
     =+  (~(put by tables.state) id.action u.table)
