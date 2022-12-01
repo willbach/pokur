@@ -6,10 +6,10 @@
   ++  noun  player-action:pokur
   ++  json
     |=  jon=^json
-    ~&  >>  jon
+    |^
+    ~&  >>  (player-action jon)
     %-  player-action:pokur
-    =<  (player-action jon)
-    |%
+    (player-action jon)
     ++  player-action
       %-  of
       :~  [%new-table parse-table]
@@ -54,7 +54,6 @@
       ==
     ++  parse-tokenized
       |=  jon=^json
-      ~&  >>  jon
       ?:  ?=(~ jon)  ~
       %-  some
       %-  ot
