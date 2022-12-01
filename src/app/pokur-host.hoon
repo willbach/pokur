@@ -108,7 +108,7 @@
     ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-game)
+        (end-game-pay-winners u.host-game)
       [cards this]
     =.  u.host-game
       ~(increment-current-round modify-game-state u.host-game)
@@ -136,7 +136,7 @@
     ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-game)
+        (end-game-pay-winners u.host-game)
       [cards this]
     :: reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
@@ -213,8 +213,8 @@
       =.  u.host-game  (initialize-new-hand u.host-game)
       :-  (send-game-updates u.host-game)
       state(games (~(put by games.state) id.game u.host-game))
-    ::  TODO handle paying winner(s) here
-    (end-game u.host-game)
+    ::  host handles paying winner(s) here
+    (end-game-pay-winners u.host-game)
   :_  state
   %+  weld  cards
   ^-  (list card)
@@ -263,6 +263,10 @@
     ?>  ?|  ?=(~ tokenized.action)
             %-  ~(valid-new-table fetch now.bowl our-info.state)
             [src.bowl [bond-id amount]:u.tokenized.action]
+        ==
+    ::  only handling tokenized %sng tables for now
+    ?>  ?|  ?=(~ tokenized.action)
+            ?=(%sng -.game-type.action)
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
@@ -366,6 +370,8 @@
           deck=generate-deck
           hand-is-over=%.y
           turn-timer=(add now.bowl turn-time-limit.u.table)
+          tokenized.u.table
+          placements=~
           game
       ==
     =.  tables.state  (~(del by tables.state) id.action)
@@ -440,14 +446,47 @@
   %-  ~(initialize-hand modify-game-state host-game)
   dealer.game.host-game
 ::
-++  end-game
+++  end-game-pay-winners
   |=  host-game=host-game-state
   ^-  (quip card _state)
   :_  state(games (~(del by games.state) id.game.host-game))
-  :_  ~
-  :*  %pass  /timer/(scot %da id.game.host-game)
-      %arvo  %b  %rest
-      turn-timer.host-game
+  :-  :*  %pass  /timer/(scot %da id.game.host-game)
+          %arvo  %b  %rest
+          turn-timer.host-game
+      ==
+  ::  if game isn't tokenized, just delete
+  ?~  tokenized.host-game
+    ~
+  ::  pay based on game type (only handling %sng now)
+  ::  TODO handle cash
+  ?>  ?=(%sng -.game-type.game.host-game)
+  =/  total-payout=@ud
+    %-  ~(total-payout fetch now.bowl our-info.state)
+    bond-id.u.tokenized.host-game
+  =<  p
+  %^  spin  payouts.game-type.game.host-game  0
+  |=  [award-pct=@ud place=@ud]
+  ::  build an award transaction for each paid placement
+  ^-  [card @ud]
+  :_  +(place)
+  :*  %pass  /pokur-wallet-poke
+      %agent  [our.bowl %uqbar]
+      %poke  %wallet-poke
+      !>
+      :*  %transaction
+          origin=~  ::  TODO add handling for txn
+          from=address.our-info.state
+          contract=id.contract.our-info.state
+          town=town.contract.our-info.state
+          :-  %noun
+          :*  %award
+              bond-id.u.tokenized.host-game
+              (snag place placements.host-game)
+              ::  calculate payout
+              %+  mul  award-pct
+              (div total-payout 100)
+          ==
+      ==
   ==
 ::
 ++  valid-sng-spec

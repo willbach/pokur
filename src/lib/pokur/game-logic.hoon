@@ -272,6 +272,7 @@
   ::  given a list of winners, send them the pot. prepare for next
   ::  hand by clearing board, hands and bets, reset fold status,
   ::  and incrementing hands-played.
+  ::  also, see if any players have gotten out and place them (for tournaments)
   ++  process-win
     |=  winners=(list ship)
     ^-  host-game-state
@@ -307,6 +308,12 @@
       ?|  =(1 active-with-chips)
           =(0 active-with-chips)
       ==
+    ::
+        placements
+      ::  re-order player placements based on stacks
+      ::  if player already has stack=0, their placement is locked in
+      ::  if not, re-order with other players based on stacks
+      (reorder-placements placements.state players.game.state)
     ::
         players.game
       %+  turn  players.game.state
@@ -460,6 +467,20 @@
       next-player-turn
     next-betting-round
   --
+::
+++  reorder-placements
+  |=  [places=(list ship) players=(list [=ship player-info])]
+  ^-  (list ship)
+  ::  sort players list by stack size, break ties by using their
+  ::  *previous* rank in places list
+  %-  turn  :_  head
+  %+  sort  players
+  |=  [a=[=ship player-info] b=[=ship player-info]]
+  ?:  (gth stack.a stack.b)  %.y
+  ?:  (lth stack.a stack.b)  %.n
+  %+  gth
+    (need (find ~[ship.a] places))
+  (need (find ~[ship.b] places))
 ::
 ::  Hand evaluation and sorted helper arms
 ::

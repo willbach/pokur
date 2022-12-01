@@ -100,17 +100,19 @@
     =/  bond
       =+  (need (scry-state bond-id.act))
       (husk bond:lib - `this.context `this.context)
-    ::  caller must be custodian
+    ::  caller must be the custodian
     ?>  =(custodian.noun.bond id.caller.context)
     ::  give asset
+    =/  receiver=[=address amount=@ud account=id]
+      (~(got py depositors.noun.bond) to.act)
     :-  :_  ~
         :+  contract.escrow-asset.noun.bond
           town.context
         :*  %give
-            to.act
+            address.receiver
             amount.act
             (need account.escrow-asset.noun.bond)
-            account.act
+            `account.receiver
         ==
     ::  if award adds up to total amount in escrow, destroy bond here
     ?:  =(amount.escrow-asset.noun.bond amount.act)
@@ -122,13 +124,11 @@
     ::  if award is partial, bond is modified and not destroyed
     =:  amount.escrow-asset.noun.bond
       (sub amount.escrow-asset.noun.bond amount.act)
-    ::  if awarded to a depositor, subtract their claim
+    ::  subtract depositor's claim
         depositors.noun.bond
-      %-  ~(urn py depositors.noun.bond)
-      |=  [=ship =address amount=@ud account=id]
-      ?:  =(address to.act)
-        [address (sub amount amount.act) account]
-      [address amount account]
+      %+  ~(jab py depositors.noun.bond)  to.act
+      |=  [=address amount=@ud account=id]
+      [address (sub amount amount.act) account]
     ==
     (result [%&^bond ~] ~ ~ ~)
   ::

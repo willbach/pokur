@@ -27,10 +27,10 @@
           custodian=address  timelock=@ud  asset-metadata=id
           =ship  amount=@ud  account=id
       ==
-      ::  as a custodian, award tokens held in escrow to chosen address
-      ::  note that addresses do *not* need to have been depositors
+      ::  as a custodian, award tokens held in escrow
+      ::  note that ships need to have been depositors
       ::  can award multiple times before timelock is reached
-      [%award bond-id=id to=address amount=@ud account=(unit id)]
+      [%award bond-id=id to=ship amount=@ud]
       ::  as a custodian, nullify the bond before its timelock
       [%refund bond-id=id]
       ::  anyone can submit -- returns all funds to depositors

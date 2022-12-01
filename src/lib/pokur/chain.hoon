@@ -21,6 +21,12 @@
     ?>  ?=(%& -.item.update)
     ((soft bond:escrow) noun.p.item.update)
   ::
+  ++  total-payout
+    |=  bond-id=id:smart
+    ^-  @ud
+    =/  =bond:escrow  (need (bond-state bond-id))
+    amount.escrow-asset.bond
+  ::
   ++  valid-new-table
     |=  [src=^ship bond-id=id:smart token-amount=@ud]
     ^-  ?

@@ -64,6 +64,10 @@
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
+      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+      ::  keep an ordered list of player stacks
+      ::  1st is winner, 2nd is second, etc
+      placements=(list ship)
       =game
   ==
 ::
