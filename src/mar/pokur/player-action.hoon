@@ -55,6 +55,7 @@
           [%blinds-schedule (ar (ot ~[[%small ni] [%big ni]]))]
           [%current-round ni]
           [%round-is-over bo]
+          [%payouts (ar ni)]
       ==
     ++  parse-tokenized
       %-  ot

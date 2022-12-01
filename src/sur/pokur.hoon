@@ -46,6 +46,9 @@
       blinds-schedule=(list [small=@ud big=@ud])
       current-round=@ud
       round-is-over=?
+      ::  1 to n size list, number is 1-100 % of prize
+      ::  first item is payout for first place, etc
+      payouts=(list @ud)
   ==
 ::
 +$  players

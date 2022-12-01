@@ -254,6 +254,11 @@
           spectators-allowed.action
           turn-time-limit.action
       ==
+    ::  validate spec
+    ?>  ?-  -.game-type.action
+          %cash  %.y  ::  TODO
+          %sng  (valid-sng-spec action)
+        ==
     ::  if game is tokenized, find bond on chain and validate
     ?>  ?|  ?=(~ tokenized.action)
             %-  ~(valid-new-table fetch now.bowl our-info.state)
@@ -444,6 +449,14 @@
       %arvo  %b  %rest
       turn-timer.host-game
   ==
+::
+++  valid-sng-spec
+  |=  act=player-action
+  ^-  ?
+  ?.  ?=(%new-table -.act)  %.n
+  ?.  ?=(%sng -.game-type.act)  %.n
+  ?.  (gte min-players.act (lent payouts.game-type.act))  %.n
+  =(100 (roll payouts.game-type.act add))
 ::
 ++  table-share-card
   |=  =table
