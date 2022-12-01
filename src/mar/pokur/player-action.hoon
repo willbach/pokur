@@ -54,6 +54,7 @@
     ++  parse-tokenized
       |=  jon=^json
       ?~  jon  ~
+      %-  some
       %-  ot
       :~  [%metadata (se %ux)]
           [%amount (se %ud)]
