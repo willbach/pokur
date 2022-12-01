@@ -7,9 +7,12 @@
   ++  json
     |=  jon=^json
     |^
-    ~&  >>  (player-action jon)
     %-  player-action:pokur
-    (player-action jon)
+    =/  res  (player-action jon)
+    ?.  ?=(%new-table -.res)  res
+    ?:  =(0 -.+.-.+.+.res)
+      res(-.+.-.+.+ ~)
+    res
     ++  player-action
       %-  of
       :~  [%new-table parse-table]
@@ -53,9 +56,6 @@
           [%round-is-over bo]
       ==
     ++  parse-tokenized
-      |=  jon=^json
-      ?:  ?=(~ jon)  ~
-      %-  some
       %-  ot
       :~  [%metadata (se %ux)]
           [%amount (se %ud)]
