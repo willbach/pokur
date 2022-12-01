@@ -1,4 +1,4 @@
-/+  pokur, *pokur-json
+/-  pokur
 =,  enjs:format
 |_  upd=host-update:pokur
 ++  grab

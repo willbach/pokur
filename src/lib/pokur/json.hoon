@@ -31,7 +31,7 @@
       ['spectators_allowed' b+spectators-allowed.t]
       ['spectators' a+(turn ~(tap in spectators.t) ship)]
       ['hands_played' s+(scot %ud hands-played.t)]
-      ['update_message' (enjs-update-message update-message.t)]
+      ['update_message' s+update-message.t]
   ==
 ::
 ++  enjs-table
@@ -39,13 +39,14 @@
   ^-  json
   %-  pairs
   :~  ['id' s+(scot %da id.l)]
+      ['host_info' (enjs-host-info host-info.l)]
+      ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
       ['leader' s+(scot %p leader.l)]
       ['players' a+(turn ~(tap in players.l) ship)]
       ['min_players' s+(scot %ud min-players.l)]
       ['max_players' s+(scot %ud max-players.l)]
       ['game_type' (enjs-game-type game-type.l)]
-      ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
-      ['bond_id' ?~(bond-id.l ~ s+(scot %ux u.bond-id.l))]
+      ['public' b+public.l]
       ['spectators_allowed' b+spectators-allowed.l]
       ['turn_time_limit' s+(scot %dr turn-time-limit.l)]
   ==
@@ -103,7 +104,7 @@
         ['small_blind' s+(scot %ud small-blind.g)]
         ['big_blind' s+(scot %ud big-blind.g)]
     ==
-  :~  ['type' s+'tournament']
+  :~  ['type' s+'sng']
       ['starting_stack' s+(scot %ud starting-stack.g)]
       ['round_duration' s+(scot %dr round-duration.g)]
       ['blinds_schedule' (enjs-blinds-schedule blinds-schedule.g)]
@@ -120,25 +121,21 @@
   [%a ~[s+(scot %ud s) s+(scot %ud b)]]
 ::
 ++  enjs-tokenized
-  |=  [metadata=@ux amount=@ud]
+  |=  [metadata=@ux amount=@ud bond-id=@ux]
   ^-  json
   %-  pairs
   :~  ['metadata' s+(scot %ux metadata)]
       ['amount' s+(scot %ud amount)]
+      ['bond_id' s+(scot %ux bond-id)]
   ==
 ::
-++  enjs-update-message
-  |=  [tex=@t winning-hand=pokur-deck]
+++  enjs-host-info
+  |=  h=host-info
   ^-  json
   %-  pairs
-  :~  ['text' s+tex]
-      ['winning_hand' (enjs-cards winning-hand)]
-  ==
-
-++  enjs-host-ship
-  |=  host-ship=@p
-  ^-  json
-  %-  pairs
-  :~  ['host' (ship host-ship)]
+  :~  ['ship' (ship ship.h)]
+      ['address' s+(scot %ux address.h)]
+      ['contract_id' s+(scot %ux id.contract.h)]
+      ['contract_town' s+(scot %ux town.contract.h)]
   ==
 --

@@ -1,15 +1,22 @@
-/-  *pokur
-/+  default-agent, dbug, *pokur, pokur-json
+/-  *pokur, indexer=zig-indexer, wallet=zig-wallet
+/+  default-agent, dbug, smart=zig-sys-smart,
+    *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
 +$  versioned-state  $%(state-0)
 +$  state-0
   $:  %0
-      host=(unit [=ship info=(unit host-info)])
+      known-hosts=(map ship host-info)
+      our-address=(unit @ux)
+      lobby-source=ship
+      lobby=(map @da table)
+      our-table=(unit @da)
       game=(unit game)
-      table=(unit table)
+      game-host=(unit ship)
       messages=(list [=ship msg=@t])
       muted-players=(set ship)
+      ::  used for delaying tokenized actions until we get txn confirmation
+      pending-poke=(unit player-action)
   ==
 --
 %-  agent:dbug
@@ -23,14 +30,28 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 ~ ~ ~ ~ ~])  ::  TODO add default host ~bacrys here
+  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
+  :_  ~
+  :*  %pass  /lobby-updates
+      %agent  [fixed-lobby-source %pokur-host]
+      %watch  /lobby-updates
+  ==
 ++  on-save
   ^-  vase
   !>(state)
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
-  `this(state !<(versioned-state old))
+  :_  this(state !<(versioned-state old))
+  ::  resub to get initial listing
+  :~  :*  %pass  /lobby-updates
+          %agent  [fixed-lobby-source %pokur-host]
+          %leave  ~
+      ==
+      :*  %pass  /lobby-updates
+          %agent  [fixed-lobby-source %pokur-host]
+          %watch  /lobby-updates
+  ==  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -44,6 +65,8 @@
       (handle-game-action:hc !<(game-action vase))
         %pokur-host-action
       (handle-host-action:hc !<(host-action vase))
+        %wallet-update
+      (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
 ++  on-watch
@@ -56,23 +79,9 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ::  forward available tables from host here
-    ?~  host.state  `this
-    ::  resub to get initial listing
-    :_  this
-    :~  :*  %pass  /lobby-updates
-            %agent  [-.u.host.state %pokur-host]
-            %leave  ~
-        ==
-        :*  %pass  /lobby-updates
-            %agent  [-.u.host.state %pokur-host]
-            %watch  /lobby-updates
-    ==  ==
-  ::
-      [%table-updates ~]
-    ?~  table.state  `this
     :_  this  :_  ~
-    :^  %give  %fact  ~[/table-updates]
-    [%pokur-update !>(`update`[%table u.table.state])]
+    :^  %give  %fact  ~[/lobby-updates]
+    [%pokur-update !>(`update`[%lobby lobby.state])]
   ::
       [%game-updates ~]
     ?~  game.state  `this
@@ -96,11 +105,12 @@
       [%start-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
     ?^  p.sign  !!  ::  TODO new table poke failed!
-    :_  this  :_  ~
-    :*  %pass  /table-updates/[i.t.wire]
-        %agent  [-:(need host.state) %pokur-host]
-        %watch  /table-updates/[i.t.wire]
-    ==
+    `this(our-table.state `(slav %da i.t.wire))
+  ::
+      [%join-table-poke @ ~]
+    ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
+    ?^  p.sign  !!  ::  TODO join table poke failed!
+    `this(our-table.state `(slav %da i.t.wire))
   ::
       [%game-updates @ @ ~]
     ?.  ?=(%fact -.sign)
@@ -119,28 +129,33 @@
       ==
     ?>  ?=(%pokur-host-update p.cage.sign)
     =/  upd  !<(host-update q.cage.sign)
-    ?>  ?=(%game -.upd)
-    ~&  >  "new game state:"
-    ~&  >  game.upd
-    =/  my-hand-rank=@t
-      %-  hierarchy-to-rank
-      =/  full-hand  (weld my-hand.game.upd board.game.upd)
-      ?+  (lent full-hand)  100
-        %5  (evaluate-5-card-hand full-hand)
-        %6  -:(evaluate-6-card-hand full-hand)
-        %7  -:(evaluate-7-card-hand full-hand)
-      ==
-    :_  this(game.state `game.upd)  :_  ~
-    :^  %give  %fact  ~[/game-updates]
-    [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+    ?+    -.upd  (on-agent:def wire sign)
+        %game
+      ~&  >  "new game state:"
+      ~&  >  game.upd
+      =/  my-hand-rank=@t
+        %-  hierarchy-to-rank
+        =/  full-hand  (weld my-hand.game.upd board.game.upd)
+        ?+  (lent full-hand)  100
+          %5  (evaluate-5-card-hand full-hand)
+          %6  -:(evaluate-6-card-hand full-hand)
+          %7  -:(evaluate-7-card-hand full-hand)
+        ==
+      :_  this(game.state `game.upd)  :_  ~
+      :^  %give  %fact  ~[/game-updates]
+      [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+    ::
+    ::  %game-over
+    ::
+    ==
   ::
       [%lobby-updates ~]
     ?+    -.sign  (on-agent:def wire sign)
         %watch-ack
       ?~  p.sign
-        ~&  >  "%pokur: joined host {<src.bowl>}"
-        `this(host.state `[src.bowl ~])
-      ~&  >>>  "%pokur: tried to join host {<src.bowl>}, failed"
+        ~&  >  "%pokur: joined lobby source {<src.bowl>}"
+        `this
+      ~&  >>>  "%pokur: tried to join lobby source {<src.bowl>}, failed"
       `this
     ::
         %kick
@@ -153,50 +168,88 @@
       =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
           %lobby
-        ~&  >>  "tables available: {<+.upd>}"
-        :_  this  :_  ~
+        ~&  >>  "tables available: {<tables.upd>}"
+        :_  this(lobby.state tables.upd)  :_  ~
         :^  %give  %fact  ~[/lobby-updates]
         [%pokur-update !>(`update`upd)]
+      ::
+          %table-closed
+        ::  if our table closed, clear
+        ?~  our-table.state  `this
+        ?.  =(u.our-table.state table-id.upd)  `this
+        :_  this(our-table.state ~)
+        :_  ~
+        :^  %give  %fact  ~[/lobby-updates]
+        [%pokur-update !>(`update`[%table-closed table-id.upd])]
+      ::
+          %game-starting
+        ::  check if it's our game, if so, sub to path and notify FE
+        ?~  our-table.state  `this
+        ?.  =(game-id.upd u.our-table.state)  `this
+        =/  =table  (~(got by lobby.state) u.our-table.state)
+        :_  this(our-table.state ~, game-host.state `ship.host-info.table)
+        :~  :^  %give  %fact  ~[/game-updates]
+            [%pokur-update !>(`update`upd)]
+        ::
+            :*  %pass  /game-updates/(scot %da id.table)/(scot %p our.bowl)
+                %agent  [ship.host-info.table %pokur-host]
+                %watch  /game-updates/(scot %da id.table)/(scot %p our.bowl)
+        ==  ==
       ==
     ==
   ::
-      [%table-updates @ ~]
-    ::  information about a specific table we're in
-    =/  table-id  (slav %da i.t.wire)
-    ::  ignore updates about table we're not in, if in one
-    ?.  ?~  table.state  %.y
-        =(table-id id.u.table.state)
-      `this
+      [%new-table-thread ~]
+    ::  receive eth block from thread, generate escrow transaction
     ?+    -.sign  (on-agent:def wire sign)
-        %watch-ack
-      ::  TODO handle acks and nacks if needed
-      `this
-    ::
-        %kick
-      ::  resub on kick
-      :_  this  :_  ~
-      [%pass wire %agent [src.bowl %pokur-host] %watch wire]
-    ::
         %fact
-      ?>  ?=(%pokur-host-update p.cage.sign)
-      =/  upd  !<(host-update q.cage.sign)
-      ?+    -.upd  (on-agent:def wire sign)
-          %table
-        ~&  >  "new table state:"
-        ~&  >  table.upd
-        :_  this(table.state `table.upd)
-        :_  ~
-        :^  %give  %fact  ~[/table-updates]
-        [%pokur-update !>(`update`[%table table.upd])]
+      ?+    p.cage.sign  (on-agent:def wire sign)
+          %thread-fail
+        =/  err  !<  (pair term tang)  q.cage.sign
+        %.  `this
+        %+  slog
+          leaf+"%pokur: get-eth-block thread failed: {(trip p.err)}"
+        q.err
       ::
-          %game-starting
-        :_  this(table.state ~)
-        :~  =+  /game-updates/(scot %da game-id.upd)/(scot %p our.bowl)
-            [%pass - %agent [src.bowl %pokur-host] %watch -]
-            =+  /table-updates/(scot %da game-id.upd)
-            [%pass - %agent [src.bowl %pokur-host] %leave ~]
-            :^  %give  %fact  ~[/table-updates]
-            [%pokur-update !>(`update`[%game-starting game-id.upd])]
+          %thread-done
+        ?~  pending-poke.state  !!
+        ?>  ?=(%new-table -.u.pending-poke.state)
+        ?~  tokenized.u.pending-poke.state  !!
+        =/  height=@ud  !<(@ud q.cage.sign)
+        ~&  >  "eth-block-height: {<height>}"
+        ?~  host-info=(~(get by known-hosts.state) host.u.pending-poke.state)
+          !!
+        ?~  our-address.state  !!
+        =/  default-timelock=@ud  ::  roughly 48 hours
+          (add height 14.400)
+        ::  generate ID of our token account
+        =/  our-account-id=@ux
+          %:  get-token-account-id
+              metadata.u.tokenized.u.pending-poke.state
+              u.our-address.state
+              town.contract.u.host-info
+              now.bowl
+          ==
+        ::  we'll get a pokeback from %wallet when this transaction goes through
+        :_  this  :_  ~
+        :*  %pass  /pokur-wallet-poke
+            %agent  [our.bowl %uqbar]
+            %poke  %wallet-poke
+            !>
+            :*  %transaction
+                origin=`[%pokur /new-bond-confirmation]
+                from=u.our-address.state
+                contract=id.contract.u.host-info
+                town=town.contract.u.host-info
+                :-  %noun
+                :*  %new-bond-with-deposit
+                    address.u.host-info
+                    default-timelock
+                    metadata.u.tokenized.u.pending-poke.state
+                    our.bowl
+                    amount.u.tokenized.u.pending-poke.state
+                    our-account-id
+                ==
+            ==
         ==
       ==
     ==
@@ -206,18 +259,23 @@
   ^-  (unit (unit cage))
   ?.  =(%x -.path)  ~
   ?+    +.path  (on-peek:def path)
-      [%host ~]
-    ``json+!>(?~(host.state ~ (enjs-host-ship:pokur-json ship.u.host.state)))
+  ::    [%host ~]
+  ::  ``json+!>(?~(host.state ~ (enjs-host-ship:pokur-json ship.u.host.state)))
       [%game-id ~]
     ``noun+!>(?~(game.state ~ `id.u.game.state))
+      [%our-table ~]
+    ``json+!>(?~(our-table.state ~ s+(scot %da u.our-table.state)))
       [%game ~]
     ``json+!>(?~(game.state ~ (enjs-game:pokur-json u.game.state)))
-      [%table ~]
-    ``json+!>(?~(table.state ~ (enjs-table:pokur-json u.table.state)))
       [%messages ~]
     ``json+!>((enjs-messages:pokur-json messages.state))
       [%muted-players ~]
     ``json+!>(a+(turn ~(tap in muted-players.state) ship:enjs:format))
+  ::
+      [%table @ ~]
+    :^  ~  ~  %json
+    !>  %-  enjs-table:pokur-json
+        (~(got by lobby.state) (slav %da i.t.t.path))
   ==
 ++  on-arvo  on-arvo:def
 ++  on-leave  on-leave:def
@@ -230,138 +288,131 @@
 ++  handle-host-action
   |=  action=host-action
   ^-  (quip card _state)
-  ?-    -.action
-      %escrow-info
+  ?+    -.action  !!
+      %host-info
     ::  receive host-info from host
-    ?~  host.state  !!
-    ?>  =(ship.u.host.state src.bowl)
-    `state(host `[src.bowl `+.action])
+    ?>  =(src.bowl ship.host-info.action)
+    `state(known-hosts (~(put by known-hosts.state) src.bowl +.action))
   ==
+::
 ++  handle-player-action
   |=  action=player-action
   ^-  (quip card _state)
   ?>  =(src.bowl our.bowl)
   ?-    -.action
-      %join-host
-    ?^  host.state
-      ~|("%pokur: error: already in a host" !!)
-    :_  state  ::  host set in %watch-ack
-    :_  ~
-    :*  %pass  /lobby-updates
-        %agent  [host.action %pokur-host]
-        %watch  /lobby-updates
-    ==
-  ::
-      %leave-host
-    ?~  host.state
-      ~|("%pokur: error: can't leave host, don't have one" !!)
-    :_  state(table ~, game ~, host ~)
-    :_  ~
-    :*  %pass  /lobby-updates
-        %agent  [ship.u.host.state %pokur-host]
-        %leave  ~
-    ==
-  ::
       %new-table
     ::  start a table in our current host, and if game is to be
     ::  tokenized, create a transaction to start a new escrow
     ::  bond with host as custodian of funds
-    ?~  host.state
-      ~|("%pokur: error: can't start table, no host" !!)
-    ?^  table.state
-      ~|("%pokur: error: can't start table, already in one" !!)
-    ?^  game.state
-      ~|("%pokur: error: can't start table, already in game" !!)
-    ::  add our.bowl to time in order to disambiguate the unlikely
-    ::  scenario of two lobbies started at exact same time
-    =.  id.action  now.bowl
-    :_  state
-    ::  TODO build transaction poke to %uqbar
-    :_  ~
-    :*  %pass  /start-table-poke/(scot %da id.action)
-        %agent  [ship.u.host.state %pokur-host]
-        %poke  %pokur-player-action  !>(action)
-    ==
-  ::
-      %join-table
-    ::  join a table in our current host
-    ?~  host.state
-      ~|("%pokur: error: can't join table, no host" !!)
-    ?^  table.state
+    ?^  our-table.state
       ~|("%pokur: error: can't join table, already in one" !!)
     ?^  game.state
       ~|("%pokur: error: can't join table, already in game" !!)
-    :_  state
-    :~  :*  %pass  /table-poke
-            %agent  [ship.u.host.state %pokur-host]
-            %poke  %pokur-player-action  !>(action)
+    =.  id.action  now.bowl
+    ?~  tokenized.action
+      :_  state  :_  ~
+      :*  %pass  /start-table-poke/(scot %da id.action)
+          %agent  [host.action %pokur-host]
+          %poke  %pokur-player-action  !>(action)
+      ==
+    ::  generate new escrow bond with host
+    ::  [%new-bond custodian=address timelock=@ud asset-metadata=id]
+    ::  fetch latest ETH block height to produce timelock
+    =/  tid          `@ta`(cat 3 'thread_' (scot %uv (sham eny.bowl)))
+    =/  ta-now       (scot %da now.bowl)
+    =/  start-args  [~ `tid byk.bowl(r da+now.bowl) %get-eth-block !>(~)]
+    ::  set pending poke
+    :_  state(pending-poke `action)
+    :~  :*  %pass  /new-table-thread
+            %agent  [our.bowl %spider]
+            %watch  /thread-result/[tid]
         ==
-        :*  %pass  /table-updates/(scot %da id.action)
-            %agent  [ship.u.host.state %pokur-host]
-            %watch  /table-updates/(scot %da id.action)
+        :*  %pass  /thread/[ta-now]
+            %agent  [our.bowl %spider]
+            %poke  %spider-start  !>(start-args)
     ==  ==
+  ::
+      %join-table
+    ?^  our-table.state
+      ~|("%pokur: error: can't join table, already in one" !!)
+    ?^  game.state
+      ~|("%pokur: error: can't join table, already in game" !!)
+    =/  =table  (~(got by lobby.state) id.action)
+    ::  if table is tokenized, generate escrow transaction, otherwise just join
+    ::  host will add us to queue but not enter us to table if tokenized, until
+    ::  transaction is received
+    ?~  tokenized.table
+      :_  state(our-table `id.action)
+      (poke-pass-through ship.host-info.table action)^~
+    ::  escrow work -- set pending join poke
+    :_  state(pending-poke `action)
+    ?~  our-address.state
+      ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
+    ::  scry indexer for token metadata so we can find our token account
+    =/  our-account-id=@ux
+      %:  get-token-account-id
+          metadata.u.tokenized.table
+          (need our-address.state)
+          town.contract.host-info.table
+          now.bowl
+      ==
+    =/  host-ta  (scot %p ship.host-info.table)
+    :_  ~
+    :*  %pass  /pokur-wallet-poke
+        %agent  [our.bowl %uqbar]
+        %poke  %wallet-poke
+        !>
+        :*  %transaction
+            origin=`[%pokur /deposit-confirmation/[host-ta]]
+            from=u.our-address.state
+            contract=id.contract.host-info.table
+            town=town.contract.host-info.table
+            :-  %noun
+            :*  %deposit
+                bond-id.u.tokenized.table
+                our.bowl
+                amount.u.tokenized.table
+                our-account-id
+            ==
+        ==
+    ==
   ::
       %leave-table
-    ?~  host.state
-      ~|("%pokur: error: can't leave table, no host" !!)
-    ?~  table.state
+    ?~  our-table.state
       ~|("%pokur: error: can't leave table, not in one" !!)
-    :_  state(table ~, messages ~)
-    :~  :*  %pass  /table-poke
-            %agent  [ship.u.host.state %pokur-host]
-            %poke  %pokur-player-action  !>(action)
-        ==
-        :*  %pass  /table-updates/(scot %da id.u.table.state)
-            %agent  [ship.u.host.state %pokur-host]
-            %leave  ~
-    ==  ==
+    =/  =table  (~(got by lobby.state) u.our-table.state)
+    :_  state(our-table ~, messages ~)
+    (poke-pass-through ship.host-info.table action)^~
   ::
       %start-game
-    ?~  host.state
-      ~|("%pokur: error: can't start game, no host" !!)
-    ?~  table.state
+    ?~  our-table.state
       ~|("%pokur: error: can't start game, not in a table" !!)
     ?^  game.state
       ~|("%pokur: error: can't start game, already in one" !!)
-    :_  state(table ~, messages ~)
-    :_  ~
-    :*  %pass  /table-poke
-        %agent  [ship.u.host.state %pokur-host]
-        %poke  %pokur-player-action  !>(action)
-    ==
+    =/  =table  (~(got by lobby.state) u.our-table.state)
+    :_  state(messages ~)
+    (poke-pass-through ship.host-info.table action)^~
   ::
       %leave-game
-    ?~  host.state
-      ~|("%pokur: error: can't leave game, no host" !!)
     ?~  game.state
       ~|("%pokur: error: can't leave game, not in one" !!)
-    :_  state(game ~, messages ~)
-    :~  :*  %pass
-            /game-updates/(scot %da id.action)/(scot %p our.bowl)
-            %agent  [ship.u.host.state %pokur-host]
+    :_  state(game ~, game-host ~, messages ~)
+    :~  (poke-pass-through (need game-host.state) action)
+        :*  %pass  /game-updates/(scot %da id.action)/(scot %p our.bowl)
+            %agent  [(need game-host.state) %pokur-host]
             %leave  ~
-        ==
-        :*  %pass  /table-poke
-            %agent  [ship.u.host.state %pokur-host]
-            %poke  %pokur-player-action  !>(action)
     ==  ==
   ::
       %kick-player
-    ?~  host.state
-      ~|("%pokur: error: can't edit table, no host" !!)
-    ?~  table.state
-      ~|("%pokur: error: can't edit table, not in one" !!)
-    :_  state
-    :_  ~
-    :*  %pass  /table-poke
-        %agent  [ship.u.host.state %pokur-host]
-        %poke  %pokur-player-action  !>(action)
-    ==
-  ::
-      %add-escrow
-    ::  TODO poke wallet with transaction to escrow contract
     !!
+    ::  ?~  our-table.state
+    ::    ~|("%pokur: error: can't edit table, not in one" !!)
+    ::  =/  =table  (~(got by lobby.state) u.our-table.state)
+    ::  :_  state
+    ::  (poke-pass-through ship.host-info.table action)^~
   ::
+      %set-our-address
+    `state(our-address `address.action)
   ==
 ::
 ++  handle-message-action
@@ -383,10 +434,13 @@
     :_  state
     %+  turn
       ?~  game.state
-        ?~  table.state
+        ?~  our-table.state
           !!
-        ~(tap in players.u.table.state)
-      (turn players.u.game.state head)
+        =/  =table  (~(got by lobby.state) u.our-table.state)
+        ~(tap in players.table)
+      %+  weld
+        (turn players.u.game.state head)
+      ~(tap in spectators.u.game.state)
     |=  =ship
     ^-  card
     :*  %pass  /message-poke  %agent  [ship %pokur]
@@ -399,10 +453,13 @@
     ::  if in table, only accept messages from players in table
     ::  if in game, only accept from players in game
     ?>  ?~  game.state
-          ?~  table.state
+          ?~  our-table.state
             %.n
-          (~(has in players.u.table.state) src.bowl)
-        ?=(^ (find [src.bowl]~ (turn players.u.game.state head)))
+          =/  =table  (~(got by lobby.state) u.our-table.state)
+          (~(has in players.table) src.bowl)
+        ?|  ?=(^ (find [src.bowl]~ (turn players.u.game.state head)))
+            (~(has in spectators.u.game.state) src.bowl)
+        ==
     ::  skip messages from muted players
     ?:  (~(has in muted-players.state) src.bowl)  `state
     :_  state(messages [[src.bowl msg.action] messages.state])
@@ -416,14 +473,89 @@
   ^-  (quip card _state)
   ?>  =(src.bowl our.bowl)
   ?~  game.state  !!
-  :_  state
-  :_  ~
+  :_  state  :_  ~
   :^  %pass  /poke-wire  %agent
-  :^  [-:(need host.state) %pokur-host]
+  :^  [(need game-host.state) %pokur-host]
     %poke  %pokur-game-action
   ?-  -.action
     %check  !>(`game-action`[%check id.u.game.state ~])
     %fold   !>(`game-action`[%fold id.u.game.state ~])
     %bet    !>(`game-action`[%bet id.u.game.state amount.action])
+  ==
+::
+++  handle-wallet-update
+  |=  update=wallet-update:wallet
+  ^-  (quip card _state)
+  ?+    -.update  !!
+  ::  only ever expecting a %finished-transaction notification
+      %finished-transaction
+    ::  wallet announcing that either our %new-bond has been started,
+    ::  meaning we've successfully created a tokenized table, or that
+    ::  our %deposit has gone through, meaning we've joined a tokenized table
+    ?>  ?=(^ origin.update)
+    ?~  pending-poke.state  !!
+    ?+    q.u.origin.update  !!
+        [%new-bond-confirmation ~]
+      ::  send bond info to host with a %new-table poke, finally
+      ?>  ?=(%new-table -.u.pending-poke.state)
+      ?~  tokenized.u.pending-poke.state  !!
+      ::  make sure txn succeeded
+      ~|  "%pokur: transaction failed!!"
+      ?>  =(%200 status.transaction.update)
+      ::  modify bond-id with txn output
+      ::  should be in events.output.update
+      =/  event=contract-event:eng:wallet
+        (head events.output.update)
+      ?>  =(%new-bond label.event)
+      =.  bond-id.u.tokenized.u.pending-poke.state
+        ((se:dejs:format %ux) json.event)
+      :_  state(pending-poke ~)
+      :_  ~
+      :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
+          %agent  [host.u.pending-poke.state %pokur-host]
+          %poke   %pokur-player-action  !>(u.pending-poke.state)
+      ==
+    ::
+        [%deposit-confirmation @ ~]
+      ?>  ?=(%join-table -.u.pending-poke.state)
+      ::  request to %join-table on host
+      ::  don't need any data other than the fact that the txn succeeded
+      ~|  "%pokur: transaction failed!!"
+      ?>  =(%200 status.transaction.update)
+      =/  host=ship  (slav %p i.t.q.u.origin.update)
+      :_  state(pending-poke ~)
+      :_  ~
+      :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
+          %agent  [host %pokur-host]
+          %poke   %pokur-player-action  !>(u.pending-poke.state)
+      ==
+    ==
+  ==
+::
+++  poke-pass-through
+  |=  [host=ship action=player-action]
+  ^-  card
+  ::  give a poke from frontend to host
+  :*  %pass   /table-poke
+      %agent  [host %pokur-host]
+      %poke   %pokur-player-action  !>(action)
+  ==
+::
+++  get-token-account-id
+  |=  [metadata=@ux our-addr=@ux town=@ux now=@da]
+  ~|  "%pokur: error: can't find metadata for escrow token"
+  =/  found=wallet-update:wallet
+    .^  wallet-update:wallet  %gx
+        /(scot %p our.bowl)/wallet/(scot %da now)/metadata/(scot %ux metadata)/noun
+    ==
+  ?:  ?=(~ found)  !!
+  ?>  ?=(%metadata -.found)
+  ?>  ?=(%token -.+.found)
+  ::  generate ID of our token account
+  %:  hash-data:smart
+      contract.found
+      our-addr
+      town
+      salt.found
   ==
 --

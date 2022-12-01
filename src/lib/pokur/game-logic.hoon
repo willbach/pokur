@@ -202,14 +202,13 @@
   ::  and sets an update message in the game state
   ++  increment-current-round
     ^-  host-game-state
-    ?>  ?=(%tournament -.game-type.game.state)
+    ?>  ?=(%sng -.game-type.game.state)
     =/  blinds=[small=@ud big=@ud]
       %+  snag  current-round.game-type.game.state
       blinds-schedule.game-type.game.state
     %=  state
       round-is-over.game-type.game  %.y
         update-message.game
-      :_  ~
       %-  crip
       """
       Round {<current-round.game-type.game.state>} beginning at next hand.
@@ -241,6 +240,19 @@
       ?=(^ (find [ship]~ in.pot))
     %=  $
       pots.game.state  t.pots.game.state
+    ::
+        update-message.game.state
+      ?:  =(1 (lent winners-in-pot))
+        ;:  (cury cat 3)
+            (scot %p -.winners-in-pot)
+            ' wins pot of '
+            (scot %ud amount.pot)
+        ==
+      =+  (roll (turn winners-in-pot |=(a=@ (scot %p a))) (cury cat 3))
+      ;:  (cury cat 3)
+          -  ' split pot of '
+          (scot %ud amount.pot)
+      ==
         players.game.state
       ?:  =(1 (lent winners-in-pot))
         ::  award entire pot to single winner
@@ -257,8 +269,8 @@
         [p stack 0 %.n %.n left]
       [p (add stack split) 0 %.n %.n left]
     ==
-  ::  given a list of [winner [rank hand]], send them the pot. prepare
-  ::  for next hand by clearing board, hands and bets, reset fold status,
+  ::  given a list of winners, send them the pot. prepare for next
+  ::  hand by clearing board, hands and bets, reset fold status,
   ::  and incrementing hands-played.
   ++  process-win
     |=  winners=(list ship)
@@ -267,7 +279,7 @@
     =.  state  committed-chips-to-pot
     =.  state  (award-pots winners)
     =?    state
-        ?&  ?=(%tournament -.game-type.game.state)
+        ?&  ?=(%sng -.game-type.game.state)
             round-is-over.game-type.game.state
         ==
       %=    state
@@ -277,12 +289,12 @@
         %.n
       ==
     %=  state
-      hands               ~
+      hands              ~
       board.game         ~
       current-bet.game   0
       last-bet.game      0
-      hand-is-over        %.y
-      deck                generate-deck
+      hand-is-over       %.y
+      deck               generate-deck
       hands-played.game  +(hands-played.game.state)
       pots.game  [0 (turn players.game.state head)]~
     ::
@@ -364,7 +376,7 @@
           current-bet.game.state
         =.  players.game.state  (commit-chips who stack.player-info)
         =.  players.game.state  (set-player-as-acted who)
-        =.  update-message.game.state  [(crip "{<who>} is all-in.") ~]
+        =.  update-message.game.state  (crip "{<who>} is all-in.")
         ?.  is-betting-over
           `next-player-turn
         `next-betting-round

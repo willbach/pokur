@@ -13,12 +13,45 @@
     ::  get token metadata
     =/  meta  (need (scry-state asset-metadata.act))
     ?>  ?=(%& -.meta)
+    =/  i=id
+      (hash-data source.p.meta this.context town.context salt.p.meta)
     =/  our-account=(unit id)
-      =-  ?~((scry-state i) ~ `i)
-      i=(hash-data source.p.meta this.context town.context salt.p.meta)
+      ?~((scry-state i) ~ `i)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
-    =-  `(result ~ [- ~] ~ ~)
+    =-  `(result ~ [%&^- ~] ~ [[%new-bond s+(scot %ux id.-)]]^~)
+    :*  id=(hash-data this.context this.context town.context bond-salt)
+        this.context
+        this.context
+        town.context
+        bond-salt
+        %bond
+        :^    custodian.act
+            timelock.act
+          [source.p.meta asset-metadata.act 0 `i]
+        ~
+    ==
+  ::
+      %new-bond-with-deposit
+    ::  get token metadata
+    =/  meta  (need (scry-state asset-metadata.act))
+    ?>  ?=(%& -.meta)
+    =/  i=id
+      (hash-data source.p.meta this.context town.context salt.p.meta)
+    =/  our-account=(unit id)
+      ?~((scry-state i) ~ `i)
+    =/  bond-salt
+      (cat 3 id.caller.context nonce.caller.context)
+    :-  :_  ~
+        :+  source.p.meta
+          town.context
+        :*  %take
+            this.context
+            amount.act
+            account.act
+            our-account
+        ==
+    =-  (result ~ [- ~] ~ `(list event)`[%new-bond s+(scot %ux -.+.-)]^~)
     :*  %&
         (hash-data this.context this.context town.context bond-salt)
         this.context
@@ -28,8 +61,8 @@
         %bond
         :^    custodian.act
             timelock.act
-          [source.p.meta asset-metadata.act 0 our-account]
-        ~
+          [source.p.meta asset-metadata.act amount.act `i]
+        (make-pmap ~[[ship.act id.caller.context amount.act account.act]])
     ==
   ::
       %deposit
@@ -39,12 +72,18 @@
     ::  adjust asset, add caller as depositor
     =.  amount.escrow-asset.noun.bond
       (add amount.escrow-asset.noun.bond amount.act)
-    ::  assert caller is not yet a depositor
-    ?<  (~(has py depositors.noun.bond) id.caller.context)
     =.  depositors.noun.bond
+      ?:  (~(has py depositors.noun.bond) ship.act)
+        ::  if already a depositor, add amount to previous
+        %+  ~(jab py depositors.noun.bond)
+          ship.act
+        |=  [=address amount=@ud account=id]
+        ?>  =(address id.caller.context)
+        [address (add amount amount.act) account]
+      ::  otherwise add new depositor
       %+  ~(put py depositors.noun.bond)
-        id.caller.context
-      [amount.act account.act]
+        ship.act
+      [id.caller.context amount.act account.act]
     ::  return result bond + make %take call to token
     :_  (result [%&^bond ~] ~ ~ ~)
     :~  :+  contract.escrow-asset.noun.bond
@@ -61,19 +100,52 @@
     =/  bond
       =+  (need (scry-state bond-id.act))
       (husk bond:lib - `this.context `this.context)
-    ::  assert awarded tokens add up to total amount in escrow
-    ?>  .=  amount.escrow-asset.noun.bond
-        =+  total=0
-        |-
-        ?~  to.act  total
-        $(to.act t.to.act, total (add total amount.i.to.act))
+    ::  caller must be custodian
+    ?>  =(custodian.noun.bond id.caller.context)
+    ::  give asset
+    :-  :_  ~
+        :+  contract.escrow-asset.noun.bond
+          town.context
+        :*  %give
+            to.act
+            amount.act
+            (need account.escrow-asset.noun.bond)
+            account.act
+        ==
+    ::  if award adds up to total amount in escrow, destroy bond here
+    ?:  =(amount.escrow-asset.noun.bond amount.act)
+      ::  zero out and destroy the bond item
+      =:  amount.escrow-asset.noun.bond  0
+          depositors.noun.bond           ~
+      ==
+      (result ~ ~ [%&^bond ~] ~)
+    ::  if award is partial, bond is modified and not destroyed
+    =:  amount.escrow-asset.noun.bond
+      (sub amount.escrow-asset.noun.bond amount.act)
+    ::  if awarded to a depositor, subtract their claim
+        depositors.noun.bond
+      %-  ~(urn py depositors.noun.bond)
+      |=  [=ship =address amount=@ud account=id]
+      ?:  =(address to.act)
+        [address (sub amount amount.act) account]
+      [address amount account]
+    ==
+    (result [%&^bond ~] ~ ~ ~)
+  ::
+      %refund
+    =/  bond
+      =+  (need (scry-state bond-id.act))
+      (husk bond:lib - `this.context `this.context)
+    ::  caller must be custodian
+    ?>  =(custodian.noun.bond id.caller.context)
+    ::  all tokens returned to depositors
     ::  zero out and destroy the bond item
     =:  amount.escrow-asset.noun.bond  0
         depositors.noun.bond           ~
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
-    %+  turn  to.act
-    |=  [=address amount=@ud account=(unit id)]
+    %+  turn  ~(tap py depositors.noun.bond)
+    |=  [=ship =address amount=@ud account=id]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context
@@ -81,7 +153,7 @@
         address
         amount
         (need account.escrow-asset.noun.bond)
-        account
+        `account
     ==
   ::
       %release
@@ -99,7 +171,7 @@
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
-    |=  [=address amount=@ud account=id]
+    |=  [=ship =address amount=@ud account=id]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context

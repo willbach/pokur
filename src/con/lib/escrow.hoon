@@ -4,7 +4,7 @@
   $:  custodian=address
       timelock=@ud  ::  measured in eth blocks
       =escrow-asset
-      depositors=(pmap address [amount=@ud account=id])
+      depositors=(pmap ship [=address amount=@ud account=id])
   ==
 ::
 +$  escrow-asset
@@ -20,14 +20,22 @@
       [%new-bond custodian=address timelock=@ud asset-metadata=id]
       ::  become a depositor in a bond -- caller must first
       ::  set appropriate allowance for this contract
-      [%deposit bond-id=id amount=@ud account=id]
+      ::  can deposit multiple times
+      [%deposit bond-id=id =ship amount=@ud account=id]
+      ::  combo of above two used for %pokur
+      $:  %new-bond-with-deposit
+          custodian=address  timelock=@ud  asset-metadata=id
+          =ship  amount=@ud  account=id
+      ==
       ::  as a custodian, award tokens held in escrow to chosen address
-      ::  total amount awarded *must* add up to amount of tokens held
       ::  note that addresses do *not* need to have been depositors
-      [%award bond-id=id to=(list [=address amount=@ud account=(unit id)])]
+      ::  can award multiple times before timelock is reached
+      [%award bond-id=id to=address amount=@ud account=(unit id)]
+      ::  as a custodian, nullify the bond before its timelock
+      [%refund bond-id=id]
       ::  anyone can submit -- returns all funds to depositors
-      ::  if the bond's timelock has passed and tokens have not
-      ::  been awarded.
+      ::  if the bond's timelock has passed and not all tokens
+      ::  have been awarded.
       [%release bond-id=id]
   ==
 ::

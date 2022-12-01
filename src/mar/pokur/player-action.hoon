@@ -6,29 +6,33 @@
   ++  noun  player-action:pokur
   ++  json
     |=  jon=^json
+    |^
     %-  player-action:pokur
-    =<  (player-action jon)
-    |%
+    =/  res  (player-action jon)
+    ?.  ?=(%new-table -.res)  res
+    =/  tok  -.+.+.+.res
+    ?:  =(0 -.+.tok)
+      res(-.+.+.+ ~)
+    res(-.+.+.+ `tok)
     ++  player-action
       %-  of
-      :~  [%join-host (ot ~[[%host (se %p)]])]
-          [%leave-host ul]
-          [%new-table parse-table]
+      :~  [%new-table parse-table]
           [%join-table parse-id]
           [%leave-table parse-id]
           [%start-game parse-id]
           [%leave-game parse-id]
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
-          [%add-escrow ul]  ::  TODO
+          [%set-our-address (ot ~[[%address (se %ux)]])]
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-table
       %-  ot
       :~  [%id (se %da)]
+          [%host (se %p)]
+          [%tokenized parse-tokenized]
           [%min-players ni]
           [%max-players ni]
           [%game-type parse-game-type]
-          [%tokenized ul]  ::  TODO softly
           [%public bo]
           [%spectators-allowed bo]
           [%turn-time-limit (se %dr)]
@@ -36,7 +40,7 @@
     ++  parse-game-type
       %-  of
       :~  [%cash parse-cash-type]
-          [%tournament parse-tournament-type]
+          [%sng parse-sng-type]
       ==
     ++  parse-cash-type
       %-  ot
@@ -44,13 +48,19 @@
           [%small-blind ni]
           [%big-blind ni]
       ==
-    ++  parse-tournament-type
+    ++  parse-sng-type
       %-  ot
       :~  [%starting-stack ni]
           [%round-duration (se %dr)]
           [%blinds-schedule (ar (ot ~[[%small ni] [%big ni]]))]
           [%current-round ni]
           [%round-is-over bo]
+      ==
+    ++  parse-tokenized
+      %-  ot
+      :~  [%metadata (se %ux)]
+          [%amount (se %ud)]
+          [%bond-id (se %ux)]
       ==
     --
   --

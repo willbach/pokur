@@ -1,4 +1,7 @@
+/=  escrow  /con/lib/escrow
 |%
+::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
+++  fixed-lobby-source  ~zod
 ::
 ::  basic poker concepts
 ::
@@ -30,14 +33,14 @@
 ::
 +$  game-type
   $%  [%cash cash-spec]
-      [%tournament tournament-spec]
+      [%sng sng-spec]
   ==
 +$  cash-spec
   $:  starting-stack=@ud
       small-blind=@ud
       big-blind=@ud
   ==
-+$  tournament-spec
++$  sng-spec
   $:  starting-stack=@ud
       round-duration=@dr
       blinds-schedule=(list [small=@ud big=@ud])
@@ -50,7 +53,6 @@
   (list [=ship player-info])
 +$  player-info
   [stack=@ud committed=@ud acted=? folded=? left=?]
-::
 ::
 ::  the data a pokur-host holds for a given table
 ::
@@ -83,66 +85,65 @@
       spectators-allowed=?
       spectators=(set ship)
       hands-played=@ud
-      update-message=[@t winning-hand=pokur-deck]  ::  XX
+      update-message=@t
   ==
 ::
 +$  table
   $:  id=@da
+      =host-info
+      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
       max-players=@ud
       =game-type
-      tokenized=(unit [metadata=@ux amount=@ud])
-      bond-id=(unit @ux)
       public=?
       spectators-allowed=?
-      ::  represented in cord as number between 1 and 999,
-      ::  parsed into @ud or @dr depending on context
+      ::  between 10 and 999 seconds, enforced by frontend parsing
+      ::  and by host
       turn-time-limit=@dr
   ==
 ::
 +$  host-info
-  $:  escrow-contract=[id=@ux town=@ux]
-      uqbar-address=@ux
-  ==
+  [=ship address=@ux contract=[id=@ux town=@ux]]
 ::
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
   $%  [%game =game my-hand-rank=@t]
-      [%table =table]
+      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%lobby tables=(list table)]
+      [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
   ==
-+$  host-update  ::  from host to player
++$  host-update  ::  from host to player app
   $%  [%game =game]
-      [%table =table]
+      [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%lobby tables=(list table)]
+      ::  [%game-over game-id=@da]
+      [%lobby tables=(map @da table)]
   ==
 ::
-+$  player-action  ::  to host
-  $%  [%join-host host=ship]
-      [%leave-host ~]
-      $:  %new-table
++$  player-action
+  $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
+          host=ship
+          tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
           min-players=@ud
           max-players=@ud
           =game-type
-          tokenized=(unit [metadata=@ux amount=@ud])
           public=?  ::  private means need the link to join
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da]
+      [%join-table id=@da]  ::  pokes to the HOST, must first pay escrow!
       [%leave-table id=@da]
-      [%start-game id=@da]  ::  creator of table must perform
+      [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
-      [%add-escrow ~]  ::  TODO generate %uqbar transaction, if game is tokenized
+      ::  choose which wallet address we wish to use to pay escrow
+      [%set-our-address address=@ux]
   ==
 ::
 +$  message-action
@@ -158,7 +159,9 @@
       [%bet game-id=@da amount=@ud]
   ==
 ::
-+$  host-action  ::  host sets for itself, and pokes players with
-  $%  [%escrow-info host-info]
++$  host-action
+  $%  [%host-info =host-info]
+      [%share-table =table]  ::  for lobby gossip
+      [%closed-table id=@da]
   ==
 --
