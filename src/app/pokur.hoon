@@ -141,17 +141,26 @@
           %6  -:(evaluate-6-card-hand full-hand)
           %7  -:(evaluate-7-card-hand full-hand)
         ==
-      :_  this(game.state `game.upd)  :_  ~
-      :^  %give  %fact  ~[/game-updates]
-      [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+      :_  this(game.state `game.upd)
+      :~  :^  %give  %fact  ~[/game-updates]
+          [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+          :*  %pass  wire
+              %agent  [src.bowl %pokur-host]
+              %leave  ~
+      ==  ==
     ::
         %game-over
       ~&  >  "host says: game is over."
       ?~  game.state  `this
       ?.  =(id.u.game.state game-id.upd)  `this
-      :_  this(game.state ~)  :_  ~
-      :^  %give  %fact  ~[/game-updates]
-      [%pokur-update !>(`update`[%game-over game-id.upd])]
+      :_  this(game.state ~)
+      :~  :^  %give  %fact  ~[/game-updates]
+          [%pokur-update !>(`update`[%game-over game-id.upd])]
+      ::
+          :*  %pass  wire
+              %agent  [src.bowl %pokur-host]
+              %leave  ~
+      ==  ==
     ==
   ::
       [%lobby-updates ~]

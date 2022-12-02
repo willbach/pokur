@@ -133,8 +133,6 @@
     :: TURN TIMER wire
     :: the timer ran out.. a player didn't make a move in time
     =/  game-id  (slav %da i.t.wire)
-    ~&  >>>
-    "%pokur-host: player timed out on game {<game-id>} at {<now.bowl>}"
     ::  find whose turn it is
     ?~  host-game=(~(get by games.state) game-id)
       `this
@@ -454,7 +452,6 @@
     %+  turn  ~(tap by hands.host-game)
     |=  [=ship hand=pokur-deck]
     ^-  card
-    =.  my-hand.game.host-game  hand
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
     [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
