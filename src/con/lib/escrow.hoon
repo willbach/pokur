@@ -4,14 +4,14 @@
   $:  custodian=address
       timelock=@ud  ::  measured in eth blocks
       =escrow-asset
-      depositors=(pmap ship [=address amount=@ud account=id])
+      depositors=(pmap ship [=address amount=@ud])
   ==
 ::
 +$  escrow-asset
   $:  contract=id
       metadata=id
       amount=@ud
-      account=(unit id)
+      account=id
   ==
 ::
 +$  action

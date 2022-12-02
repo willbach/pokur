@@ -1,4 +1,4 @@
-/-  *pokur
+/-  *pokur, wallet=zig-wallet
 /+  default-agent, dbug, *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
@@ -50,6 +50,8 @@
         %pokur-host-action
       ::  internal pokes and host management
       (handle-host-action:hc !<(host-action vase))
+        %wallet-update
+      (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
 ++  on-watch
@@ -424,6 +426,17 @@
     ::  u.table(players (~(del in players.u.table) who.action))
   ==
 ::
+++  handle-wallet-update
+  |=  update=wallet-update:wallet
+  ^-  (quip card _state)
+  ?+    -.update  !!
+  ::  only ever expecting a %finished-transaction notification
+      %finished-transaction
+    ::  can ignore for now, maybe do something in future
+    ~&  >  "%pokur-host: %award transaction was successful"
+    `state
+  ==
+::
 ::  +send-game-updates: make update cards for players and spectators
 ::
 ++  send-game-updates
@@ -449,8 +462,8 @@
   |=  host-game=host-game-state
   ^-  (list card)
   %+  weld
-    %+  turn  ~(tap by hands.host-game)
-    |=  [=ship hand=pokur-deck]
+    %+  turn  players.game.host-game
+    |=  [=ship *]
     ^-  card
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]

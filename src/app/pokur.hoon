@@ -142,12 +142,9 @@
           %7  -:(evaluate-7-card-hand full-hand)
         ==
       :_  this(game.state `game.upd)
-      :~  :^  %give  %fact  ~[/game-updates]
-          [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
-          :*  %pass  wire
-              %agent  [src.bowl %pokur-host]
-              %leave  ~
-      ==  ==
+      :_  ~
+      :^  %give  %fact  ~[/game-updates]
+      [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
     ::
         %game-over
       ~&  >  "host says: game is over."

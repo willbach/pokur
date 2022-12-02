@@ -13,10 +13,8 @@
     ::  get token metadata
     =/  meta  (need (scry-state asset-metadata.act))
     ?>  ?=(%& -.meta)
-    =/  i=id
+    =/  our-account=id
       (hash-data source.p.meta this.context town.context salt.p.meta)
-    =/  our-account=(unit id)
-      ?~((scry-state i) ~ `i)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
     =-  `(result ~ [%&^- ~] ~ [[%new-bond s+(scot %ux id.-)]]^~)
@@ -26,9 +24,10 @@
         town.context
         bond-salt
         %bond
+        ^-  bond:lib
         :^    custodian.act
             timelock.act
-          [source.p.meta asset-metadata.act 0 `i]
+          [source.p.meta asset-metadata.act 0 our-account]
         ~
     ==
   ::
@@ -36,21 +35,17 @@
     ::  get token metadata
     =/  meta  (need (scry-state asset-metadata.act))
     ?>  ?=(%& -.meta)
-    =/  i=id
+    =/  our-account=id
       (hash-data source.p.meta this.context town.context salt.p.meta)
-    =/  our-account=(unit id)
-      ?~((scry-state i) ~ `i)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
     :-  :_  ~
         :+  source.p.meta
           town.context
-        :*  %take
+        :^    %take
             this.context
-            amount.act
-            account.act
-            our-account
-        ==
+          amount.act
+        account.act
     =-  (result ~ [- ~] ~ `(list event)`[%new-bond s+(scot %ux -.+.-)]^~)
     :*  %&
         (hash-data this.context this.context town.context bond-salt)
@@ -59,10 +54,11 @@
         town.context
         bond-salt
         %bond
+        ^-  bond:lib
         :^    custodian.act
             timelock.act
-          [source.p.meta asset-metadata.act amount.act `i]
-        (make-pmap ~[[ship.act id.caller.context amount.act account.act]])
+          [source.p.meta asset-metadata.act amount.act our-account]
+        (make-pmap ~[[ship.act id.caller.context amount.act]])
     ==
   ::
       %deposit
@@ -77,23 +73,21 @@
         ::  if already a depositor, add amount to previous
         %+  ~(jab py depositors.noun.bond)
           ship.act
-        |=  [=address amount=@ud account=id]
+        |=  [=address amount=@ud]
         ?>  =(address id.caller.context)
-        [address (add amount amount.act) account]
+        [address (add amount amount.act)]
       ::  otherwise add new depositor
       %+  ~(put py depositors.noun.bond)
         ship.act
-      [id.caller.context amount.act account.act]
+      [id.caller.context amount.act]
     ::  return result bond + make %take call to token
     :_  (result [%&^bond ~] ~ ~ ~)
     :~  :+  contract.escrow-asset.noun.bond
           town.context
-        :*  %take
+        :^    %take
             this.context
-            amount.act
-            account.act
-            account.escrow-asset.noun.bond
-        ==
+          amount.act
+        account.act
     ==
   ::
       %award
@@ -103,17 +97,15 @@
     ::  caller must be the custodian
     ?>  =(custodian.noun.bond id.caller.context)
     ::  give asset
-    =/  receiver=[=address amount=@ud account=id]
+    =/  receiver=[=address amount=@ud]
       (~(got py depositors.noun.bond) to.act)
     :-  :_  ~
         :+  contract.escrow-asset.noun.bond
           town.context
-        :*  %give
+        :^    %give
             address.receiver
-            amount.act
-            (need account.escrow-asset.noun.bond)
-            `account.receiver
-        ==
+          amount.act
+        account.escrow-asset.noun.bond
     ::  if award adds up to total amount in escrow, destroy bond here
     ?:  =(amount.escrow-asset.noun.bond amount.act)
       ::  zero out and destroy the bond item
@@ -127,8 +119,8 @@
     ::  subtract depositor's claim
         depositors.noun.bond
       %+  ~(jab py depositors.noun.bond)  to.act
-      |=  [=address amount=@ud account=id]
-      [address (sub amount amount.act) account]
+      |=  [=address amount=@ud]
+      [address (sub amount amount.act)]
     ==
     (result [%&^bond ~] ~ ~ ~)
   ::
@@ -145,16 +137,14 @@
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
-    |=  [=ship =address amount=@ud account=id]
+    |=  [=ship =address amount=@ud]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context
-    :*  %give
+    :^    %give
         address
-        amount
-        (need account.escrow-asset.noun.bond)
-        `account
-    ==
+      amount
+    account.escrow-asset.noun.bond
   ::
       %release
     =/  bond
@@ -171,16 +161,14 @@
     ==
     :_  (result ~ ~ [%&^bond ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
-    |=  [=ship =address amount=@ud account=id]
+    |=  [=ship =address amount=@ud]
     ^-  call
     :+  contract.escrow-asset.noun.bond
       town.context
-    :*  %give
+    :^    %give
         address
-        amount
-        (need account.escrow-asset.noun.bond)
-        `account
-    ==
+      amount
+    account.escrow-asset.noun.bond
   ::
   ==
 ++  read

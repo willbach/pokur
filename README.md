@@ -34,7 +34,7 @@ Run the following commands on **~bus**:
 Now, we can start a moneyed game.
 We'll use zigs tokens for a sit n go.
 
-On ~zod:
+On **~zod**:
 First set your allowance so the escrow contract can take up to 1 million zigs from you:
 ```hoon
 :uqbar &wallet-poke [%transaction ~ from=0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 contract=0x74.6361.7274.6e6f.632d.7367.697a town=0x0 action=[%noun [%set-allowance who=0xabcd.abcd amount=1.000.000 account=0x89a0.89d8.dddf.d13a.418c.0d93.d4b4.e7c7.637a.d56c.96c0.7f91.3a14.8174.c7a7.71e6]]]
@@ -87,7 +87,7 @@ You can now start the game on **~zod**. At the end, the winning ship should be a
 
 On ship ~zod:
 ```
-:pokur &pokur-player-action [%new-table *@da ~zod ~ 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n] %.y %.y ~m10]
+:pokur &pokur-player-action [%new-table *@da ~zod ~ 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
 ```
 
 (look at "lobbies available" print to find table id -- this prints twice, is ok)
