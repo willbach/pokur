@@ -1,4 +1,5 @@
-/+  pokur, *pokur-json
+/-  pokur
+/+  *pokur-json
 =,  enjs:format
 |_  upd=update:pokur
 ++  grab
@@ -16,14 +17,20 @@
           ['hand_rank' s+my-hand-rank.upd]
       ==
     ::
-        %table
-      (enjs-table table.upd)
+        %table-closed
+      (pairs ~[['id' s+(scot %da table-id.upd)]])
+    ::
+        %game-starting
+      (pairs ~[['id' s+(scot %da game-id.upd)]])
+    ::
+        %game-over
+      (pairs ~[['id' s+(scot %da game-id.upd)]])
     ::
         %lobby
       %-  pairs
-      %+  turn  tables.upd
-      |=  =table
-      [(scot %da id.table) (enjs-table table)]
+      %+  turn  ~(tap by tables.upd)
+      |=  [id=@da =table]
+      [(scot %da id) (enjs-table table)]
     ::
         %new-message
       %-  pairs
@@ -32,8 +39,6 @@
       ==
     ::
         %left-game  ~
-    ::
-        %game-starting  ~
     ==
   --
 ++  grad  %noun

@@ -446,11 +446,12 @@
         (break-ties +.a +.b)
       (gth r.a r.b)
     ::  then check for identical hands, in which case pot must be split.
-    ?~  player-ranks  ~
-    =/  winning-hand  hand.i.player-ranks
-    %+  skim  t.player-ranks
+    ?~  player-ranks  -.player-ranks^~
+    =/  best-hand  hand.i.player-ranks
+    %+  skim
+      `(list [ship @ud hand=pokur-deck])`player-ranks
     |=  [ship @ud hand=pokur-deck]
-    (hands-equal hand winning-hand)
+    (hands-equal hand best-hand)
   ::
   ++  remove-player
     |=  who=ship
@@ -643,6 +644,7 @@
 ++  hands-equal
   |=  [h1=pokur-deck h2=pokur-deck]
   ^-  ?
+  ?:  &(=(~ h1) =(~ h2))  %.y
   ?~  h1  %.n
   ?~  h2  %.n
   ?.  (cards-equal i.h1 i.h2)

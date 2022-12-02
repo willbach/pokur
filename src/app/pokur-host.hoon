@@ -21,7 +21,14 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 [our.bowl 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 [0xabcd.abcd 0x0]] ~ ~])
+  =+  0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
+  :_  this(state [%0 [our.bowl - [0xabcd.abcd 0x0]] ~ ~])
+  :_  ~
+  :*  %pass  /pokur-wallet-poke
+      %agent  [our.bowl %uqbar]
+      %poke  %wallet-poke
+      !>([%approve-origin [%pokur-host /awards] [1 1.000.000]])
+  ==
 ++  on-save
   ^-  vase
   !>(state)
@@ -319,6 +326,7 @@
               contract=id.contract.host-info.u.table
               town=town.contract.host-info.u.table
               :-  %noun
+              ^-  action:escrow
               :*  %refund
                   bond-id.u.tokenized.u.table
               ==
@@ -439,6 +447,24 @@
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
   [%pokur-host-update !>(`host-update`[%game game.host-game])]
 ::
+++  game-over-updates
+  |=  host-game=host-game-state
+  ^-  (list card)
+  %+  weld
+    %+  turn  ~(tap by hands.host-game)
+    |=  [=ship hand=pokur-deck]
+    ^-  card
+    =.  my-hand.game.host-game  hand
+    :^  %give  %fact
+      ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+    [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+  %+  turn  ~(tap in spectators.game.host-game)
+  |=  =ship
+  ^-  card
+  :^  %give  %fact
+    ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+  [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+::
 ++  initialize-new-hand
   |=  host-game=host-game-state
   ^-  host-game-state
@@ -450,6 +476,8 @@
   |=  host-game=host-game-state
   ^-  (quip card _state)
   :_  state(games (~(del by games.state) id.game.host-game))
+  %+  welp
+    (game-over-updates host-game)
   :-  :*  %pass  /timer/(scot %da id.game.host-game)
           %arvo  %b  %rest
           turn-timer.host-game
@@ -463,10 +491,15 @@
   =/  total-payout=@ud
     %-  ~(total-payout fetch now.bowl our-info.state)
     bond-id.u.tokenized.host-game
+  ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
+  ~&  >  "payouts: {<payouts.game-type.game.host-game>}"
+  ~&  >  "placements: {<placements.host-game>}"
   =<  p
   %^  spin  payouts.game-type.game.host-game  0
   |=  [award-pct=@ud place=@ud]
   ::  build an award transaction for each paid placement
+  ::  automatically sign+submit these by poking %wallet
+  ::  in advance to automate txns from this origin
   ^-  [card @ud]
   :_  +(place)
   :*  %pass  /pokur-wallet-poke
@@ -474,15 +507,17 @@
       %poke  %wallet-poke
       !>
       :*  %transaction
-          origin=~  ::  TODO add handling for txn
+          origin=`[%pokur-host /awards]
           from=address.our-info.state
           contract=id.contract.our-info.state
           town=town.contract.our-info.state
           :-  %noun
+          ^-  action:escrow
           :*  %award
               bond-id.u.tokenized.host-game
               (snag place placements.host-game)
               ::  calculate payout
+              ::  TODO verify this is accurate
               %+  mul  award-pct
               (div total-payout 100)
           ==
