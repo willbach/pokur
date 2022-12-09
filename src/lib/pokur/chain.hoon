@@ -2,9 +2,9 @@
 /+  smart=zig-sys-smart
 |%
 ++  fetch
-  |_  [now=@da host-info]
+  |_  [[our=@p now=@da] host-info]
   ++  i-scry
-    /(scot %p ship)/uqbar/(scot %da now)/indexer
+    /(scot %p our)/uqbar/(scot %da now)/indexer
   ++  bond-state
     |=  bond-id=id:smart
     ^-  (unit bond:escrow)
@@ -20,6 +20,12 @@
     ?.  ?=(%newest-item -.update)  ~
     ?>  ?=(%& -.item.update)
     ((soft bond:escrow) noun.p.item.update)
+  ::
+  ++  total-payout
+    |=  bond-id=id:smart
+    ^-  @ud
+    =/  =bond:escrow  (need (bond-state bond-id))
+    amount.escrow-asset.bond
   ::
   ++  valid-new-table
     |=  [src=^ship bond-id=id:smart token-amount=@ud]

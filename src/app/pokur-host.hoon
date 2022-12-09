@@ -1,4 +1,4 @@
-/-  *pokur
+/-  *pokur, wallet=zig-wallet
 /+  default-agent, dbug, *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
@@ -21,7 +21,14 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 [our.bowl 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 [0xabcd.abcd 0x0]] ~ ~])
+  =+  0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
+  :_  this(state [%0 [our.bowl - [0xabcd.abcd 0x0]] ~ ~])
+  :_  ~
+  :*  %pass  /pokur-wallet-poke
+      %agent  [our.bowl %uqbar]
+      %poke  %wallet-poke
+      !>([%approve-origin [%pokur-host /awards] [1 1.000.000]])
+  ==
 ++  on-save
   ^-  vase
   !>(state)
@@ -43,6 +50,8 @@
         %pokur-host-action
       ::  internal pokes and host management
       (handle-host-action:hc !<(host-action vase))
+        %wallet-update
+      (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
 ++  on-watch
@@ -108,7 +117,7 @@
     ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-game)
+        (end-game-pay-winners u.host-game)
       [cards this]
     =.  u.host-game
       ~(increment-current-round modify-game-state u.host-game)
@@ -126,8 +135,6 @@
     :: TURN TIMER wire
     :: the timer ran out.. a player didn't make a move in time
     =/  game-id  (slav %da i.t.wire)
-    ~&  >>>
-    "%pokur-host: player timed out on game {<game-id>} at {<now.bowl>}"
     ::  find whose turn it is
     ?~  host-game=(~(get by games.state) game-id)
       `this
@@ -136,7 +143,7 @@
     ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
-        (end-game u.host-game)
+        (end-game-pay-winners u.host-game)
       [cards this]
     :: reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
@@ -213,8 +220,8 @@
       =.  u.host-game  (initialize-new-hand u.host-game)
       :-  (send-game-updates u.host-game)
       state(games (~(put by games.state) id.game u.host-game))
-    ::  TODO handle paying winner(s) here
-    (end-game u.host-game)
+    ::  host handles paying winner(s) here
+    (end-game-pay-winners u.host-game)
   :_  state
   %+  weld  cards
   ^-  (list card)
@@ -254,10 +261,19 @@
           spectators-allowed.action
           turn-time-limit.action
       ==
+    ::  validate spec
+    ?>  ?-  -.game-type.action
+          %cash  %.y  ::  TODO
+          %sng  (valid-sng-spec action)
+        ==
     ::  if game is tokenized, find bond on chain and validate
     ?>  ?|  ?=(~ tokenized.action)
-            %-  ~(valid-new-table fetch now.bowl our-info.state)
+            %-  ~(valid-new-table fetch [our now]:bowl our-info.state)
             [src.bowl [bond-id amount]:u.tokenized.action]
+        ==
+    ::  only handling tokenized %sng tables for now
+    ?>  ?|  ?=(~ tokenized.action)
+            ?=(%sng -.game-type.action)
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
@@ -273,7 +289,7 @@
     ::  if game is tokenized, check against
     ::  bond to see if player has paid in
     ?>  ?|  ?=(~ tokenized.u.table)
-            %-  ~(valid-new-player fetch now.bowl our-info.state)
+            %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
             [src.bowl [bond-id amount]:u.tokenized.u.table]
         ==
     =.  players.u.table  (~(put in players.u.table) src.bowl)
@@ -310,6 +326,7 @@
               contract=id.contract.host-info.u.table
               town=town.contract.host-info.u.table
               :-  %noun
+              ^-  action:escrow
               :*  %refund
                   bond-id.u.tokenized.u.table
               ==
@@ -361,6 +378,8 @@
           deck=generate-deck
           hand-is-over=%.y
           turn-timer=(add now.bowl turn-time-limit.u.table)
+          tokenized.u.table
+          placements=~
           game
       ==
     =.  tables.state  (~(del by tables.state) id.action)
@@ -407,6 +426,17 @@
     ::  u.table(players (~(del in players.u.table) who.action))
   ==
 ::
+++  handle-wallet-update
+  |=  update=wallet-update:wallet
+  ^-  (quip card _state)
+  ?+    -.update  !!
+  ::  only ever expecting a %finished-transaction notification
+      %finished-transaction
+    ::  can ignore for now, maybe do something in future
+    ~&  >  "%pokur-host: %award transaction was successful"
+    `state
+  ==
+::
 ::  +send-game-updates: make update cards for players and spectators
 ::
 ++  send-game-updates
@@ -428,6 +458,23 @@
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
   [%pokur-host-update !>(`host-update`[%game game.host-game])]
 ::
+++  game-over-updates
+  |=  host-game=host-game-state
+  ^-  (list card)
+  %+  weld
+    %+  turn  players.game.host-game
+    |=  [=ship *]
+    ^-  card
+    :^  %give  %fact
+      ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+    [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+  %+  turn  ~(tap in spectators.game.host-game)
+  |=  =ship
+  ^-  card
+  :^  %give  %fact
+    ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
+  [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+::
 ++  initialize-new-hand
   |=  host-game=host-game-state
   ^-  host-game-state
@@ -435,15 +482,65 @@
   %-  ~(initialize-hand modify-game-state host-game)
   dealer.game.host-game
 ::
-++  end-game
+++  end-game-pay-winners
   |=  host-game=host-game-state
   ^-  (quip card _state)
   :_  state(games (~(del by games.state) id.game.host-game))
-  :_  ~
-  :*  %pass  /timer/(scot %da id.game.host-game)
-      %arvo  %b  %rest
-      turn-timer.host-game
+  %+  welp
+    (game-over-updates host-game)
+  :-  :*  %pass  /timer/(scot %da id.game.host-game)
+          %arvo  %b  %rest
+          turn-timer.host-game
+      ==
+  ::  if game isn't tokenized, just delete
+  ?~  tokenized.host-game
+    ~
+  ::  pay based on game type (only handling %sng now)
+  ::  TODO handle cash
+  ?>  ?=(%sng -.game-type.game.host-game)
+  =/  total-payout=@ud
+    %-  ~(total-payout fetch [our now]:bowl our-info.state)
+    bond-id.u.tokenized.host-game
+  ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
+  ~&  >  "payouts: {<payouts.game-type.game.host-game>}"
+  ~&  >  "placements: {<placements.host-game>}"
+  =<  p
+  %^  spin  payouts.game-type.game.host-game  0
+  |=  [award-pct=@ud place=@ud]
+  ::  build an award transaction for each paid placement
+  ::  automatically sign+submit these by poking %wallet
+  ::  in advance to automate txns from this origin
+  ^-  [card @ud]
+  :_  +(place)
+  :*  %pass  /pokur-wallet-poke
+      %agent  [our.bowl %uqbar]
+      %poke  %wallet-poke
+      !>
+      :*  %transaction
+          origin=`[%pokur-host /awards]
+          from=address.our-info.state
+          contract=id.contract.our-info.state
+          town=town.contract.our-info.state
+          :-  %noun
+          ^-  action:escrow
+          :*  %award
+              bond-id.u.tokenized.host-game
+              (snag place placements.host-game)
+              ::  calculate payout
+              ::  TODO verify this is accurate
+              %+  mul  award-pct
+              (div total-payout 100)
+          ==
+      ==
   ==
+::
+++  valid-sng-spec
+  |=  act=player-action
+  ^-  ?
+  ?.  ?=(%new-table -.act)  %.n
+  ?.  ?=(%sng -.game-type.act)  %.n
+  ?.  (gte min-players.act (lent payouts.game-type.act))  %.n
+  =(100 (roll payouts.game-type.act add))
 ::
 ++  table-share-card
   |=  =table

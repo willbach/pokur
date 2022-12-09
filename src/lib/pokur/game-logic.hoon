@@ -272,6 +272,7 @@
   ::  given a list of winners, send them the pot. prepare for next
   ::  hand by clearing board, hands and bets, reset fold status,
   ::  and incrementing hands-played.
+  ::  also, see if any players have gotten out and place them (for tournaments)
   ++  process-win
     |=  winners=(list ship)
     ^-  host-game-state
@@ -307,6 +308,12 @@
       ?|  =(1 active-with-chips)
           =(0 active-with-chips)
       ==
+    ::
+        placements
+      ::  re-order player placements based on stacks
+      ::  if player already has stack=0, their placement is locked in
+      ::  if not, re-order with other players based on stacks
+      (reorder-placements placements.state players.game.state)
     ::
         players.game
       %+  turn  players.game.state
@@ -439,11 +446,12 @@
         (break-ties +.a +.b)
       (gth r.a r.b)
     ::  then check for identical hands, in which case pot must be split.
-    ?~  player-ranks  ~
-    =/  winning-hand  hand.i.player-ranks
-    %+  skim  t.player-ranks
+    ?~  player-ranks  -.player-ranks^~
+    =/  best-hand  hand.i.player-ranks
+    %+  skim
+      `(list [ship @ud hand=pokur-deck])`player-ranks
     |=  [ship @ud hand=pokur-deck]
-    (hands-equal hand winning-hand)
+    (hands-equal hand best-hand)
   ::
   ++  remove-player
     |=  who=ship
@@ -460,6 +468,20 @@
       next-player-turn
     next-betting-round
   --
+::
+++  reorder-placements
+  |=  [places=(list ship) players=(list [=ship player-info])]
+  ^-  (list ship)
+  ::  sort players list by stack size, break ties by using their
+  ::  *previous* rank in places list
+  %-  turn  :_  head
+  %+  sort  players
+  |=  [a=[=ship player-info] b=[=ship player-info]]
+  ?:  (gth stack.a stack.b)  %.y
+  ?:  (lth stack.a stack.b)  %.n
+  %+  gth
+    (need (find ~[ship.a] places))
+  (need (find ~[ship.b] places))
 ::
 ::  Hand evaluation and sorted helper arms
 ::
@@ -622,6 +644,7 @@
 ++  hands-equal
   |=  [h1=pokur-deck h2=pokur-deck]
   ^-  ?
+  ?:  &(=(~ h1) =(~ h2))  %.y
   ?~  h1  %.n
   ?~  h2  %.n
   ?.  (cards-equal i.h1 i.h2)

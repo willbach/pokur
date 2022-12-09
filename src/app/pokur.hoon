@@ -141,12 +141,23 @@
           %6  -:(evaluate-6-card-hand full-hand)
           %7  -:(evaluate-7-card-hand full-hand)
         ==
-      :_  this(game.state `game.upd)  :_  ~
+      :_  this(game.state `game.upd)
+      :_  ~
       :^  %give  %fact  ~[/game-updates]
       [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
     ::
-    ::  %game-over
-    ::
+        %game-over
+      ~&  >  "host says: game is over."
+      ?~  game.state  `this
+      ?.  =(id.u.game.state game-id.upd)  `this
+      :_  this(game.state ~)
+      :~  :^  %give  %fact  ~[/game-updates]
+          [%pokur-update !>(`update`[%game-over game-id.upd])]
+      ::
+          :*  %pass  wire
+              %agent  [src.bowl %pokur-host]
+              %leave  ~
+      ==  ==
     ==
   ::
       [%lobby-updates ~]
@@ -241,6 +252,7 @@
                 contract=id.contract.u.host-info
                 town=town.contract.u.host-info
                 :-  %noun
+                ^-  action:escrow
                 :*  %new-bond-with-deposit
                     address.u.host-info
                     default-timelock
@@ -368,6 +380,7 @@
             contract=id.contract.host-info.table
             town=town.contract.host-info.table
             :-  %noun
+            ^-  action:escrow
             :*  %deposit
                 bond-id.u.tokenized.table
                 our.bowl
