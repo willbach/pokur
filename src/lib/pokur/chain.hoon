@@ -2,9 +2,9 @@
 /+  smart=zig-sys-smart
 |%
 ++  fetch
-  |_  [now=@da host-info]
+  |_  [[our=@p now=@da] host-info]
   ++  i-scry
-    /(scot %p ship)/uqbar/(scot %da now)/indexer
+    /(scot %p our)/uqbar/(scot %da now)/indexer
   ++  bond-state
     |=  bond-id=id:smart
     ^-  (unit bond:escrow)

@@ -268,7 +268,7 @@
         ==
     ::  if game is tokenized, find bond on chain and validate
     ?>  ?|  ?=(~ tokenized.action)
-            %-  ~(valid-new-table fetch now.bowl our-info.state)
+            %-  ~(valid-new-table fetch [our now]:bowl our-info.state)
             [src.bowl [bond-id amount]:u.tokenized.action]
         ==
     ::  only handling tokenized %sng tables for now
@@ -289,7 +289,7 @@
     ::  if game is tokenized, check against
     ::  bond to see if player has paid in
     ?>  ?|  ?=(~ tokenized.u.table)
-            %-  ~(valid-new-player fetch now.bowl our-info.state)
+            %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
             [src.bowl [bond-id amount]:u.tokenized.u.table]
         ==
     =.  players.u.table  (~(put in players.u.table) src.bowl)
@@ -499,7 +499,7 @@
   ::  TODO handle cash
   ?>  ?=(%sng -.game-type.game.host-game)
   =/  total-payout=@ud
-    %-  ~(total-payout fetch now.bowl our-info.state)
+    %-  ~(total-payout fetch [our now]:bowl our-info.state)
     bond-id.u.tokenized.host-game
   ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
   ~&  >  "payouts: {<payouts.game-type.game.host-game>}"
