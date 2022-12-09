@@ -22,6 +22,7 @@
       ['pots' (enjs-pots pots.t)]
       ['current_bet' s+(scot %ud current-bet.t)]
       ['last_bet' s+(scot %ud last-bet.t)]
+      ['min_bet' s+(scot %ud (make-min-bet t))]
       ['board' (enjs-cards board.t)]
       ['hand' (enjs-cards my-hand.t)]
       ['current_turn' s+(scot %p whose-turn.t)]
@@ -33,6 +34,17 @@
       ['hands_played' s+(scot %ud hands-played.t)]
       ['update_message' s+update-message.t]
   ==
+::
+++  make-min-bet
+  |=  t=game
+  ^-  @ud
+  ?.  =(0 last-bet.t)
+    last-bet.t
+  ?:  ?=(%cash -.game-type.t)
+    big-blind.game-type.t
+  =<  big
+  %-  snag
+  [current-round blinds-schedule]:game-type.t
 ::
 ++  enjs-table
   |=  l=table
