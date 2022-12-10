@@ -64,7 +64,7 @@
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
-      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       ::  keep an ordered list of player stacks
       ::  1st is winner, 2nd is second, etc
       placements=(list ship)
@@ -98,7 +98,7 @@
 +$  table
   $:  id=@da
       =host-info
-      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
@@ -120,7 +120,7 @@
   $%  [%game =game my-hand-rank=@t]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over game-id=@da]
+      [%game-over game-id=@da placements=(list ship)]
       [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
@@ -129,7 +129,7 @@
   $%  [%game =game]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over game-id=@da]
+      [%game-over game-id=@da placements=(list ship)]
       [%lobby tables=(map @da table)]
   ==
 ::
@@ -137,7 +137,7 @@
   $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship
-          tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
           min-players=@ud
           max-players=@ud
           =game-type

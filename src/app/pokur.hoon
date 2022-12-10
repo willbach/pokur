@@ -152,7 +152,7 @@
       ?.  =(id.u.game.state game-id.upd)  `this
       :_  this(game.state ~)
       :~  :^  %give  %fact  ~[/game-updates]
-          [%pokur-update !>(`update`[%game-over game-id.upd])]
+          [%pokur-update !>(`update`upd)]
       ::
           :*  %pass  wire
               %agent  [src.bowl %pokur-host]

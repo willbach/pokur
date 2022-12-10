@@ -467,13 +467,13 @@
     ^-  card
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-    [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+    [%pokur-host-update !>(`host-update`[%game-over [id.game placements]:host-game])]
   %+  turn  ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
   :^  %give  %fact
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-  [%pokur-host-update !>(`host-update`[%game-over id.game.host-game])]
+  [%pokur-host-update !>(`host-update`[%game-over [id.game placements]:host-game])]
 ::
 ++  initialize-new-hand
   |=  host-game=host-game-state

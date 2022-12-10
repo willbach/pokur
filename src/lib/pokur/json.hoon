@@ -133,10 +133,11 @@
   [%a ~[s+(scot %ud s) s+(scot %ud b)]]
 ::
 ++  enjs-tokenized
-  |=  [metadata=@ux amount=@ud bond-id=@ux]
+  |=  [metadata=@ux symbol=@t amount=@ud bond-id=@ux]
   ^-  json
   %-  pairs
   :~  ['metadata' s+(scot %ux metadata)]
+      ['symbol' s+symbol]
       ['amount' s+(scot %ud amount)]
       ['bond_id' s+(scot %ux bond-id)]
   ==
