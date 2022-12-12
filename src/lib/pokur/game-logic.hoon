@@ -28,7 +28,8 @@
     ?:  |(=(3 n) =(4 n))  turn-or-river
     ?.  =(5 n)            pokur-flop
     ::  handle end of hand
-    %-  process-win
+    ::               this is SHOWDOWN
+    %-  process-win  :_  %.y
     %-  turn  :_  head
     %-  determine-winner
     %+  murn  players.game.state
@@ -43,6 +44,7 @@
   ++  initialize-hand
     |=  dealer=ship
     ^-  host-game-state
+    =.  last-aggressor.game.state  ~
     =.  players.game.state
       %+  skip  players.game.state
       |=([ship player-info] left)
@@ -216,12 +218,17 @@
       """
     ==
   ::
+  ::  if showdown, reveal hand of winner(s) and last-aggressor
   ++  award-pots
-    |=  winners=(list ship)
+    |=  [winners=(list ship) showdown=?]
     ^-  host-game-state
-    ::  TODO create update message with side pot handling
     ?~  pots.game.state  state
     =.  update-message.game.state  ''
+    =.  revealed-hands.game.state
+      =-  ?~  last=last-aggressor.game.state  -
+          [[u.last (~(got by hands.state) u.last)] -]
+      %+  turn  winners
+      |=(p=@p [p (~(got by hands.state) p)])
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list ship)
       %+  skip  winners
@@ -279,11 +286,11 @@
   ::  and incrementing hands-played.
   ::  also, see if any players have gotten out and place them (for tournaments)
   ++  process-win
-    |=  winners=(list ship)
+    |=  [winners=(list ship) showdown=?]
     ^-  host-game-state
     ::  sends any extra committed chips to pot
     =.  state  committed-chips-to-pot
-    =.  state  (award-pots winners)
+    =.  state  (award-pots winners showdown)
     =?    state
         ?&  ?=(%sng -.game-type.game.state)
             round-is-over.game-type.game.state
@@ -359,7 +366,8 @@
         %+  skip  players.game.state
         |=([ship ^player-info] folded)
       ?:  =(1 (lent players-left))
-        `(process-win [-.-.players-left]~)
+        ::  NOT showdown
+        `(process-win [-.-.players-left]~ %.n)
       :: otherwise continue game
       ?.  is-betting-over
         `next-player-turn

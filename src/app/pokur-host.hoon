@@ -372,6 +372,7 @@
           spectators=~
           hands-played=0
           (crip "Pokur game started, hosted by {<our.bowl>}")
+          revealed-hands=~
       ==
     =/  =host-game-state
       %-  initialize-new-hand

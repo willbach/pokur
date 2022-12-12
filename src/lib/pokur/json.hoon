@@ -33,6 +33,7 @@
       ['spectators' a+(turn ~(tap in spectators.t) ship)]
       ['hands_played' s+(scot %ud hands-played.t)]
       ['update_message' s+update-message.t]
+      ['revealed_hands' (enjs-hands revealed-hands.t)]
   ==
 ::
 ++  make-min-bet
@@ -62,6 +63,14 @@
       ['spectators_allowed' b+spectators-allowed.l]
       ['turn_time_limit' s+(scot %dr turn-time-limit.l)]
   ==
+::
+++  enjs-hands
+  |=  hands=(list [@p pokur-deck])
+  ^-  json
+  %-  pairs
+  %+  turn  hands
+  |=  [p=@p hand=pokur-deck]
+  [(scot %p p) (enjs-cards hand)]
 ::
 ++  enjs-cards
   |=  cards=pokur-deck

@@ -94,6 +94,7 @@
       spectators=(set ship)
       hands-played=@ud
       update-message=@t
+      revealed-hands=(list [ship pokur-deck])
   ==
 ::
 +$  table
