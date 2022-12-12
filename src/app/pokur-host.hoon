@@ -176,6 +176,7 @@
       %share-table
     ::  get table from other host, add to our lobby
     ?>  =(src.bowl ship.host-info.table.action)
+    ?:  =(src.bowl our.bowl)  `state
     =.  tables.state
       (~(put by tables.state) id.table.action table.action)
     [(lobby-update-card tables.state)^~ state]

@@ -8,18 +8,17 @@
 ::
 ++  modify-game-state
   |_  state=host-game-state
-  ::  checks if all players have acted or folded, and
-  ::  committed the same amount of chips, OR,
-  ::  if a player is all-in, i.e. has 0 in stack
+  ::  check if every player has either folded, or
+  ::  acted AND (committed = current bet OR all-in)
   ++  is-betting-over
     ^-  ?
     %+  levy  players.game.state
     |=  [ship player-info]
-    ?|  acted
-        folded
-        ?&  =(0 stack)
-            =(committed current-bet.game.state)
-    ==  ==
+    ?|  folded
+        ?&  acted
+            ?|  =(0 stack)
+                =(committed current-bet.game.state)
+    ==  ==  ==
   ::  checks cards on game and either initiates flop,
   ::  turn, river, or determine-winner
   ++  next-betting-round
@@ -75,11 +74,13 @@
   ::
   ++  pokur-flop
     ^-  host-game-state
+    =.  last-aggressor.game.state  ~
     =.  state  committed-chips-to-pot
     (deal-to-board 3)
   ::
   ++  turn-or-river
     ^-  host-game-state
+    =.  last-aggressor.game.state  ~
     =.  state  committed-chips-to-pot
     (deal-to-board 1)
   ::  draws n cards (after burning 1) from deck,
@@ -225,10 +226,12 @@
     ?~  pots.game.state  state
     =.  update-message.game.state  ''
     =.  revealed-hands.game.state
-      =-  ?~  last=last-aggressor.game.state  -
-          [[u.last (~(got by hands.state) u.last)] -]
-      %+  turn  winners
-      |=(p=@p [p (~(got by hands.state) p)])
+      =/  revealed
+          %+  turn  winners
+          |=(p=@p [p (~(got by hands.state) p)])
+      ?~  last=last-aggressor.game.state  revealed
+      ?^  (find ~[u.last] revealed)       revealed
+      [[u.last (~(got by hands.state) u.last)] revealed]
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list ship)
       %+  skip  winners
