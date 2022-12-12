@@ -361,6 +361,7 @@
           pots=~[[0 ~(tap in players.u.table)]]
           current-bet=0
           last-bet=0
+          last-aggressor=~
           board=~
           my-hand=~
           whose-turn=*ship

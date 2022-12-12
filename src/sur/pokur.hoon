@@ -82,6 +82,7 @@
       pots=(list [amount=@ud in=(list ship)])  ::  list is for side-pots
       current-bet=@ud
       last-bet=@ud
+      last-aggressor=(unit ship)  ::  used in showdowns for hand reveal
       board=pokur-deck
       my-hand=pokur-deck
       whose-turn=ship

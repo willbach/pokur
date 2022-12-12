@@ -221,6 +221,7 @@
     ^-  host-game-state
     ::  TODO create update message with side pot handling
     ?~  pots.game.state  state
+    =.  update-message.game.state  ''
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list ship)
       %+  skip  winners
@@ -247,11 +248,15 @@
             (scot %p -.winners-in-pot)
             ' wins pot of '
             (scot %ud amount.pot)
+            '.  '
+            update-message.game.state
         ==
       =+  (roll (turn winners-in-pot |=(a=@ (scot %p a))) (cury cat 3))
       ;:  (cury cat 3)
           -  ' split pot of '
           (scot %ud amount.pot)
+          '.  '
+          update-message.game.state
       ==
         players.game.state
       ?:  =(1 (lent winners-in-pot))
@@ -371,16 +376,19 @@
         [current-round blinds-schedule]:game-type.game.state
       ?:  (gte amount.action stack.player-info)
         ::  ALL-IN logic here
-        =.  last-bet.game.state
-          ::  same with last-bet, only update if raise
-          ?:  (gth bet-plus-committed current-bet.game.state)
-            (sub bet-plus-committed current-bet.game.state)
-          last-bet.game.state
         =.  current-bet.game.state
           ::  only update current bet if the all-in is a raise
           ?:  (gth bet-plus-committed current-bet.game.state)
             bet-plus-committed
           current-bet.game.state
+        =.  last-bet.game.state
+          ::  same with last-bet, only update if raise
+          ?:  (gth bet-plus-committed current-bet.game.state)
+            (sub bet-plus-committed current-bet.game.state)
+          last-bet.game.state
+        =?    last-aggressor.game.state
+            (gth bet-plus-committed current-bet.game.state)
+          `who
         =.  players.game.state  (commit-chips who stack.player-info)
         =.  players.game.state  (set-player-as-acted who)
         =.  update-message.game.state  (crip "{<who>} is all-in.")
@@ -405,8 +413,9 @@
               (add last-bet.game.state current-bet.game.state)
           ==
         ::  error, raise must be >= amount of previous bet/raise
-        !!
+        ~
       ::  process raise
+      =.  last-aggressor.game.state  `who
       ::  do this before updating current-bet
       =.  last-bet.game.state
         (sub bet-plus-committed current-bet.game.state)
