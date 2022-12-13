@@ -231,7 +231,7 @@
           ::  if hand is over, add 5s to next turn
           ?.  hand-is-over.u.host-game
             new-timer
-          (add ~s5 new-timer)
+          (add new-timer ~s5)
       ==
   ?~  turn-timer.u.host-game
     :: there's no ongoing timer to cancel, just set new
@@ -393,7 +393,7 @@
     %+  welp
       :~  :*  %pass  /timer/(scot %da id.game)
               %arvo  %b  %wait
-              turn-timer.host-game-state
+              (add turn-timer.host-game-state ~s5)
           ==
           (game-starting-card id.u.table)
           (lobby-update-card tables.state)
