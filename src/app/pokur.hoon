@@ -147,9 +147,9 @@
       [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
     ::
         %game-over
-      ~&  >  "host says: game is over."
-      ?~  game.state  `this
-      ?.  =(id.u.game.state game-id.upd)  `this
+      ~&  >  "new game state:"
+      ~&  >  game.upd
+      ~&  >>  "host says: game is over."
       :_  this(game.state ~)
       :~  :^  %give  %fact  ~[/game-updates]
           [%pokur-update !>(`update`upd)]

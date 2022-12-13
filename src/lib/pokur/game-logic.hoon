@@ -365,7 +365,7 @@
         %fold
       =.  players.game.state  (set-player-as-acted who)
       =.  players.game.state  (set-player-as-folded who)
-      :: if only one player hasn't folded, process win for them
+      ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state
         |=([ship ^player-info] folded)
@@ -484,6 +484,15 @@
       |=  [p=ship i=player-info]
       ?.  =(p who)  [p i]
       [p i(acted %.y, folded %.y, left %.y)]
+    =.  update-message.game.state
+      '{<who>} left the game.'
+    =/  players-left
+      %+  skip  players.game.state
+      |=([ship player-info] folded)
+    ?:  =(1 (lent players-left))
+      ::  will handle ending game
+      (process-win [-.-.players-left]~ %.n)
+    ::  otherwise continue game
     ?.  =(who whose-turn.game.state)  state
     ?.  is-betting-over
       next-player-turn
@@ -495,9 +504,12 @@
   ^-  (list ship)
   ::  sort players list by stack size, break ties by using their
   ::  *previous* rank in places list
+  ::  any players who have left are treated as stack=0
   %-  turn  :_  head
   %+  sort  players
   |=  [a=[=ship player-info] b=[=ship player-info]]
+  ?:  ?&(!left.a left.b)  %.y
+  ?:  ?&(left.a !left.b)  %.n
   ?:  (gth stack.a stack.b)  %.y
   ?:  (lth stack.a stack.b)  %.n
   %+  gth

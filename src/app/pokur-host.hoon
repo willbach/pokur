@@ -409,13 +409,20 @@
     ::  player leaves game
     ?~  host-game=(~(get by games.state) id.action)
       !!
+    ?.  ?|  (~(has by hands.u.host-game) src.bowl)
+            (~(has in spectators.game.u.host-game) src.bowl)
+        ==
+      !!
     :: remove sender from their game
-    =.  u.host-game
+    =?    u.host-game
+        (~(has by hands.u.host-game) src.bowl)
       (~(remove-player modify-game-state u.host-game) src.bowl)
-    =*  game  game.u.host-game
     :: remove spectator if they were one
-    =.  spectators.game
-      (~(del in spectators.game) src.bowl)
+    =.  spectators.game.u.host-game
+      (~(del in spectators.game.u.host-game) src.bowl)
+    ::  if only one player remains in game, end it.
+    ?:  game-is-over.game.u.host-game
+      (end-game-pay-winners u.host-game)
     :-  (send-game-updates u.host-game)
     state(games (~(put by games.state) id.action u.host-game))
   ::
@@ -473,13 +480,13 @@
     ^-  card
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-    [%pokur-host-update !>(`host-update`[%game-over [id.game placements]:host-game])]
+    [%pokur-host-update !>(`host-update`[%game-over [game placements]:host-game])]
   %+  turn  ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
   :^  %give  %fact
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-  [%pokur-host-update !>(`host-update`[%game-over [id.game placements]:host-game])]
+  [%pokur-host-update !>(`host-update`[%game-over [game placements]:host-game])]
 ::
 ++  initialize-new-hand
   |=  host-game=host-game-state
@@ -500,6 +507,7 @@
       ==
   ::  if game isn't tokenized, just delete
   ?~  tokenized.host-game
+    ~&  >  "placements: {<placements.host-game>}"
     ~
   ::  pay based on game type (only handling %sng now)
   ::  TODO handle cash
