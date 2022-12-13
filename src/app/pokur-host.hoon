@@ -228,7 +228,10 @@
   ^-  (list card)
   :-  :*  %pass  /timer/(scot %da id.game)
           %arvo  %b  %wait
-          new-timer
+          ::  if hand is over, add 5s to next turn
+          ?.  hand-is-over.u.host-game
+            new-timer
+          (add ~s5 new-timer)
       ==
   ?~  turn-timer.u.host-game
     :: there's no ongoing timer to cancel, just set new

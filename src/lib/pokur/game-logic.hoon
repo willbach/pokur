@@ -44,6 +44,7 @@
     |=  dealer=ship
     ^-  host-game-state
     =.  last-aggressor.game.state  ~
+    =.  revealed-hands.game.state  ~
     =.  players.game.state
       %+  skip  players.game.state
       |=([ship player-info] left)
