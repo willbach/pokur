@@ -37,6 +37,9 @@
       ::  if the bond's timelock has passed and not all tokens
       ::  have been awarded.
       [%release bond-id=id]
+      ::  handle token standard %push action
+      ::  the actions this handles: %deposit, %new-bond-with-deposit
+      [%on-push from=id amount=@ud calldata=*]
   ==
 ::
 ::  standard fungible token metadata

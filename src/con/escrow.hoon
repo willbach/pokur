@@ -170,9 +170,22 @@
       amount
     account.escrow-asset.noun.bond
   ::
+      %on-push
+    ::  react to token %push, where allowance equaling `amount.act` was set
+    ::  and this contract was called by `from.act`. we only handle %deposit
+    ::  and %new-bond-with-deposit here.
+    =/  calldata  ;;(action:lib calldata.act)
+    ?>  ?+  -.calldata  %.n
+          %deposit                =(amount.act amount.calldata)
+          %new-bond-with-deposit  =(amount.act amount.calldata)
+        ==
+    %=  $
+      act  calldata
+      id.caller.context  from.act
+    ==
   ==
 ++  read
-  |_  =path
+  |_  =pith
   ++  json
     ~
   ++  noun
