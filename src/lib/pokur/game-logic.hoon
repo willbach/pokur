@@ -796,24 +796,32 @@
     j         +(j)
     new-deck  [(atom-to-card-val j) (atom-to-suit i)]^new-deck
   ==
-::  given a deck and entropy, return shuffled deck
-::  TODO: this could be better... not sure it's robust enough for real play
-++  shuffle-deck
-  |=  [unshuffled=pokur-deck entropy=@]
-  ^-  pokur-deck
-  =|  shuffled=pokur-deck
-  =/  random  ~(. og entropy)
-  =/  remaining  (lent unshuffled)
+::
+::  shuffle a list -- used to shuffle pokur deck,
+::  and player list at start of game
+::
+::  DO NOT USE THIS FOR LARGE LISTS. IT IS EXTREMELY SLOW.
+::  I have enforced that i <= 100 to make absolutely sure
+::  that this arm is only used for shuffling decks and players
+::
+::  https://dl.acm.org/doi/pdf/10.1145/364520.364540#.pdf
+::  -- To shuffle an array a of n elements (indices 0..n-1):
+::  for i from n−1 downto 1 do:
+::     j ← random integer such that 0 ≤ j ≤ i
+::     exchange a[j] and a[i]
+::
+++  shuffle
+  |*  [a=(list) eny=@]
+  ^+  a
+  =+  r=~(. og eny)
+  =+  i=(lent a)
+  ?>  (lte i 100)
   |-
-  ?:  =(remaining 1)
-    [(snag 0 unshuffled) shuffled]
-  =^  index  random
-    (rads:random remaining)
-  %=  $
-    shuffled    (snag index unshuffled)^shuffled
-    remaining   (dec remaining)
-    unshuffled  (oust [index 1] unshuffled)
-  ==
+  ?:  =(i 0)  a
+  =^  j  r
+    (rads:r i)
+  $(i (dec i), a (into (oust [j 1] a) i (snag j a)))
+::
 ::  gives back [hand rest] where hand is n cards from top of deck, rest is rest
 ++  draw
   |=  [n=@ud d=pokur-deck]

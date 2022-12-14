@@ -364,7 +364,9 @@
           game-type.u.table
           turn-time-limit.u.table
           turn-start=(add now.bowl ~s5)
-          %+  turn  ~(tap in players.u.table)
+          %+  turn
+            ::  shuffle player list to get random starting order
+            (shuffle ~(tap in players.u.table) eny.bowl)
           |=  =ship
           [ship starting-stack.game-type.u.table 0 %.n %.n %.n]
           pots=~[[0 ~(tap in players.u.table)]]
@@ -496,7 +498,7 @@
 ++  initialize-new-hand
   |=  host-game=host-game-state
   ^-  host-game-state
-  =.  deck.host-game  (shuffle-deck deck.host-game eny.bowl)
+  =.  deck.host-game  (shuffle deck.host-game eny.bowl)
   %-  ~(initialize-hand modify-game-state host-game)
   dealer.game.host-game
 ::
