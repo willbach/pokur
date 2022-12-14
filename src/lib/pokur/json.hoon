@@ -18,6 +18,7 @@
       ['game_is_over' b+game-is-over.t]
       ['game_type' (enjs-game-type game-type.t)]
       ['turn_time_limit' s+(scot %dr turn-time-limit.t)]
+      ['turn_start' s+(scot %da turn-start.t)]
       ['players' (enjs-players players.t)]
       ['pots' (enjs-pots pots.t)]
       ['current_bet' s+(scot %ud current-bet.t)]

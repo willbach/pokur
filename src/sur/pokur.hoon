@@ -78,6 +78,7 @@
       game-is-over=?
       =game-type
       turn-time-limit=@dr
+      turn-start=@da
       =players
       pots=(list [amount=@ud in=(list ship)])  ::  list is for side-pots
       current-bet=@ud

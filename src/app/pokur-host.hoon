@@ -210,6 +210,10 @@
   :: poke ourself to set a turn timer
   =/  new-timer  (add now.bowl turn-time-limit.game)
   =.  turn-timer.u.host-game  new-timer
+  =.  turn-start.game.u.host-game
+    ?.  hand-is-over.u.host-game
+      now.bowl
+    (add now.bowl ~s5)
   =.  u.host-game
     =+  (~(process-player-action modify-game-state u.host-game) from action)
     ?~  -  ~|("%pokur-host: invalid action received!" !!)  u.-
@@ -359,6 +363,7 @@
           game-is-over=%.n
           game-type.u.table
           turn-time-limit.u.table
+          turn-start=(add now.bowl ~s5)
           %+  turn  ~(tap in players.u.table)
           |=  =ship
           [ship starting-stack.game-type.u.table 0 %.n %.n %.n]
