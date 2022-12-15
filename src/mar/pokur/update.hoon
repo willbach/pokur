@@ -24,7 +24,10 @@
       (pairs ~[['id' s+(scot %da game-id.upd)]])
     ::
         %game-over
-      (pairs ~[['id' s+(scot %da game-id.upd)]])
+      %-  pairs
+      :~  ['id' s+(scot %da game-id.upd)]
+          ['placements' a+(turn placements.upd ship)]
+      ==
     ::
         %lobby
       %-  pairs

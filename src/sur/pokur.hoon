@@ -64,7 +64,7 @@
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
-      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       ::  keep an ordered list of player stacks
       ::  1st is winner, 2nd is second, etc
       placements=(list ship)
@@ -78,10 +78,12 @@
       game-is-over=?
       =game-type
       turn-time-limit=@dr
+      turn-start=@da
       =players
       pots=(list [amount=@ud in=(list ship)])  ::  list is for side-pots
       current-bet=@ud
       last-bet=@ud
+      last-aggressor=(unit ship)  ::  used in showdowns for hand reveal
       board=pokur-deck
       my-hand=pokur-deck
       whose-turn=ship
@@ -93,12 +95,13 @@
       spectators=(set ship)
       hands-played=@ud
       update-message=@t
+      revealed-hands=(list [ship pokur-deck])
   ==
 ::
 +$  table
   $:  id=@da
       =host-info
-      tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
@@ -120,7 +123,7 @@
   $%  [%game =game my-hand-rank=@t]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over game-id=@da]
+      [%game-over =game placements=(list ship)]
       [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
@@ -129,7 +132,7 @@
   $%  [%game =game]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over game-id=@da]
+      [%game-over =game placements=(list ship)]
       [%lobby tables=(map @da table)]
   ==
 ::
@@ -137,7 +140,7 @@
   $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship
-          tokenized=(unit [metadata=@ux amount=@ud bond-id=@ux])
+          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
           min-players=@ud
           max-players=@ud
           =game-type
@@ -171,5 +174,6 @@
   $%  [%host-info =host-info]
       [%share-table =table]  ::  for lobby gossip
       [%closed-table id=@da]
+      [%turn-timers id=@da wake=@da rest=@da]
   ==
 --

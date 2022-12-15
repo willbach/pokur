@@ -147,12 +147,12 @@
       [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
     ::
         %game-over
-      ~&  >  "host says: game is over."
-      ?~  game.state  `this
-      ?.  =(id.u.game.state game-id.upd)  `this
+      ~&  >  "new game state:"
+      ~&  >  game.upd
+      ~&  >>  "host says: game is over."
       :_  this(game.state ~)
       :~  :^  %give  %fact  ~[/game-updates]
-          [%pokur-update !>(`update`[%game-over game-id.upd])]
+          [%pokur-update !>(`update`upd)]
       ::
           :*  %pass  wire
               %agent  [src.bowl %pokur-host]
@@ -233,8 +233,8 @@
         =/  default-timelock=@ud  ::  roughly 48 hours
           (add height 14.400)
         ::  generate ID of our token account
-        =/  our-account-id=@ux
-          %:  get-token-account-id
+        =/  [token-contract=@ux our-account-id=@ux]
+          %:  get-token-contract-and-account-id
               metadata.u.tokenized.u.pending-poke.state
               u.our-address.state
               town.contract.u.host-info
@@ -249,20 +249,22 @@
             :*  %transaction
                 origin=`[%pokur /new-bond-confirmation]
                 from=u.our-address.state
-                contract=id.contract.u.host-info
+                contract=token-contract
                 town=town.contract.u.host-info
                 :-  %noun
-                ^-  action:escrow
-                :*  %new-bond-with-deposit
-                    address.u.host-info
-                    default-timelock
-                    metadata.u.tokenized.u.pending-poke.state
-                    our.bowl
-                    amount.u.tokenized.u.pending-poke.state
-                    our-account-id
-                ==
-            ==
-        ==
+                :*  %push
+                    to=id.contract.u.host-info
+                    amount=amount.u.tokenized.u.pending-poke.state
+                    from-account=our-account-id
+                    ^-  action:escrow
+                    :*  %new-bond-with-deposit
+                        address.u.host-info
+                        default-timelock
+                        metadata.u.tokenized.u.pending-poke.state
+                        our.bowl
+                        amount.u.tokenized.u.pending-poke.state
+                        our-account-id
+        ==  ==  ==  ==
       ==
     ==
   ==
@@ -350,9 +352,9 @@
     ?^  game.state
       ~|("%pokur: error: can't join table, already in game" !!)
     =/  =table  (~(got by lobby.state) id.action)
-    ::  if table is tokenized, generate escrow transaction, otherwise just join
-    ::  host will add us to queue but not enter us to table if tokenized, until
-    ::  transaction is received
+    ::  if table is tokenized, generate escrow transaction,
+    ::  otherwise just join. host will not allow us to enter
+    ::  table if tokenized until transaction is received
     ?~  tokenized.table
       :_  state(our-table `id.action)
       (poke-pass-through ship.host-info.table action)^~
@@ -361,8 +363,8 @@
     ?~  our-address.state
       ~|("%pokur: error: can't add escrow, missing a wallet address" !!)
     ::  scry indexer for token metadata so we can find our token account
-    =/  our-account-id=@ux
-      %:  get-token-account-id
+    =/  [token-contract=@ux our-account-id=@ux]
+      %:  get-token-contract-and-account-id
           metadata.u.tokenized.table
           (need our-address.state)
           town.contract.host-info.table
@@ -377,17 +379,20 @@
         :*  %transaction
             origin=`[%pokur /deposit-confirmation/[host-ta]]
             from=u.our-address.state
-            contract=id.contract.host-info.table
+            contract=token-contract
             town=town.contract.host-info.table
             :-  %noun
-            ^-  action:escrow
-            :*  %deposit
-                bond-id.u.tokenized.table
-                our.bowl
-                amount.u.tokenized.table
-                our-account-id
-            ==
-        ==
+            :*  %push
+                to=id.contract.host-info.table
+                amount=amount.u.tokenized.table
+                from-account=our-account-id
+                ^-  action:escrow
+                :*  %deposit
+                    bond-id.u.tokenized.table
+                    our.bowl
+                    amount.u.tokenized.table
+                    our-account-id
+        ==  ==  ==
     ==
   ::
       %leave-table
@@ -554,8 +559,9 @@
       %poke   %pokur-player-action  !>(action)
   ==
 ::
-++  get-token-account-id
+++  get-token-contract-and-account-id
   |=  [metadata=@ux our-addr=@ux town=@ux now=@da]
+  ^-  [contract=@ux account=@ux]
   ~|  "%pokur: error: can't find metadata for escrow token"
   =/  found=wallet-update:wallet
     .^  wallet-update:wallet  %gx
@@ -564,6 +570,7 @@
   ?:  ?=(~ found)  !!
   ?>  ?=(%metadata -.found)
   ?>  ?=(%token -.+.found)
+  :-  contract.found
   ::  generate ID of our token account
   %:  hash-data:smart
       contract.found

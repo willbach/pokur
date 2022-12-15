@@ -18,6 +18,7 @@
       ['game_is_over' b+game-is-over.t]
       ['game_type' (enjs-game-type game-type.t)]
       ['turn_time_limit' s+(scot %dr turn-time-limit.t)]
+      ['turn_start' s+(scot %da turn-start.t)]
       ['players' (enjs-players players.t)]
       ['pots' (enjs-pots pots.t)]
       ['current_bet' s+(scot %ud current-bet.t)]
@@ -33,6 +34,7 @@
       ['spectators' a+(turn ~(tap in spectators.t) ship)]
       ['hands_played' s+(scot %ud hands-played.t)]
       ['update_message' s+update-message.t]
+      ['revealed_hands' (enjs-hands revealed-hands.t)]
   ==
 ::
 ++  make-min-bet
@@ -62,6 +64,14 @@
       ['spectators_allowed' b+spectators-allowed.l]
       ['turn_time_limit' s+(scot %dr turn-time-limit.l)]
   ==
+::
+++  enjs-hands
+  |=  hands=(list [@p pokur-deck])
+  ^-  json
+  %-  pairs
+  %+  turn  hands
+  |=  [p=@p hand=pokur-deck]
+  [(scot %p p) (enjs-cards hand)]
 ::
 ++  enjs-cards
   |=  cards=pokur-deck
@@ -133,10 +143,11 @@
   [%a ~[s+(scot %ud s) s+(scot %ud b)]]
 ::
 ++  enjs-tokenized
-  |=  [metadata=@ux amount=@ud bond-id=@ux]
+  |=  [metadata=@ux symbol=@t amount=@ud bond-id=@ux]
   ^-  json
   %-  pairs
   :~  ['metadata' s+(scot %ux metadata)]
+      ['symbol' s+symbol]
       ['amount' s+(scot %ud amount)]
       ['bond_id' s+(scot %ux bond-id)]
   ==
