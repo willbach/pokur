@@ -174,5 +174,6 @@
   $%  [%host-info =host-info]
       [%share-table =table]  ::  for lobby gossip
       [%closed-table id=@da]
+      [%turn-timers id=@da wake=@da rest=@da]
   ==
 --

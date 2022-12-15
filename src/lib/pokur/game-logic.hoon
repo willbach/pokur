@@ -44,7 +44,6 @@
     |=  dealer=ship
     ^-  host-game-state
     =.  last-aggressor.game.state  ~
-    =.  revealed-hands.game.state  ~
     =.  players.game.state
       %+  skip  players.game.state
       |=([ship player-info] left)
@@ -227,6 +226,7 @@
     ?~  pots.game.state  state
     =.  update-message.game.state  ''
     =.  revealed-hands.game.state
+      ?.  showdown  ~
       =/  revealed
           %+  turn  winners
           |=(p=@p [p (~(got by hands.state) p)])
@@ -305,6 +305,11 @@
           round-is-over.game-type.game
         %.n
       ==
+    ::  remove players who have left the game since last hand
+    =.  players.game.state
+      %+  skip  players.game.state
+      |=  [p=ship player-info]
+      left
     %=  state
       hands              ~
       board.game         ~
@@ -320,7 +325,7 @@
         %-  lent
         %+  skip  players.game.state
         |=  [p=ship player-info]
-        |(=(0 stack) left)
+        =(0 stack)
       ?|  =(1 active-with-chips)
           =(0 active-with-chips)
       ==
