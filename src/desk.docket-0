@@ -1,0 +1,9 @@
+:~  title+'Pokur'
+    info+'Play Texas Holdem on Urbit'
+    color+0x10.4f20
+    glob-http+['https://poker-app-distro.s3.us-east-2.amazonaws.com/glob-0v7.r1fs1.86967.9i8aa.gv17o.n30oa.glob' 0v7.r1fs1.86967.9i8aa.gv17o.n30oa]
+    base+'pokur'
+    version+[0 1 0]
+    website+'https://bacrys.org/pokur'
+    license+'MIT'
+==
