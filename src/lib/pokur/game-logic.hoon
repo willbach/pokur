@@ -206,8 +206,12 @@
   ++  increment-current-round
     ^-  host-game-state
     ?>  ?=(%sng -.game-type.game.state)
+    =/  next-round
+      +(current-round.game-type.game.state)
     =/  blinds=[small=@ud big=@ud]
-      %+  snag  current-round.game-type.game.state
+      ?:  (gte next-round (lent blinds-schedule.game-type.game.state))
+        (rear blinds-schedule.game-type.game.state)
+      %+  snag  next-round
       blinds-schedule.game-type.game.state
     %=  state
       round-is-over.game-type.game  %.y
