@@ -191,8 +191,10 @@
     =/  blinds=[small=@ud big=@ud]
       ?:  ?=(%cash -.game-type.game.state)
         [small-blind big-blind]:game-type.game.state
-      %+  snag  current-round.game-type.game.state
-      blinds-schedule.game-type.game.state
+      ?:  %+  gte  current-round.game-type.game.state
+          (lent blinds-schedule.game-type.game.state)
+        (rear blinds-schedule.game-type.game.state)
+      (snag [current-round blinds-schedule]:game-type.game.state)
     =.  players.game.state
       (commit-chips small-blind.game.state small.blinds)
     %=  state
