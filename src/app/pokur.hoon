@@ -238,7 +238,7 @@
               metadata.u.tokenized.u.pending-poke.state
               u.our-address.state
               town.contract.u.host-info
-              now.bowl
+              [our now]:bowl
           ==
         ::  we'll get a pokeback from %wallet when this transaction goes through
         :_  this  :_  ~
@@ -368,7 +368,7 @@
           metadata.u.tokenized.table
           (need our-address.state)
           town.contract.host-info.table
-          now.bowl
+          [our now]:bowl
       ==
     =/  host-ta  (scot %p ship.host-info.table)
     :_  ~
@@ -560,12 +560,12 @@
   ==
 ::
 ++  get-token-contract-and-account-id
-  |=  [metadata=@ux our-addr=@ux town=@ux now=@da]
+  |=  [metadata=@ux our-addr=@ux town=@ux our=@p now=@da]
   ^-  [contract=@ux account=@ux]
   ~|  "%pokur: error: can't find metadata for escrow token"
   =/  found=wallet-update:wallet
     .^  wallet-update:wallet  %gx
-        /(scot %p our.bowl)/wallet/(scot %da now)/metadata/(scot %ux metadata)/noun
+        /(scot %p our)/wallet/(scot %da now)/metadata/(scot %ux metadata)/noun
     ==
   ?:  ?=(~ found)  !!
   ?>  ?=(%metadata -.found)
