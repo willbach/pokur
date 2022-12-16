@@ -60,6 +60,7 @@
     ++  parse-tokenized
       %-  ot
       :~  [%metadata (se %ux)]
+          [%symbol so]
           [%amount (se %ud)]
           [%bond-id (se %ux)]
       ==
