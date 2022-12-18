@@ -1,5 +1,5 @@
 import React from 'react'
-import { sigil, reactRenderer } from '@tlon/sigil-js'
+import { formatShip, renderSigil } from '../../utils/player';
 import Row from "../spacing/Row"
 import Text from '../text/Text'
 
@@ -16,9 +16,9 @@ const Player = ({ ship, className, alt = false, hideSigil = false }: PlayerProps
   return (
     <Row key={ship} className={`player ${className || ''}`}>
       {!hideSigil && <div className='sigil-container'>
-        {sigil({ patp: ship, renderer: reactRenderer, size: 24, colors: alt ? ['white', 'black'] : ['black', 'white'] })}
+        {renderSigil({ ship, alt })}
       </div>}
-      <Text key={ship} className={`ship ${alt ? 'alt' : ''}`}>~{ship.replace(/~/, '')}</Text>
+      <Text key={ship} className={`ship ${alt ? 'alt' : ''}`}>{formatShip(ship.replace(/~/, ''))}</Text>
     </Row>
   )
 }

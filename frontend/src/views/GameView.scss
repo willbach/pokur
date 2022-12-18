@@ -46,6 +46,11 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
   position: relative;
   background: radial-gradient(circle at center, #000000 0, #535353);
 
+  &.game-over {
+    background: url('../assets/img/poker-table.png');
+    background-size: cover;
+  }
+
   .game-actions {
     position: absolute;
     bottom: 8px;
@@ -74,7 +79,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
     bottom: 0;
     left: 0;
     right: 0;
-    background: url('../assets/img/poker-table.webp');
+    background: url('../assets/img/poker-table.png');
     background-size: cover;
     z-index: 0;
   }
@@ -181,7 +186,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
       position: relative;
       border: 6px solid #353535;
       border-radius: 25vw;
-      background: url('../assets/img/poker-table.webp');
+      background: url('../assets/img/poker-table.png');
       background-size: cover;
 
       .player-display {
@@ -204,6 +209,8 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
             border-radius: 50%;
             padding: 4px;
             margin-right: 4px;
+            width: 26px;
+            text-align: center;
           }
         }
 
@@ -235,7 +242,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
 
           .bet {
             bottom: 50px;
-            left: -110px;
+            left: -120px;
           }
         }
         &.pp-4 {
@@ -285,7 +292,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
 
           .bet {
             bottom: 50px;
-            right: -110px;
+            right: -120px;
           }
         }
         &.pp-9 {
@@ -320,10 +327,14 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           border-radius: 4px;
           text-align: center;
           color: white;
-          background: linear-gradient(90deg, #868686, #686868 50%, #868686);
           padding: 2px 8px;
           height: fit-content;
           box-shadow: 3px 3px 5px rgb(36, 36, 36);
+          background: linear-gradient(90deg, #868686, #686868 50%, #868686);
+
+          &.current-turn {
+            animation: blinkingBackground 2s infinite;
+          }
 
           .player {
             border-bottom: 1px solid white;
@@ -374,4 +385,10 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
       }
     }
   }
+}
+
+@keyframes blinkingBackground{
+  0%		{ background: linear-gradient(90deg, #6e6e6e, #4d4d4d 50%, #6e6e6e); }
+  50%		{ background: linear-gradient(90deg, #969696, #828282 50%, #969696); }
+  100%	{ background: linear-gradient(90deg, #6e6e6e, #4d4d4d 50%, #6e6e6e); }
 }

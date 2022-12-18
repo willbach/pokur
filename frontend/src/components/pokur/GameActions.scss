@@ -17,6 +17,7 @@
   input.input.bet-slider {
     margin-bottom: 4px;
     width: 100%;
+    background-color: #383838;
     
     -webkit-appearance: none;  /* Override default CSS styles */
     appearance: none;
@@ -72,6 +73,19 @@
     height: 32px;
     margin-bottom: 4px;
     width: 80px;
+  }
+
+  .quick-bet {
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    .bet-buttons {
+
+      button {
+        font-size: 16px;
+        padding: 4px;
+      }
+    }
   }
 
   button {

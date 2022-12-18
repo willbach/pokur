@@ -24,3 +24,5 @@ export const numToUd = (num: string | number) => Number(num).toLocaleString('de-
 
 export const displayTokenAmount = (amount: number, decimals: number, decimalPlaces?: number) =>
   formatAmount(amount / Math.pow(10, decimals || 1), decimalPlaces)
+
+export const fromUd = (amount?: string) => amount ? Number(amount.replace(/\./g, '')) : 0

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
-import { sigil, reactRenderer } from '@tlon/sigil-js'
 import api from '../api'
 import Button from '../components/form/Button'
 import Col from '../components/spacing/Col'
@@ -14,15 +13,17 @@ import Player from '../components/pokur/Player'
 import GameActions from '../components/pokur/GameActions'
 import { PLAYER_POSITIONS } from '../utils/constants'
 import logo from '../assets/img/logo192.png'
+import { renderSigil } from '../utils/player'
 
 import './GameView.scss'
+import { fromUd } from '../utils/number'
 
 interface GameViewProps {
   redirectPath: string
 }
 
 const GameView = ({ redirectPath }: GameViewProps) => {
-  const { game, leaveGame, subscribeToPath } = usePokurStore()
+  const { game, gameEndMessage, leaveGame, subscribeToPath } = usePokurStore()
   const nav = useNavigate()
 
   useEffect(() => {
@@ -34,11 +35,11 @@ const GameView = ({ redirectPath }: GameViewProps) => {
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => !game ? nav('/') : undefined, [game, nav])
-
   const leave = useCallback(async () => {
     if (window.confirm('Are you sure you want to leave the game?')) {
-      await leaveGame(game?.id!)
+      try {
+        await leaveGame(game?.id!)
+      } catch (err) {}
       nav('/')
     }
   }, [nav, game, leaveGame])
@@ -53,12 +54,26 @@ const GameView = ({ redirectPath }: GameViewProps) => {
   }, [game])
 
   console.log('GAME:', game)
+  const gameOver = game?.game_is_over || (gameEndMessage && !game)
+
+  const computedPots = useMemo(() =>
+    (game?.pots || []).map(
+      (p, i, a) => i !== a.length - 1 ? { ...p, amount: fromUd(p.amount) } :
+        { ...p, amount: fromUd(p.amount) + (game?.players || []).reduce((acc, pl) => acc + fromUd(pl.committed), 0) }
+    )
+  , [game])
+
+  console.log('COMPUTED POTS:', computedPots)
 
   return (
-    <Col className='game-view'>
-      {!game || game.game_is_over ? (
+    <Col className={`game-view ${gameOver ? 'game-over' : ''}`}>
+      {!game ? (
         <Col className='content'>
-          <h3>{game?.game_is_over ? 'Game Ended' : 'Game Not Found'}</h3>
+          <h3>{gameOver ? 'Game Ended' : 'Game Not Found'}</h3>
+          {Boolean(gameEndMessage) && <>
+            <p>{gameEndMessage}</p>
+            <p>Payouts will be made from the escrow contract soon.</p>
+          </>}
           <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
             Return to Lobby
           </Button>
@@ -72,14 +87,14 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                 <Text mono>POKUR</Text>
               </Row>
               <Col className='pots'>
-                {Boolean(game?.pots[0]?.amount) && game?.pots[0].amount !== '0' && (
-                  <Text className='pot'>Main Pot: {game.pots[0]?.amount || '0'}</Text>
+                {Boolean(computedPots[0]?.amount) && String(computedPots[0].amount) !== '0' && (
+                  <Text className='pot'>{game.pots.length > 1 ? 'Main ' : ''}Pot: {computedPots[0]?.amount || '0'}</Text>
                 )}
 
-                {game.pots.length < 2 && (
-                  game.pots.map((p, i) => (
+                {computedPots.length > 1 && (
+                  computedPots.map((p, i) => (
                     i === 0 ? null :
-                    <Text className='pot' key={p.amount + i}>Side Pot #{i}: {p.amount}</Text>
+                    <Text className='pot' key={String(p.amount) + i}>Side Pot #{i}: {p.amount}</Text>
                   ))
                 )}
               </Col>
@@ -92,30 +107,35 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               </TransitionGroup>
             </Col>
 
-            {playerOrder.map((p, ind) => {
+            {playerOrder.map((p, ind, arr) => {
               const curTurn = game.current_turn.includes(p.ship)
-              const buttonIndicator = game?.big_blind.includes(p.ship) ? 'BB' :
+              
+              const buttonIndicator = arr.length === 2 && game?.dealer.includes(p.ship) ? 'D' :
+                arr.length === 2 ? '' :
+                game?.big_blind.includes(p.ship) ? 'BB' :
                 game?.small_blind.includes(p.ship) ? 'SB' :
                 game?.dealer.includes(p.ship) ? 'D' : ''
 
               return (
                 <Col className={`player-display ${PLAYER_POSITIONS[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
                   <Row className='cards'>
-                    {(window as any).ship === p.ship && false ? (
+                    {(window as any).ship === p.ship ? (
                       <>
                         {game?.hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
-                    ) : p.left ? (
-                      <Text bold style={{ whiteSpace: 'nowrap' }}>Left the game</Text>
+                    ) : game.revealed_hands[`~${p.ship}`] ? (
+                      <>
+                        {game.revealed_hands[`~${p.ship}`].map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
+                      </>
                     ) : (
                       <div className='sigil-container avatar'>
-                        {sigil({ patp: p.ship, renderer: reactRenderer, class: 'avatar-sigil', colors: ['black', 'white'] })}
+                        {renderSigil({ ship: p.ship, className: 'avatar-sigil' })}
                       </div>
                     )}
                   </Row>
-                  <div className='player-info'>
+                  <div className={`player-info ${curTurn ? 'current-turn' : ''}`}>
                     <Player hideSigil ship={p.ship} />
-                    <Text className='stack' bold>${p.stack}</Text>
+                    <Text className='stack' bold>{p.left ? 'Left the game' : `$${p.stack}`}</Text>
                   </div>
                   <Row className='bet'>
                     {Boolean(buttonIndicator) && <div className='button-indicator'>{buttonIndicator}</div>}
@@ -127,7 +147,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
           </div>
           <div className='table' />
           <Chat />
-          {game.current_turn.includes((window as any).ship) && <GameActions />}
+          {game.current_turn.includes((window as any).ship) && !Object.keys(game?.revealed_hands || {}).length && <GameActions pots={computedPots} />}
         </Col>
       )}
       {Boolean(game) && (

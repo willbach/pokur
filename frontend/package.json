@@ -13,9 +13,11 @@
     "@types/react": "^17.0.20",
     "@types/react-dom": "^17.0.9",
     "@types/react-transition-group": "^4.4.5",
+    "@uqbar/wallet-ui": "../../../../../uqbar/wallet-ui",
     "@urbit/http-api": "^2.1.1",
     "moment": "^2.29.3",
     "react": "^17.0.2",
+    "react-countdown-circle-timer": "^3.1.0",
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-router-dom": "^6.2.2",
@@ -26,12 +28,16 @@
     "web-vitals": "^2.1.0",
     "zustand": "^3.7.1"
   },
+  "devDependencies": {
+    "react-app-rewired": "^2.2.1"
+  },
   "proxy": "http://localhost:8080",
   "scripts": {
-    "start": "sed -i.bak -e 's/compress: true/compress: false/' ./node_modules/react-scripts/config/webpackDevServer.config.js && react-scripts start",
+    "start": "sed -i.bak -e 's/compress: true/compress: false/' ./node_modules/react-scripts/config/webpackDevServer.config.js && react-app-rewired start",
     "start:mock": "REACT_APP_MOCK_DATA=true yarn start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "just-start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -42,9 +48,9 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
     ],
     "development": [
       "last 1 chrome version",
