@@ -150,7 +150,7 @@
       ~&  >  "new game state:"
       ~&  >  game.upd
       ~&  >>  "host says: game is over."
-      :_  this(game.state ~)
+      :_  this(game.state ~, messages.state ~)
       :~  :^  %give  %fact  ~[/game-updates]
           [%pokur-update !>(`update`upd)]
       ::
@@ -188,7 +188,7 @@
         ::  if our table closed, clear
         ?~  our-table.state  `this
         ?.  =(u.our-table.state table-id.upd)  `this
-        :_  this(our-table.state ~)
+        :_  this(our-table.state ~, messages.state ~)
         :_  ~
         :^  %give  %fact  ~[/lobby-updates]
         [%pokur-update !>(`update`[%table-closed table-id.upd])]

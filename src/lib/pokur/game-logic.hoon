@@ -29,7 +29,6 @@
     ::  handle end of hand
     ::               this is SHOWDOWN
     %-  process-win  :_  %.y
-    %-  turn  :_  head
     %-  determine-winner
     %+  murn  players.game.state
     |=  [who=ship player-info]
@@ -220,30 +219,32 @@
         update-message.game
       %-  crip
       """
-      Round {<current-round.game-type.game.state>} beginning at next hand.
+      Round {<next-round>} beginning at next hand.
       New blinds: {<small.blinds>}/{<big.blinds>}
       """
     ==
   ::
   ::  if showdown, reveal hand of winner(s) and last-aggressor
   ++  award-pots
-    |=  [winners=(list ship) showdown=?]
+    |=  [winners=(list [ship [@ud pokur-deck]]) showdown=?]
     ^-  host-game-state
     ?~  pots.game.state  state
     =.  update-message.game.state  ''
     =.  revealed-hands.game.state
+      ^-  (list [ship pokur-deck])
       ?.  showdown  ~
-      =/  revealed
-          %+  turn  winners
-          |=(p=@p [p (~(got by hands.state) p)])
-      ?~  last=last-aggressor.game.state  revealed
-      ?^  (find ~[u.last] revealed)       revealed
-      [[u.last (~(got by hands.state) u.last)] revealed]
+      %+  turn
+        ?~  last=last-aggressor.game.state
+          (turn winners head)
+        =+  w=(turn winners head)
+        ?^  (find ~[u.last] w)  w
+        [u.last w]
+      |=(p=ship [p (~(got by hands.state) p)])
     =*  pot  i.pots.game.state
-    =/  winners-in-pot=(list ship)
+    =/  winners-in-pot=(list [ship [@ud pokur-deck]])
       %+  skip  winners
-      |=  =ship
-      =(~ (find [ship]~ in.pot))
+      |=  [p=ship [@ud pokur-deck]]
+      =(~ (find [p]~ in.pot))
     =?    winners-in-pot
         =(~ winners-in-pot)
       ::  no winners in this pot, find the relative winner(s) present
@@ -251,7 +252,6 @@
       ::  prior to this side-pot and therefore doesn't deserve it
       ::  if a pot is to be awarded before showdown, the player that
       ::  was folded to will be in all pots.
-      %-  turn  :_  head
       %-  determine-winner
       %+  skim  ~(tap by hands.state)
       |=  [=ship hand=pokur-deck]
@@ -260,34 +260,42 @@
       pots.game.state  t.pots.game.state
     ::
         update-message.game.state
-      ?:  =(1 (lent winners-in-pot))
-        ;:  (cury cat 3)
-            (scot %p -.winners-in-pot)
+      %^  cat  3
+        ?:  =(1 (lent winners-in-pot))
+          ;:  (cury cat 3)
+            (scot %p -.-.winners-in-pot)
             ' wins pot of '
             (scot %ud amount.pot)
-            '.  '
-            update-message.game.state
-        ==
-      =+  (roll (turn winners-in-pot |=(a=@ (scot %p a))) (cury cat 3))
-      ;:  (cury cat 3)
-          -  ' split pot of '
+          ==
+        ;:  (cury cat 3)
+          %+  roll
+            %+  turn  winners-in-pot
+            |=([p=@ *] (cat 3 (scot %p p) ', '))
+          (cury cat 3)
+          'split pot of '
           (scot %ud amount.pot)
-          '.  '
-          update-message.game.state
+        ==
+      ?.  showdown
+        (cat 3 '.  ' update-message.game.state)
+      ;:  (cury cat 3)
+        ' with hand '
+        (hierarchy-to-rank -.+.-.winners-in-pot)
+        '.  '  update-message.game.state
       ==
+    ::
         players.game.state
       ?:  =(1 (lent winners-in-pot))
         ::  award entire pot to single winner
         %+  turn  players.game.state
         |=  [p=ship player-info]
-        ?.  =(p -.winners-in-pot)
+        ?.  =(p -.-.winners-in-pot)
           [p stack 0 %.n %.n left]
         [p (add stack amount.pot) 0 %.n %.n left]
       ::  split pot evenly between multiple winners
       =/  split  (div amount.pot (lent winners-in-pot))
       %+  turn  players.game.state
       |=  [p=ship player-info]
-      ?~  (find [p]~ winners-in-pot)
+      ?~  (find [p]~ (turn winners-in-pot head))
         [p stack 0 %.n %.n left]
       [p (add stack split) 0 %.n %.n left]
     ==
@@ -296,7 +304,7 @@
   ::  and incrementing hands-played.
   ::  also, see if any players have gotten out and place them (for tournaments)
   ++  process-win
-    |=  [winners=(list ship) showdown=?]
+    |=  [winners=(list [ship [@ud pokur-deck]]) showdown=?]
     ^-  host-game-state
     ::  sends any extra committed chips to pot
     =.  state  committed-chips-to-pot
@@ -382,7 +390,7 @@
         |=([ship ^player-info] folded)
       ?:  =(1 (lent players-left))
         ::  NOT showdown
-        `(process-win [-.-.players-left]~ %.n)
+        `(process-win [-.-.players-left [0 ~]]~ %.n)
       :: otherwise continue game
       ?.  is-betting-over
         `next-player-turn
@@ -502,7 +510,7 @@
       |=([ship player-info] folded)
     ?:  =(1 (lent players-left))
       ::  will handle ending game
-      (process-win [-.-.players-left]~ %.n)
+      (process-win [-.-.players-left [0 ~]]~ %.n)
     ::  otherwise continue game
     ?.  =(who whose-turn.game.state)  state
     ?.  is-betting-over
