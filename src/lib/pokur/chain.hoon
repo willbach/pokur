@@ -28,28 +28,37 @@
     amount.escrow-asset.bond
   ::
   ++  valid-new-table
-    |=  [src=^ship bond-id=id:smart token-amount=@ud]
-    ^-  ?
+    |=  [src=^ship on-batch=? bond-id=id:smart token-amount=@ud]
+    ^-  (unit ?)
     ::  find bond information from indexer
     =/  bond=(unit bond:escrow)  (bond-state bond-id)
-    ?~  bond  %.n  ::  need bond, reject action
+    ::  make sure our address has been set
+    ?:  =(0x0 address)  `%.n
+    ?~  bond
+      ::  need bond, can't find it in our chain state
+      ::  if not on-batch, kick over to pending
+      ?.(on-batch ~ `%.n)
+    ::  we have bond in our local chain state
     ::  assert bond info is legit
-    ?.  =(address custodian.u.bond)  %.n
+    ?.  =(address custodian.u.bond)  `%.n
     ::  TODO assert timelock is acceptable
-    ?~  leader-payment=(~(get by depositors.u.bond) src)  %.n
-    ?.  (gte amount.u.leader-payment token-amount)  %.n
+    ?~  leader-payment=(~(get by depositors.u.bond) src)  `%.n
+    ?.  (gte amount.u.leader-payment token-amount)  `%.n
     ::  all good!
-    %.y
+    `%.y
   ::
   ++  valid-new-player
-    |=  [src=^ship bond-id=id:smart token-amount=@ud]
-    ^-  ?
+    |=  [src=^ship on-batch=? bond-id=id:smart token-amount=@ud]
+    ^-  (unit ?)
     ::  find bond information from indexer
     =/  bond=(unit bond:escrow)  (bond-state bond-id)
-    ?~  bond  %.n  ::  need bond, reject action
-    ?~  player-payment=(~(get by depositors.u.bond) src)  %.n
-    ?.  (gte amount.u.player-payment token-amount)  %.n
+    ?~  bond  `%.n  ::  need bond, reject action
+    ?~  player-payment=(~(get by depositors.u.bond) src)
+      ::  not seeing payment yet
+      ::  if not on-batch, kick over to pending
+      ?.(on-batch ~ `%.n)
+    ?.  (gte amount.u.player-payment token-amount)  `%.n
     ::  all good!
-    %.y
+    `%.y
   --
 --

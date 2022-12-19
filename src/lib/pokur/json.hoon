@@ -1,8 +1,17 @@
 /-  *pokur
 =,  enjs:format
 |%
+++  enjs-hosts
+  |=  m=(map @p host-info)
+  ^-  json
+  %-  pairs
+  %+  turn  ~(tap by m)
+  |=  [who=@p =host-info]
+  :-  (scot %p who)
+  (enjs-host-info host-info)
 ++  enjs-messages
   |=  m=(list [@p @t])
+  ^-  json
   :-  %a
   %+  turn  m
   |=  [shi=@p msg=@t]

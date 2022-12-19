@@ -156,6 +156,14 @@
       [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
       ::  choose which wallet address we wish to use to pay escrow
       [%set-our-address address=@ux]
+      ::  add a ship to our known-hosts
+      [%find-host who=ship]
+      [%remove-host who=ship]
+  ==
+::
++$  txn-player-action
+  $%  [%new-table-txn batch-id=@ux =player-action]
+      [%join-table-txn batch-id=@ux =player-action]
   ==
 ::
 +$  message-action
@@ -176,5 +184,16 @@
       [%share-table =table]  ::  for lobby gossip
       [%closed-table id=@da]
       [%turn-timers id=@da wake=@da rest=@da]
+  ==
+::
+::  historical states
+::
++$  pokur-host-state-0
+  $:  %0
+      our-info=host-info
+      ::  host holds its own tables as well as gossipped ones from main host
+      tables=(map @da table)
+      ::  host holds all active games they are running
+      games=(map @da host-game-state)
   ==
 --
