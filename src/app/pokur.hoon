@@ -142,9 +142,24 @@
           %7  -:(evaluate-7-card-hand full-hand)
         ==
       :_  this(game.state `game.upd)
+      ^-  (list card)
+      :-  :^  %give  %fact  ~[/game-updates]
+          [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+      ?.  ?&  =(our.bowl whose-turn.game.upd)
+              =-  =(0 stack.-)
+              %-  head
+              %+  skim  players.game.upd
+              |=([p=ship player-info] =(p our.bowl))
+          ==
+        ::  not all-in, let player choose action
+        ~
+      ::  all-in, auto-check
       :_  ~
-      :^  %give  %fact  ~[/game-updates]
-      [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+      :*  %pass  /poke-wire
+          %agent  [src.bowl %pokur-host]
+          %poke  %pokur-game-action
+          !>(`game-action`[%check id.game.upd ~])
+      ==
     ::
         %game-over
       ~&  >  "new game state:"
