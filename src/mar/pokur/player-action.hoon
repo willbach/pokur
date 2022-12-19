@@ -24,6 +24,7 @@
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
           [%set-our-address (ot ~[[%address (se %ux)]])]
           [%find-host (ot ~[[%who (se %p)]])]
+          [%remove-host (ot ~[[%who (se %p)]])]
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-table
