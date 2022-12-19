@@ -1,6 +1,49 @@
 /-  *pokur
-/+  *test, *pokur
+/+  *test, *pokur-game-logic
 |%
+::
+::  determine-winner tests
+::
+++  test-winner-1  ^-  tang
+  ::  this should have ~bus and ~dev both win with straight on board
+  =/  state  *host-game-state
+  =.  board.game.state
+    :~  [%ace %clubs]
+        [%2 %clubs]
+        [%3 %hearts]
+        [%4 %hearts]
+        [%5 %hearts]
+    ==
+  =/  hands
+    :~  [~bus ~[[%5 %spades] [%ace %spades]]]
+        [~dev ~[[%king %spades] [%jack %spades]]]
+    ==
+  %+  expect-eq
+    !>
+    :~  [~bus 4 ~[[%5 %spades] [%ace %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts]]]
+        [~dev 4 ~[[%ace %clubs] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
+    ==
+  !>((~(determine-winner modify-game-state state) hands))
+::
+++  test-winner-2  ^-  tang
+  ::  this should have ~bus win
+  =/  state  *host-game-state
+  =.  board.game.state
+    :~  [%ace %clubs]
+        [%2 %clubs]
+        [%3 %hearts]
+        [%4 %hearts]
+        [%5 %hearts]
+    ==
+  =/  hands
+    :~  [~bus ~[[%6 %spades] [%ace %spades]]]
+        [~dev ~[[%king %spades] [%jack %spades]]]
+    ==
+  %+  expect-eq
+    !>
+    :~  [~bus 5 ~[[%6 %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
+    ==
+  !>((~(determine-winner modify-game-state state) hands))
 ::
 ::  tie breaking tests
 ::
@@ -82,7 +125,7 @@
 ++  test-tie-break-5
   ^-  tang
   =/  hand1
-    :-  4 :: straight with 5 cards
+    :-  5 :: straight with 5 cards
     :~  [%2 %spades]
         [%3 %spades]
         [%4 %hearts]
@@ -90,7 +133,7 @@
         [%6 %spades]
     ==
   =/  hand2
-    :-  4
+    :-  5
     :~  [%3 %spades]
         [%4 %hearts]
         [%5 %clubs]
@@ -98,6 +141,26 @@
         [%7 %hearts]
     ==
   (expect-eq !>(%.y) !>((break-ties hand2 hand1)))
+::
+++  test-tie-break-6
+  ^-  tang
+  =/  hand1
+    :-  4  ::  wheel
+    :~  [%2 %spades]
+        [%3 %spades]
+        [%4 %hearts]
+        [%5 %clubs]
+        [%ace %spades]
+    ==
+  =/  hand2
+    :-  4
+    :~  [%3 %spades]
+        [%4 %hearts]
+        [%5 %clubs]
+        [%ace %spades]
+        [%2 %hearts]
+    ==
+  (expect-eq !>(%.n) !>((break-ties hand2 hand1)))
 ::
 :: 7-card hand evaluation tests
 ::
@@ -112,7 +175,7 @@
         [%king %spades]
         [%ace %spades]
     ==
-  (expect-eq !>(9) !>(-:(evaluate-7-card-hand hand)))
+  (expect-eq !>(10) !>(-:(evaluate-7-card-hand hand)))
 ++  test-eval2
   ^-  tang
   =/  hand
@@ -160,7 +223,7 @@
         [%king %hearts]
         [%ace %spades]
     ==
-  (expect-eq !>(5) !>(-:(evaluate-7-card-hand hand)))
+  (expect-eq !>(6) !>(-:(evaluate-7-card-hand hand)))
 ++  test-eval6
   ^-  tang
   =/  hand
@@ -172,17 +235,17 @@
         [%queen %spades]
         [%jack %hearts]
     ==
-  (expect-eq !>(5) !>(-:(evaluate-7-card-hand hand)))
+  (expect-eq !>(6) !>(-:(evaluate-7-card-hand hand)))
 ++  test-eval7
   ^-  tang
   =/  hand
     ~[[%jack %hearts] [%10 %hearts] [%jack %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
-  (expect-eq !>(4) !>(-:(evaluate-7-card-hand hand)))
+  (expect-eq !>(5) !>(-:(evaluate-7-card-hand hand)))
 ++  test-eval8
   ^-  tang
   =/  hand
     ~[[%2 %hearts] [%10 %hearts] [%4 %spades] [%king %hearts] [%ace %spades] [%jack %clubs] [%queen %spades]]
-  (expect-eq !>(4) !>(-:(evaluate-7-card-hand hand)))
+  (expect-eq !>(5) !>(-:(evaluate-7-card-hand hand)))
 ::
 :: 6-card hand evaluation tests
 ::
@@ -198,23 +261,23 @@
   ^-  tang
   =/  hand
     ~[[%10 %spades] [%jack %spades] [%queen %spades] [%king %spades] [%ace %spades]]
-  (expect-eq !>(9) !>((evaluate-5-card-hand hand)))
+  (expect-eq !>(10) !>((evaluate-5-card-hand hand)))
 ++  test-eval-straight-flush
   =/  hand
     ~[[%2 %spades] [%3 %spades] [%4 %spades] [%5 %spades] [%6 %spades]]
-  (expect-eq !>(8) !>((evaluate-5-card-hand hand)))
+  (expect-eq !>(9) !>((evaluate-5-card-hand hand)))
 ++  test-eval-4-of-a-kind
   =/  hand
     ~[[%2 %spades] [%2 %hearts] [%2 %clubs] [%2 %diamonds] [%6 %spades]]
-  (expect-eq !>(7) !>((evaluate-5-card-hand hand)))
+  (expect-eq !>(8) !>((evaluate-5-card-hand hand)))
 ++  test-eval-full-house
   =/  hand
     ~[[%2 %spades] [%2 %hearts] [%2 %clubs] [%6 %spades] [%6 %diamonds]]
-  (expect-eq !>(6) !>((evaluate-5-card-hand hand)))
+  (expect-eq !>(7) !>((evaluate-5-card-hand hand)))
 ++  test-eval-flush
   =/  hand
     ~[[%ace %spades] [%3 %spades] [%4 %spades] [%5 %spades] [%8 %spades]]
-  (expect-eq !>(5) !>((evaluate-5-card-hand hand)))
+  (expect-eq !>(6) !>((evaluate-5-card-hand hand)))
 ++  test-eval-straight
   =/  hand
     ~[[%2 %hearts] [%3 %diamonds] [%4 %spades] [%5 %spades] [%6 %spades]]
@@ -222,7 +285,7 @@
     ~[[%ace %hearts] [%2 %diamonds] [%3 %spades] [%4 %spades] [%5 %spades]]
   ;:  weld
     (expect-eq !>(4) !>((evaluate-5-card-hand wheel-straight)))
-    (expect-eq !>(4) !>((evaluate-5-card-hand hand)))
+    (expect-eq !>(5) !>((evaluate-5-card-hand hand)))
   ==
 ++  test-eval-3-of-a-kind
   =/  hand

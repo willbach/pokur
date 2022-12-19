@@ -25,6 +25,7 @@
       %full-house
       %flush
       %straight
+      %wheel-straight  ::  A2345
       %three-of-a-kind
       %two-pair
       %pair

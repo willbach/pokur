@@ -615,8 +615,8 @@
       raw-hand  t.raw-hand
       histo  (snap histo -.i.raw-hand +((snag -.i.raw-hand histo)))
     ==
-  ?:  =(histogram ~[4 1])      7  ::  four of a kind
-  ?:  =(histogram ~[3 2])      6  ::  full house
+  ?:  =(histogram ~[4 1])      8  ::  four of a kind
+  ?:  =(histogram ~[3 2])      7  ::  full house
   ?:  =(histogram ~[3 1 1])    3  ::  trips
   ?:  =(histogram ~[2 2 1])    2  ::  two pair
   ?:  =(histogram ~[2 1 1 1])  1  ::  pair
@@ -624,15 +624,15 @@
   =.  raw-hand
     (sort raw-hand |=([a=[@ud @ud] b=[@ud @ud]] (gth -.a -.b)))
   ::  check for flush, straight
-  =/  is-straight  (check-5-card-straight raw-hand)
+  =/  is-straight=(unit @ud)  (check-5-card-straight raw-hand)
   ?:  (check-5-card-flush raw-hand)
-    ?:  is-straight
+    ?^  is-straight
       ?:  &(=(-.-.raw-hand 12) =(-.+>+>-.raw-hand 8))
-        9  ::  royal flush!!!!
-      8  ::  straight flush!
-    5  ::  flush
-  ?:  is-straight
-    4  ::  straight
+        10  ::  royal flush!!!!
+      9  ::  straight flush!
+    6  ::  flush
+  ?^  is-straight
+    u.is-straight  ::  wheel or regular straight
   0  ::  high card
 ::
 ++  check-5-card-flush
@@ -641,14 +641,18 @@
   =/  suit  +.-.raw-hand
   %+  levy  raw-hand
   |=(c=[@ud @ud] =(+.c suit))
-:: **hand must be sorted before using this
+::  **hand must be sorted before using this
+::  returns rank 5 for regular straight,
+::  rank 4 for wheel straight, 1 otherwise (%.n)
 ++  check-5-card-straight
   |=  raw-hand=(list [@ud @ud])
-  ^-  ?
+  ^-  (unit @ud)
   ?:  =(4 (sub -.-.raw-hand -.+>+>-.raw-hand))
-    %.y
-  :: also need to check for wheel straight
-  &(=(-.-.raw-hand 12) =(-.+<.raw-hand 3))
+    `5
+  ::  also need to check for wheel straight
+  ?:  &(=(-.-.raw-hand 12) =(-.+<.raw-hand 3))
+    `4
+  ~
 :: given two hands, returns %.y if 1 is better than 2
 :: *ONLY WORKS* for 5 card hands
 ++  break-ties
@@ -663,7 +667,7 @@
   ::  match tie-breaking strategy to type of hand
   ?:  ?|  =(r.hand1 8)
           =(r.hand1 5)
-          =(r.hand1 4)
+          =(r.hand1 5)
           =(r.hand1 0)
         ==
     ::  these ties can be broken by just finding high card
@@ -696,6 +700,9 @@
 ++  hands-equal
   |=  [h1=pokur-deck h2=pokur-deck]
   ^-  ?
+  =.  h1  (sort h1 card-compare)
+  =.  h2  (sort h2 card-compare)
+  |-
   ?:  &(=(~ h1) =(~ h2))  %.y
   ?~  h1  %.n
   ?~  h2  %.n
@@ -727,12 +734,13 @@
   |=  h=@ud
   ^-  @t
   ?+  h  '-'
-    %9  'Royal Flush'
-    %8  'Straight Flush'
-    %7  'Four of a Kind'
-    %6  'Full House'
-    %5  'Flush'
-    %4  'Straight'
+    %10  'Royal Flush'
+    %9  'Straight Flush'
+    %8  'Four of a Kind'
+    %7  'Full House'
+    %6  'Flush'
+    %5  'Straight'
+    %4  'Straight'  ::  A2345
     %3  'Three of a Kind'
     %2  'Two Pair'
     %1  'Pair'
