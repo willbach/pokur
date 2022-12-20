@@ -139,15 +139,15 @@
     |=  [current=ship =players]
     ^-  ship
     =/  unfolded-players
-      %+  skip  players
-      |=([ship player-info] folded)
+      %+  skim  players
+      |=([p=ship player-info] |(!folded =(p current)))
     ?:  =(~ unfolded-players)
       ::  everyone left, just return something so server can delete
       current
     %-  head
     %+  snag
       %+  mod
-        +((need (find [current]~ (turn players head))))
+        +((need (find [current]~ (turn unfolded-players head))))
       (lent unfolded-players)
     unfolded-players
   ::  sends chips from player's 'stack' to their

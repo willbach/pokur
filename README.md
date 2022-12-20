@@ -43,7 +43,7 @@ Make a table. This is a sit'n'go table that awards 100% of winnings to 1st place
 ```hoon
 :pokur-host &pokur-host-action [%host-info our 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 [0xabcd.abcd 0x0]]
 :pokur &pokur-player-action [%set-our-address 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70]
-:pokur &pokur-player-action [%new-table *@da ~zod `[`@ux`'zigs-metadata' 'ZIG' 1.000 0x0] 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
+:pokur &pokur-player-action [%new-table *@da ~zod `[`@ux`'zigs-metadata' 'ZIG' 1.000.000.000.000.000.000 0x0] 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
 ```
 Fill in tx hash, submit and sequence:
 ```hoon

@@ -42,7 +42,8 @@
     ::  assert bond info is legit
     ?.  =(address custodian.u.bond)  `%.n
     ::  TODO assert timelock is acceptable
-    ?~  leader-payment=(~(get by depositors.u.bond) src)  `%.n
+    ?~  leader-payment=(~(get py:smart depositors.u.bond) src)
+      `%.n
     ?.  (gte amount.u.leader-payment token-amount)  `%.n
     ::  all good!
     `%.y
@@ -53,7 +54,7 @@
     ::  find bond information from indexer
     =/  bond=(unit bond:escrow)  (bond-state bond-id)
     ?~  bond  `%.n  ::  need bond, reject action
-    ?~  player-payment=(~(get by depositors.u.bond) src)
+    ?~  player-payment=(~(get py:smart depositors.u.bond) src)
       ::  not seeing payment yet
       ::  if not on-batch, kick over to pending
       ?.(on-batch ~ `%.n)
