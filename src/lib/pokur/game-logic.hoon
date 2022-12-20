@@ -215,13 +215,7 @@
       players.game.state
     ::  if game type is %cash, use set blinds
     ::  if %tournament, set blinds based on round we're on
-    =/  blinds=[small=@ud big=@ud]
-      ?:  ?=(%cash -.game-type.game.state)
-        [small-blind big-blind]:game-type.game.state
-      ?:  %+  gte  current-round.game-type.game.state
-          (lent blinds-schedule.game-type.game.state)
-        (rear blinds-schedule.game-type.game.state)
-      (snag [current-round blinds-schedule]:game-type.game.state)
+    =/  blinds  get-current-blinds
     =.  players.game.state
       (commit-chips small-blind.game.state small.blinds)
     %=  state
@@ -229,6 +223,14 @@
       last-bet.game     big.blinds
       players.game  (commit-chips big-blind.game.state big.blinds)
     ==
+  ++  get-current-blinds
+    ^-  [small=@ud big=@ud]
+    ?:  ?=(%cash -.game-type.game.state)
+      [small-blind big-blind]:game-type.game.state
+    ?:  %+  gte  current-round.game-type.game.state
+        (lent blinds-schedule.game-type.game.state)
+      (rear blinds-schedule.game-type.game.state)
+    (snag [current-round blinds-schedule]:game-type.game.state)
   ::  this gets called when a tournament round timer runs out
   ::  it tells us to increment when current hand is over
   ::  and sets an update message in the game state
@@ -430,11 +432,7 @@
       =/  bet-plus-committed
         (add amount.action committed.player-info)
       =/  current-min-bet
-        ?:  ?=(%cash -.game-type.game.state)
-          big-blind.game-type.game.state
-        =<  big
-        %-  snag
-        [current-round blinds-schedule]:game-type.game.state
+        big:get-current-blinds
       ?:  (gte amount.action stack.player-info)
         ::  ALL-IN logic here
         =.  current-bet.game.state
