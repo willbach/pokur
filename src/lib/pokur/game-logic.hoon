@@ -84,12 +84,15 @@
     =.  hand-is-over.state  %.n
     state
   ::  deals 2 cards from deck to each player in game
+  ::  only deal to players who are not "out": stack=0
   ++  deal-hands
     ^-  host-game-state
     =/  players  players.game.state
     |-
     ?~  players  state
-    =/  drawn    (draw 2 deck.state)
+    ?:  =(0 stack.i.players)
+      $(players t.players)
+    =/  drawn  (draw 2 deck.state)
     %=  $
       players      t.players
       deck.state   rest.drawn
