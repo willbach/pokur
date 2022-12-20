@@ -3,7 +3,6 @@ import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import usePokurStore from "../../store/pokurStore"
 import { isSelf } from "../../utils/game"
 import { fromUd } from "../../utils/number"
-import { getSecondsFromNow } from "../../utils/time"
 import Button from "../form/Button"
 import Input from "../form/Input"
 import Col from "../spacing/Col"
@@ -17,9 +16,10 @@ interface GameActionsProps {
     amount: number
     players_in: string[]
   }[]
+  secondsLeft: number
 }
 
-const GameActions = ({ pots }: GameActionsProps) => {
+const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   const { game, check, fold, bet } = usePokurStore()
 
   const minBet = Number(game?.min_bet ? game.min_bet.replace(/[^0-9]/g, '') : '20')
@@ -73,15 +73,13 @@ const GameActions = ({ pots }: GameActionsProps) => {
 
   const quickBet = useCallback((amount: '1/2' | '3/4' | 'pot') => async () => {
     if (amount === '1/2') {
-      await bet(game!.id, Math.min(callAmount + Number(pots[0].amount) / 2, maxBet))
+      setMyBet(Math.min(callAmount + Number(pots[0].amount) / 2, maxBet))
     } else if (amount === '3/4') {
-      await bet(game!.id, Math.min(callAmount + Number(pots[0].amount) * 3 / 4, maxBet))
+      setMyBet(Math.min(callAmount + Number(pots[0].amount) * 3 / 4, maxBet))
     } else {
-      await bet(game!.id, Math.min(callAmount + Number(pots[0].amount), maxBet))
+      setMyBet(Math.min(callAmount + Number(pots[0].amount), maxBet))
     }
-  }, [game, maxBet, callAmount, pots, bet])
-
-  const secondsLeft = getSecondsFromNow(game?.turn_start, game?.turn_time_limit)
+  }, [maxBet, callAmount, pots, setMyBet])
 
   return (
     <Col className='game-actions'>
@@ -90,10 +88,11 @@ const GameActions = ({ pots }: GameActionsProps) => {
           <Row style={{ width: 140, justifyContent: 'space-between', fontSize: 20, color: 'white', fontWeight: 600, marginBottom: 8 }}>
             <Text style={{ fontSize: 18 }}>Time Left:</Text>
             <CountdownCircleTimer
+              key={game?.turn_start}
               isPlaying
               trailColor='#383838s'
               duration={secondsLeft}
-              colors={['#ffffff', '#ae0000']}
+              colors={['#ffffff', '#ff0000']}
               colorsTime={[secondsLeft, 0]}
               size={40}
               strokeWidth={4}

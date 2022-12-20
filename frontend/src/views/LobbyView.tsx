@@ -72,7 +72,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     }
   }, [lobby, setInsetView, nav, setLoading, setTable])
 
-  const changeTableForm = useCallback((key: string, isNumeric = false) => (e: any) => {
+  const changeTableForm = useCallback((key: string, isNumeric: boolean = false) => (e: any) => {
     if (key.includes('tokenized')) {
       const [,tokenizedKey] = key.split('/')
 
@@ -244,7 +244,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
                 </Row>
                 <Row>
                   <label>Starting Stack</label>
-                  <Select value={tableForm['starting-stack']} onChange={changeTableForm('starting-stack')}>
+                  <Select value={tableForm['starting-stack']} onChange={changeTableForm('starting-stack', true)}>
                     {STACK_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
                   </Select>
                 </Row>

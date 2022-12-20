@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
@@ -14,9 +14,11 @@ import GameActions from '../components/pokur/GameActions'
 import { PLAYER_POSITIONS } from '../utils/constants'
 import logo from '../assets/img/logo192.png'
 import { renderSigil } from '../utils/player'
+import { fromUd } from '../utils/number'
+import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+import { getSecondsFromNow } from '../utils/time'
 
 import './GameView.scss'
-import { fromUd } from '../utils/number'
 
 interface GameViewProps {
   redirectPath: string
@@ -63,7 +65,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     )
   , [game])
 
-  console.log('COMPUTED POTS:', computedPots)
+  const secondsLeft = getSecondsFromNow(game?.turn_start, game?.turn_time_limit)
 
   return (
     <Col className={`game-view ${gameOver ? 'game-over' : ''}`}>
@@ -109,6 +111,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
 
             {playerOrder.map((p, ind, arr) => {
               const curTurn = game.current_turn.includes(p.ship)
+              const isSelf = (window as any).ship === p.ship
+              const hand = game.revealed_hands[`~${p.ship}`]
               
               const buttonIndicator = arr.length === 2 && game?.dealer.includes(p.ship) ? 'D' :
                 arr.length === 2 ? '' :
@@ -119,13 +123,13 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               return (
                 <Col className={`player-display ${PLAYER_POSITIONS[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
                   <Row className='cards'>
-                    {(window as any).ship === p.ship ? (
+                    {isSelf ? (
                       <>
                         {game?.hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
-                    ) : game.revealed_hands[`~${p.ship}`] ? (
+                    ) : hand ? (
                       <>
-                        {game.revealed_hands[`~${p.ship}`].map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
+                        {hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
                     ) : (
                       <div className='sigil-container avatar'>
@@ -141,13 +145,29 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                     {Boolean(buttonIndicator) && <div className='button-indicator'>{buttonIndicator}</div>}
                     {Number(p.committed) > 0 && <div>Bet: {p.committed}</div>}
                   </Row>
+                  {curTurn && !isSelf && !hand && (
+                    <div className='turn-timer'>
+                      <CountdownCircleTimer
+                        key={secondsLeft}
+                        isPlaying
+                        trailColor='#545454'
+                        duration={secondsLeft}
+                        colors={['#ffffff', '#ff0000']}
+                        colorsTime={[secondsLeft, 0]}
+                        size={64}
+                        strokeWidth={3}
+                      />
+                    </div>
+                  )}
                 </Col>
               )
             })}
           </div>
           <div className='table' />
           <Chat />
-          {game.current_turn.includes((window as any).ship) && !Object.keys(game?.revealed_hands || {}).length && <GameActions pots={computedPots} />}
+          {game.current_turn.includes((window as any).ship) && !Object.keys(game?.revealed_hands || {}).length &&
+            <GameActions pots={computedPots} secondsLeft={secondsLeft} />
+          }
         </Col>
       )}
       {Boolean(game) && (

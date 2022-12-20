@@ -1,9 +1,25 @@
 import { sigil, reactRenderer } from '@tlon/sigil-js'
 
-export const formatShip = (ship: string) =>
-  ship.length > 26 ? `${ship.slice(0, 6)}_${ship.slice(-6)}` :
-  ship.length > 14 ? `~${ship.slice(-13, -7)}^${ship.slice(-6)}` :
-  ship
+export const formatShip = (ship: string) => {
+  const clean = ship.replace('~', '')
+
+  return '~' + (clean.length > 28 ? `${clean.slice(0, 7)}_${clean.slice(-6)}` :
+    clean.length > 14 ? `${clean.slice(-13, -7)}^${clean.slice(-6)}` :
+    ship)
+}
+
+export const renderShip = (ship: string) => {
+  const clean = ship.replace('~', '')
+
+  if (clean.length > 14) {
+    return <>
+      <span style={{ fontSize: 11, verticalAlign: 'top' }}>~{clean.slice(0, 13)}</span>
+      ^{clean.slice(14)}
+    </>
+  }
+
+  return '~' + (clean.length > 28 ? `${clean.slice(0, 7)}_${clean.slice(-6)}` : ship)
+}
 
 export interface RenderSigilProps {
   ship: string

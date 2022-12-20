@@ -2,6 +2,8 @@
 @use '../../styles/border.scss' as border;
 
 .player {
+  position: relative;
+
   &.mt-8 {
     margin-top: 8px;
   }

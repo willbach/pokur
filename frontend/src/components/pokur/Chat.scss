@@ -40,6 +40,7 @@
       width: fit-content;
       align-items: flex-start;
       color: gray;
+      font-size: 13px;
     }
 
     .message {
@@ -59,9 +60,17 @@
       .author {
         margin-right: 8px;
         display: inline;
+        
+        .text {
+          font-size: 13px;
+        }
+        .moon-prefix {
+          font-size: 12px;
+          vertical-align: top;
+        }
       }
       .msg-text {
-        
+        font-size: 13px;
       }
 
       &.self {
@@ -71,6 +80,14 @@
 
         .author {
           justify-content: flex-end;
+          
+          .text {
+            font-size: 13px;
+          }
+          .moon-prefix {
+            font-size: 12px;
+            vertical-align: top;
+          }
         }
       }
     }

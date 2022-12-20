@@ -1,16 +1,19 @@
 import { SubscriptionRequestInterface } from "@urbit/http-api";
 import { NavigateFunction } from "react-router-dom";
 import { GetState, SetState } from "zustand";
+import { Game } from "../types/Game";
 import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
 import { ONE_SECOND } from "../utils/constants";
 import { PokurStore } from "./pokurStore";
-import flopSound from '../assets/sound/flop.mov'
-import turnSound from '../assets/sound/turn.mov'
-import foldSound from '../../assets/sound/fold.mov'
-import checkSound from '../../assets/sound/check.mov'
-import betSound from '../../assets/sound/bet.mp3'
-import callSound from '../../assets/sound/call.mp3'
+
+const flopSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/flop.mov')
+const turnSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/turn.mov')
+const foldSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/fold.mov')
+const checkSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/check.mov')
+const betSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/bet.mp3')
+const callSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/call.mp3')
+const newHandSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/new-hand.mov')
 
 export type SubscriptionPath = '/lobby-updates' | '/game-updates' | '/messages'
 
@@ -47,23 +50,25 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
   console.log('Game Update:'.toUpperCase(), gameUpdate)
 
   if (gameUpdate.game) {
-    const { game, hand_rank } = gameUpdate
+    const { game, hand_rank } = gameUpdate as { game: Game, hand_rank: string }
 
-    // sounds
-    if (game.board.length && get().game?.board.length !== undefined) {
+    // Sounds
+    if (get().game?.hands_played !== game.hands_played) {
+      newHandSound.play()
+    } else if (game.board.length && get().game?.board.length !== undefined) {
       const curBoardLength = get().game?.board.length
 
       if (curBoardLength === 0 && game.board.length === 3) {
-        new Audio(flopSound).play()
+        flopSound.play()
       } else if (game.board.length === (curBoardLength || 0) + 1) {
-        new Audio(turnSound).play()
+        turnSound.play()
       }
     }
 
     if (game.update_message && game.update_message !== get().game?.update_message) {
       set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
     }
-  
+
     if (game.game_is_over) {
       console.log('GAME ENDED')
       set({ gameEndMessage: game.update_message })
@@ -71,7 +76,14 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
 
     // if hands should be revealed, reveal the hands and then update the game in 4 seconds
     if (Object.keys(game.revealed_hands || {}).length) {
-      set({ game: { ...get().game!, revealed_hands: game.revealed_hands, hand_rank } })
+      set({
+        game: { ...get().game!, revealed_hands: game.revealed_hands, hand_rank },
+        messages: [{ from: 'game-update', msg: `Hands: ${
+          Object.keys(game.revealed_hands).reduce((msg, p) =>
+            msg + `${p}: ${game.revealed_hands[p].map(({ val, suit }) => `${val} of ${suit}`).join(', ')}.`
+          , '')
+        }` }].concat(get().messages),
+      })
       setTimeout(() => {
         set({ game: { ...game, hand_rank, revealed_hands: {} } })
       }, 4 * ONE_SECOND)

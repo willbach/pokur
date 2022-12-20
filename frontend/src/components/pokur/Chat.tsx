@@ -4,9 +4,11 @@ import usePokurStore from '../../store/pokurStore';
 import Button from '../form/Button'
 import Input from '../form/Input'
 import Col from '../spacing/Col'
-import './Chat.scss'
 import Text from '../text/Text';
 import Row from '../spacing/Row';
+import { renderShip } from '../../utils/player';
+
+import './Chat.scss'
 
 const Chat = () => {
   const { messages, sendMessage } = usePokurStore()
@@ -35,7 +37,7 @@ const Chat = () => {
           ) : (
             <Row key={from + i} className={`message ${(window as any).ship === from.replace(/~/, '') ? 'self' : ''}`}>
               {(from !== arr[i + 1]?.from) && <span className='author'>
-                <Text mono style={{ marginLeft: 4 }}>~{from.replace(/~/, '')}:</Text>
+                <Text mono style={{ marginLeft: 4 }}>{renderShip(from)}:</Text>
               </span>}
               <span className='msg-text'>{msg}</span>
             </Row>

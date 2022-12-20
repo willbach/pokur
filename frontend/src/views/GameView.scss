@@ -195,6 +195,12 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
         position: absolute;
         align-items: center;
 
+        .turn-timer {
+          position: absolute;
+          top: 0;
+          
+        }
+
         .bet {
           color: white;
           font-weight: bold;
