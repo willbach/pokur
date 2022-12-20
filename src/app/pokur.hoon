@@ -145,19 +145,28 @@
       ^-  (list card)
       :-  :^  %give  %fact  ~[/game-updates]
           [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
+      ::  if we are all-in, or if we are last remaining player in hand
+      ::  who is not, auto-check
       ?.  ?&  =(our.bowl whose-turn.game.upd)
-              =-  =(0 stack.-)
-              %-  head
-              %+  skim  players.game.upd
-              |=([p=ship player-info] =(p our.bowl))
-          ==
-        ::  not all-in, let player choose action
+              ?|  ::  we're all-in
+                  =-  =(0 stack.-)
+                  %-  head
+                  %+  skim  players.game.upd
+                  |=([p=ship player-info] =(p our.bowl))
+                  ::  everyone else is
+                  =-  (lte (lent -) 1)
+                  %+  murn  players.game.upd
+                  |=  [=ship player-info]
+                  ?.  &(!folded (gth stack 0))  ~
+                  `ship
+          ==  ==
+        ::  neither, let player choose action
         ~
-      ::  all-in, auto-check
+      ::  wait 2 seconds, then auto-check
       :_  ~
       :*  %pass  /timer/autocheck
           %arvo  %b  %wait
-          (add now.bowl ~s1)
+          (add now.bowl ~s2)
       ==
     ::
         %game-over
