@@ -19,10 +19,35 @@
             ?|  =(0 stack)
                 =(committed current-bet.game.state)
     ==  ==  ==
+  ::  check if all (or all but one) players remaining in hand are all-in
+  ::  produces a list of ships that are "locked into" hand
+  ::  must be used after a betting round is over
+  ++  all-in-players
+    ^-  (list ship)
+    =/  actionable-players
+      %+  murn  players.game.state
+      |=  [=ship player-info]
+      ?.  &(!folded (gth stack 0))  ~
+      `ship
+    ?.  (lte (lent actionable-players) 1)
+      ~
+    %+  weld
+      actionable-players
+    %+  murn  players.game.state
+    |=  [=ship player-info]
+    ?.  &(!folded =(0 stack))  ~
+    `ship
   ::  checks cards on game and either initiates flop,
   ::  turn, river, or determine-winner
   ++  next-betting-round
     ^-  host-game-state
+    ::  check if we are in "showdown"
+    ::  mode and reveal hands if so.
+    =+  all-in-players
+    =?    revealed-hands.game.state
+        ?=(^ -)
+      %+  turn  -
+      |=(=ship [ship (~(got by hands.state) ship)])
     =/  n  (lent board.game.state)
     ?:  |(=(3 n) =(4 n))  turn-or-river
     ?.  =(5 n)            pokur-flop
@@ -230,9 +255,10 @@
     ^-  host-game-state
     ?~  pots.game.state  state
     =.  update-message.game.state  ''
-    =.  revealed-hands.game.state
-      ^-  (list [ship pokur-deck])
-      ?.  showdown  ~
+    ::  if we don't already have a set of revealed hands from an
+    ::  all-in, reveal winner and last-aggressor (if we're at showdown)
+    =?    revealed-hands.game.state
+        &(showdown ?=(~ revealed-hands.game.state))
       %+  turn
         ?~  last=last-aggressor.game.state
           (turn winners head)
@@ -240,6 +266,7 @@
         ?^  (find ~[u.last] w)  w
         [u.last w]
       |=(p=ship [p (~(got by hands.state) p)])
+    ::
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list [ship [@ud pokur-deck]])
       %+  skip  winners
@@ -377,9 +404,9 @@
         ~
       ::  set checking player to 'acted'
       =.  players.game.state  (set-player-as-acted who)
-      ?:  is-betting-over
-        `next-betting-round
-      `next-player-turn
+      ?.  is-betting-over
+        `next-player-turn
+      `next-betting-round
     ::
         %fold
       =.  players.game.state  (set-player-as-acted who)
