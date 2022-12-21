@@ -5,8 +5,15 @@
   ^-  @dr
   ?>  (lth (slav %ud tex) 1.000)
   (slav %dr `@t`(cat 3 '~s' tex))
+::  get player-info about a specific player in game
+++  get-player-info
+  |=  [who=ship =players]
+  ^-  (unit player-info)
+  =-  ?~  -  ~  `+:(head -)
+  %+  skim  players
+  |=([p=ship player-info] =(p who))
 ::
-++  modify-game-state
+++  guts
   |_  state=host-game-state
   ::  check if every player has either folded, or
   ::  acted AND (committed = current bet OR all-in)
@@ -400,9 +407,7 @@
     ^-  (unit host-game-state)
     ?>  =(who whose-turn.game.state)
     =/  =player-info
-      =<  +  %-  head
-      %+  skim  players.game.state
-      |=([p=ship player-info] =(p who))
+      (need (get-player-info who players.game.state))
     ?-    -.action
         %check
       ?.  =(current-bet.game.state committed.player-info)

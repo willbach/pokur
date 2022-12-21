@@ -23,7 +23,7 @@
     :~  [~bus 4 ~[[%5 %spades] [%ace %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts]]]
         [~dev 4 ~[[%ace %clubs] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
     ==
-  !>((~(determine-winner modify-game-state state) hands))
+  !>((~(determine-winner guts state) hands))
 ::
 ++  test-winner-2  ^-  tang
   ::  this should have ~bus win
@@ -43,7 +43,7 @@
     !>
     :~  [~bus 5 ~[[%6 %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
     ==
-  !>((~(determine-winner modify-game-state state) hands))
+  !>((~(determine-winner guts state) hands))
 ::
 ::  tie breaking tests
 ::

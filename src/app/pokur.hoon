@@ -149,10 +149,8 @@
       ::  who is not, auto-check
       ?.  ?&  =(our.bowl whose-turn.game.upd)
               ?|  ::  we're all-in
-                  =-  =(0 stack.-)
-                  %-  head
-                  %+  skim  players.game.upd
-                  |=([p=ship player-info] =(p our.bowl))
+                  =-  =(0 stack:(need -))
+                  (get-player-info our.bowl players.game.upd)
                   ::  everyone else is
                   =-  (lte (lent -) 1)
                   %+  murn  players.game.upd

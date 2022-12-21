@@ -145,7 +145,7 @@
         (end-game-pay-winners u.host-game)
       [cards this]
     =.  u.host-game
-      ~(increment-current-round modify-game-state u.host-game)
+      ~(increment-current-round guts u.host-game)
     :_  this(games.state (~(put by games.state) game-id u.host-game))
     %+  snoc
       (send-game-updates u.host-game)
@@ -170,7 +170,7 @@
       =^  cards  state
         (end-game-pay-winners u.host-game)
       [cards this]
-    :: reset that game's turn timer
+    ::  reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
     =.  update-message.game
       (crip "{<whose-turn.game>} timed out.")
@@ -179,7 +179,13 @@
     :*  %pass  /self-poke-wire
         %agent  [our.bowl %pokur-host]
         %poke  %pokur-game-action
-        !>([%fold game-id ~])
+        !>  ^-  game-action
+        ::  if there is a required bet, auto-fold
+        ::  otherwise, auto-check
+        ?:  =-  =(current-bet.game (need -))
+            (get-player-info whose-turn.game players.game)
+          [%check game-id ~]
+        [%fold game-id ~]
     ==
   ==
 ++  on-peek
@@ -290,7 +296,7 @@
   ?.  =(whose-turn.game from)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
-  =+  (~(process-player-action modify-game-state u.host-game) from action)
+  =+  (~(process-player-action guts u.host-game) from action)
   ?~  -
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: invalid action received!"]]]
@@ -541,7 +547,7 @@
     :: remove sender from their game
     =?    u.host-game
         (~(has by hands.u.host-game) src.bowl)
-      (~(remove-player modify-game-state u.host-game) src.bowl)
+      (~(remove-player guts u.host-game) src.bowl)
     :: remove spectator if they were one
     =.  spectators.game.u.host-game
       (~(del in spectators.game.u.host-game) src.bowl)
@@ -616,7 +622,7 @@
   |=  host-game=host-game-state
   ^-  host-game-state
   =.  deck.host-game  (shuffle deck.host-game eny.bowl)
-  %-  ~(initialize-hand modify-game-state host-game)
+  %-  ~(initialize-hand guts host-game)
   dealer.game.host-game
 ::
 ++  end-game-pay-winners
