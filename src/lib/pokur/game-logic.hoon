@@ -74,7 +74,9 @@
   ++  initialize-hand
     |=  dealer=ship
     ^-  host-game-state
-    =.  last-aggressor.game.state  ~
+    =:  last-aggressor.game.state  ~
+        last-action.game.state     ~
+    ==
     =.  players.game.state
       %+  skip  players.game.state
       |=([ship player-info] left)
@@ -413,7 +415,9 @@
       ?.  =(current-bet.game.state committed.player-info)
         ~
       ::  set checking player to 'acted'
-      =.  players.game.state  (set-player-as-acted who)
+      =:  players.game.state      (set-player-as-acted who)
+          last-action.game.state  `%check
+      ==
       ?.  is-betting-over
         `next-player-turn
       `next-betting-round
@@ -429,6 +433,7 @@
         ::  NOT showdown
         `(process-win [-.-.players-left [0 ~]]~ %.n)
       :: otherwise continue game
+      =.  last-action.game.state  `%fold
       ?.  is-betting-over
         `next-player-turn
       `next-betting-round
@@ -440,19 +445,19 @@
         big:get-current-blinds
       ?:  (gte amount.action stack.player-info)
         ::  ALL-IN logic here
-        =.  current-bet.game.state
-          ::  only update current bet if the all-in is a raise
+        =.  game.state
           ?:  (gth bet-plus-committed current-bet.game.state)
-            bet-plus-committed
-          current-bet.game.state
-        =.  last-bet.game.state
-          ::  same with last-bet, only update if raise
-          ?:  (gth bet-plus-committed current-bet.game.state)
-            (sub bet-plus-committed current-bet.game.state)
-          last-bet.game.state
-        =?    last-aggressor.game.state
-            (gth bet-plus-committed current-bet.game.state)
-          `who
+            ::  this is a "raise" all-in, update necessary trackers
+            %=  game.state
+              current-bet     bet-plus-committed
+              last-bet        (sub bet-plus-committed current-bet.game.state)
+              last-aggressor  `who
+              last-action     `%raise
+            ==
+          ::  this is a "call" all-in
+          %=  game.state
+            last-action     `%call
+          ==
         =.  players.game.state  (commit-chips who stack.player-info)
         =.  players.game.state  (set-player-as-acted who)
         =.  update-message.game.state  (crip "{<who>} is all-in.")
@@ -466,8 +471,9 @@
         ~  ::  this is a starting bet below min-bet
       ?:  =(bet-plus-committed current-bet.game.state)
         ::  this is a call
-        =.  players.game.state  (commit-chips who amount.action)
-        =.  players.game.state  (set-player-as-acted who)
+        =.  players.game.state      (commit-chips who amount.action)
+        =.  players.game.state      (set-player-as-acted who)
+        =.  last-action.game.state  `%call
         ?.  is-betting-over
           `next-player-turn
         `next-betting-round
@@ -479,7 +485,9 @@
         ::  error, raise must be >= amount of previous bet/raise
         ~
       ::  process raise
-      =.  last-aggressor.game.state  `who
+      =:  last-aggressor.game.state  `who
+          last-action.game.state     `%raise
+      ==
       ::  do this before updating current-bet
       =.  last-bet.game.state
         (sub bet-plus-committed current-bet.game.state)

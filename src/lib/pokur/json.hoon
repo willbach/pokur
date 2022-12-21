@@ -32,6 +32,7 @@
       ['pots' (enjs-pots pots.t)]
       ['current_bet' s+(scot %ud current-bet.t)]
       ['last_bet' s+(scot %ud last-bet.t)]
+      ['last_action' ?~(last-action.t ~ s+(scot %t u.last-action.t))]
       ['min_bet' s+(scot %ud (make-min-bet t))]
       ['board' (enjs-cards board.t)]
       ['hand' (enjs-cards my-hand.t)]

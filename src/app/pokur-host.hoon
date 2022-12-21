@@ -493,6 +493,7 @@
           pots=~[[0 player-order]]
           current-bet=0
           last-bet=0
+          last-action=~
           last-aggressor=~
           board=~
           my-hand=~
