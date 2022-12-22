@@ -450,7 +450,7 @@
           %poke  %wallet-poke
           !>
           :*  %transaction
-              origin=~
+              origin=`[%pokur-host /awards]
               from=address.our-info.state
               contract=id.contract.host-info.u.table
               town=town.contract.host-info.u.table
