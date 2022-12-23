@@ -17,7 +17,7 @@
     ++  player-action
       %-  of
       :~  [%new-table parse-table]
-          [%join-table parse-id]
+          [%join-table (ot ~[[%id (se %da)] [%public bo]])]
           [%leave-table parse-id]
           [%start-game parse-id]
           [%leave-game parse-id]
