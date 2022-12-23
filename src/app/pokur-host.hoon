@@ -15,6 +15,10 @@
       games=(map @da host-game-state)
       pending-player-txns=(jar batch=@ux [src=@p =txn-player-action])
   ==
+++  zero-to-one
+  |=  old=pokur-host-state-0
+  ^-  state-1
+  [%1 our-info.old tables.old games.old ~]
 --
 %-  agent:dbug
 =|  state=state-1
@@ -46,17 +50,14 @@
   |=  =old=vase
   ^-  (quip card _this)
   =/  old-state  !<(versioned-state old-vase)
-  ?:  ?=(%1 -.old-state)
+  ?-    -.old-state
+      %1
     `this(state old-state)
-  ?:  ?=(%0 -.old-state)
-    :-  =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
-        /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
-    %=    this
-        state
-      ^-  state-1
-      [%1 our-info.old-state tables.old-state games.old-state ~]
-    ==
-  !!
+      %0
+    :_  this(state (zero-to-one old-state))
+    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
+    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -252,16 +253,24 @@
     ?:  =(src.bowl our.bowl)  `state
     =.  tables.state
       (~(put by tables.state) id.table.action table.action)
-    [(lobby-update-card tables.state)^~ state]
+    [(new-table-card table.action)^~ state]
   ::
       %closed-table
     ::  remove table by other host from our lobby
+    ?:  =(src.bowl our.bowl)  `state
     ?~  table=(~(get by tables.state) id.action)
       `state
     ?>  =(src.bowl ship.host-info.u.table)
-    =.  tables.state
-      (~(del by tables.state) id.u.table)
-    [(lobby-update-card tables.state)^~ state]
+    :-  (table-closed-card id.u.table)^~
+    state(tables (~(del by tables.state) id.u.table))
+  ::
+      %game-starting
+    ::  remove table by other host from our lobby
+    ?:  =(src.bowl our.bowl)  `state
+    ?~  table=(~(get by tables.state) id.action)
+      `state
+    ?>  =(src.bowl ship.host-info.u.table)
+    `state(tables (~(del by tables.state) id.u.table))
   ::
       %turn-timers
     :_  state
@@ -409,8 +418,8 @@
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
-    :~  (lobby-update-card -)
-        (table-share-card table)
+    :~  (new-table-card table)
+        (table-gossip-card [%open table])
     ==
   ::
       %join-table
@@ -424,8 +433,8 @@
     =.  players.u.table  (~(put in players.u.table) src.bowl)
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
-    :~  (lobby-update-card -)
-        (table-share-card u.table)
+    :~  (new-table-card u.table)
+        (table-gossip-card [%open u.table])
     ==
   ::
       %leave-table
@@ -440,9 +449,8 @@
     ?:  =(0 ~(wyt in players.u.table))
       =+  (~(del by tables.state) id.action u.table)
       :_  state(tables -)
-      :^    (lobby-update-card -)
-          (table-closed-card id.action)
-        (closed-table-card id.action)
+      :+  (table-closed-card id.action)
+        (table-gossip-card [%closed id.action])
       ?~  tokenized.u.table  ~
       :_  ~
       :*  %pass  /pokur-wallet-poke
@@ -463,8 +471,8 @@
       ==
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
-    :~  (lobby-update-card -)
-        (table-share-card u.table)
+    :~  (new-table-card u.table)
+        (table-gossip-card [%open u.table])
     ==
   ::
       %start-game
@@ -522,8 +530,7 @@
     :_  state(games (~(put by games.state) id.action host-game-state))
     %+  welp
       :~  (game-starting-card id.u.table)
-          (lobby-update-card tables.state)
-          (closed-table-card id.u.table)
+          (table-gossip-card [%starting id.u.table])
           :*  %pass  /self-poke
               %agent  [our.bowl %pokur-host]
               %poke  %pokur-host-action
@@ -559,16 +566,43 @@
     state(games (~(put by games.state) id.action u.host-game))
   ::
       %kick-player
-    !!
-    ::  ?~  table=(~(get by tables.state) id.action)
-    ::    !!
-    ::  ::  src must be table leader
-    ::  ?>  =(src.bowl leader.u.table)
-    ::  ::  table must be private
-    ::  ?>  =(%.n public.u.table)
-    ::  =-  [(lobby-update-card -)^~ state(tables -)]
-    ::  %+  ~(put by tables.state)  id.action
-    ::  u.table(players (~(del in players.u.table) who.action))
+    ?~  table=(~(get by tables.state) id.action)  !!
+    ::  src must be table leader
+    ?>  =(src.bowl leader.u.table)
+    ::  table must be private
+    ?>  =(%.n public.u.table)
+    ::  player must be in table
+    ?>  (~(has in players.u.table) who.action)
+    =/  refund-card
+      ?~  tokenized.u.table  ~
+      ::  if tokenized, we award kicked player their funds back
+      ::  only paid-in players are allowed to join tokenized tables
+      ::  so we know they paid if they're here
+      :_  ~
+      :*  %pass  /pokur-wallet-poke
+          %agent  [our.bowl %uqbar]
+          %poke  %wallet-poke
+          !>
+          :*  %transaction
+              origin=`[%pokur-host /awards]
+              from=address.our-info.state
+              contract=id.contract.host-info.u.table
+              town=town.contract.host-info.u.table
+              :-  %noun
+              ^-  action:escrow
+              :*  %award
+                  bond-id.u.tokenized.u.table
+                  who.action
+                  amount.u.tokenized.u.table
+              ==
+          ==
+      ==
+    =+  %+  ~(put by tables.state)  id.action
+        u.table(players (~(del in players.u.table) who.action))
+    :_  state(tables -)
+    :+  (new-table-card u.table)
+      (table-gossip-card [%open u.table])
+    refund-card
   ==
 ::
 ++  handle-wallet-update
@@ -683,24 +717,18 @@
   ?.  (gte min-players.act (lent payouts.game-type.act))  %.n
   =(100 (roll payouts.game-type.act add))
 ::
-++  table-share-card
-  |=  =table
+++  table-gossip-card
+  |=  info=$%([%open table] [%closed @da] [%starting @da])
   ^-  card
   ::  TODO put gossip here, for now just share with central ship
   :*  %pass   /table-share
       %agent  [fixed-lobby-source %pokur-host]
       %poke   %pokur-host-action
-      !>(`host-action`[%share-table table])
-  ==
-::
-++  closed-table-card
-  |=  id=@da
-  ^-  card
-  ::  TODO put gossip here, for now just share with central ship
-  :*  %pass   /table-share
-      %agent  [fixed-lobby-source %pokur-host]
-      %poke   %pokur-host-action
-      !>(`host-action`[%closed-table id])
+      ?-  -.info
+        %open      !>(`host-action`[%share-table +.info])
+        %closed    !>(`host-action`[%closed-table +.info])
+        %starting  !>(`host-action`[%game-starting +.info])
+      ==
   ==
 ::
 ++  game-starting-card
@@ -717,12 +745,12 @@
   :-  %pokur-host-update
   !>(`host-update`[%table-closed id])
 ::
-++  lobby-update-card
-  |=  m=(map @da table)
+++  new-table-card
+  |=  =table
   ^-  card
   :^  %give  %fact  ~[/lobby-updates]
   :-  %pokur-host-update
-  !>(`host-update`[%lobby (public-tables m)])
+  !>(`host-update`[%new-table table])
 ::
 ++  public-tables
   |=  m=(map @da table)

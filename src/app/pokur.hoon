@@ -3,7 +3,9 @@
     *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
-+$  versioned-state  $%(state-0)
++$  versioned-state
+  $%  state-0
+  ==
 +$  state-0
   $:  %0
       known-hosts=(map ship host-info)
@@ -42,16 +44,19 @@
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
-  :_  this(state !<(versioned-state old))
-  ::  resub to get initial listing
-  :~  :*  %pass  /lobby-updates
-          %agent  [fixed-lobby-source %pokur-host]
-          %leave  ~
-      ==
-      :*  %pass  /lobby-updates
-          %agent  [fixed-lobby-source %pokur-host]
-          %watch  /lobby-updates
-  ==  ==
+  ~&  old
+  =/  old-state  !<(versioned-state old)
+  :-  :~  :*  %pass  /lobby-updates
+            %agent  [fixed-lobby-source %pokur-host]
+            %leave  ~
+        ==
+        :*  %pass  /lobby-updates
+            %agent  [fixed-lobby-source %pokur-host]
+            %watch  /lobby-updates
+    ==  ==
+  ?-  -.old-state
+    %0  this(state old-state)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -192,7 +197,8 @@
       `this
     ::
         %kick
-      ::  resub on kick
+      ::  resub on kick only to fixed-source
+      ?.  =(src.bowl fixed-lobby-source)  `this
       :_  this  :_  ~
       [%pass wire %agent [src.bowl %pokur-host] %watch wire]
     ::
@@ -201,32 +207,45 @@
       =/  upd  !<(host-update q.cage.sign)
       ?+    -.upd  (on-agent:def wire sign)
           %lobby
-        ~&  >>  "tables available: {<tables.upd>}"
-        :_  this(lobby.state tables.upd)  :_  ~
+        =.  lobby.state  (~(uni by lobby.state) tables.upd)
+        :_  this  :_  ~
         :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`upd)]
+        [%pokur-update !>(`update`[%lobby lobby.state])]
+      ::
+          %new-table
+        ::  add table to our lobby state
+        =.  lobby.state  (~(put by lobby.state) id.table.upd table.upd)
+        :_  this  :_  ~
+        :^  %give  %fact  ~[/lobby-updates]
+        [%pokur-update !>(`update`[%lobby lobby.state])]
       ::
           %table-closed
-        ::  if our table closed, clear
+        =.  lobby.state  (~(del by lobby.state) table-id.upd)
         ?~  our-table.state  `this
         ?.  =(u.our-table.state table-id.upd)  `this
+        ::  if our table closed, clear
         :_  this(our-table.state ~, messages.state ~)
-        :_  ~
-        :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`[%table-closed table-id.upd])]
+        :+  :^  %give  %fact  ~[/lobby-updates]
+            [%pokur-update !>(`update`[%lobby lobby.state])]
+          :^  %give  %fact  ~[/lobby-updates]
+          [%pokur-update !>(`update`[%table-closed table-id.upd])]
+        ~
       ::
           %game-starting
         ::  check if it's our game, if so, sub to path and notify FE
+        ?~  table=(~(get by lobby.state) game-id.upd)
+          `this
+        =.  lobby.state  (~(del by lobby.state) game-id.upd)
         ?~  our-table.state  `this
         ?.  =(game-id.upd u.our-table.state)  `this
-        =/  =table  (~(got by lobby.state) u.our-table.state)
-        :_  this(our-table.state ~, game-host.state `ship.host-info.table)
+        ?.  =(src.bowl ship.host-info.u.table)  `this
+        :_  this(our-table.state ~, game-host.state `ship.host-info.u.table)
         :~  :^  %give  %fact  ~[/game-updates]
             [%pokur-update !>(`update`upd)]
         ::
-            :*  %pass  /game-updates/(scot %da id.table)/(scot %p our.bowl)
-                %agent  [ship.host-info.table %pokur-host]
-                %watch  /game-updates/(scot %da id.table)/(scot %p our.bowl)
+            :*  %pass  /game-updates/(scot %da id.u.table)/(scot %p our.bowl)
+                %agent  [ship.host-info.u.table %pokur-host]
+                %watch  /game-updates/(scot %da id.u.table)/(scot %p our.bowl)
         ==  ==
       ==
     ==
@@ -469,12 +488,13 @@
     ==  ==
   ::
       %kick-player
-    !!
-    ::  ?~  our-table.state
-    ::    ~|("%pokur: error: can't edit table, not in one" !!)
-    ::  =/  =table  (~(got by lobby.state) u.our-table.state)
-    ::  :_  state
-    ::  (poke-pass-through ship.host-info.table action)^~
+    ?~  our-table.state
+      ~|("%pokur: error: can't edit table, not in one" !!)
+    =/  =table  (~(got by lobby.state) u.our-table.state)
+    ?.  &(=(our.bowl leader.table) !public.table)
+      ~|("%pokur: error: can't edit table, not table leader/not private" !!)
+    :_  state
+    (poke-pass-through ship.host-info.table action)^~
   ::
       %set-our-address
     `state(our-address `address.action)
@@ -493,6 +513,26 @@
         %agent  [who.action %pokur-host]
         %leave  ~
     ==
+  ::
+      %send-invite
+    ::  produce an invite for a player
+    ::  must invite to table we're currently in
+    =/  =table  (~(got by lobby.state) (need our-table.state))
+    :_  state  :_  ~
+    :*  %pass  /invite-poke
+        %agent  [to.action %pokur]
+        %poke  %pokur-player-action
+        !>(`player-action`[%invite table])
+    ==
+  ::
+      %invite
+    ::  got invite from another player for a private table.
+    ::  only accept invites from ships you trust.
+    ::  integrate invite-tables into our lobby state
+    :_  state(lobby (~(put by lobby.state) id.table.action table.action))
+    :_  ~
+    :^  %give  %fact  ~[/lobby-updates]
+    [%pokur-update !>(`update`[%new-invite src.bowl table.action])]
   ==
 ::
 ++  handle-message-action

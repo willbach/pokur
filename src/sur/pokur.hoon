@@ -129,12 +129,14 @@
       [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
+      [%new-invite from=ship =table]
   ==
 +$  host-update  ::  from host to player app
   $%  [%game =game]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       [%game-over =game placements=(list ship)]
+      [%new-table =table]
       [%lobby tables=(map @da table)]
   ==
 ::
@@ -160,6 +162,8 @@
       ::  add a ship to our known-hosts
       [%find-host who=ship]
       [%remove-host who=ship]
+      [%send-invite to=ship]  ::  from FE to player app
+      [%invite =table]  ::  from player app to player app
   ==
 ::
 +$  txn-player-action
@@ -184,6 +188,7 @@
   $%  [%host-info =host-info]
       [%share-table =table]  ::  for lobby gossip
       [%closed-table id=@da]
+      [%game-starting id=@da]
       [%turn-timers id=@da wake=@da rest=@da]
   ==
 ::
