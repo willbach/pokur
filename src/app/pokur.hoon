@@ -44,16 +44,15 @@
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
-  ~&  old
   =/  old-state  !<(versioned-state old)
   :-  :~  :*  %pass  /lobby-updates
-            %agent  [fixed-lobby-source %pokur-host]
-            %leave  ~
-        ==
-        :*  %pass  /lobby-updates
-            %agent  [fixed-lobby-source %pokur-host]
-            %watch  /lobby-updates
-    ==  ==
+              %agent  [fixed-lobby-source %pokur-host]
+              %leave  ~
+          ==
+          :*  %pass  /lobby-updates
+              %agent  [fixed-lobby-source %pokur-host]
+              %watch  /lobby-updates
+      ==  ==
   ?-  -.old-state
     %0  this(state old-state)
   ==
@@ -84,9 +83,7 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ::  forward available tables from host here
-    :_  this  :_  ~
-    :^  %give  %fact  ~[/lobby-updates]
-    [%pokur-update !>(`update`[%lobby lobby.state])]
+    [lobby-update-card^~ this]
   ::
       [%game-updates ~]
     ?~  game.state  `this
@@ -208,25 +205,22 @@
       ?+    -.upd  (on-agent:def wire sign)
           %lobby
         =.  lobby.state  (~(uni by lobby.state) tables.upd)
-        :_  this  :_  ~
-        :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`[%lobby lobby.state])]
+        [lobby-update-card^~ this]
       ::
           %new-table
         ::  add table to our lobby state
         =.  lobby.state  (~(put by lobby.state) id.table.upd table.upd)
-        :_  this  :_  ~
-        :^  %give  %fact  ~[/lobby-updates]
-        [%pokur-update !>(`update`[%lobby lobby.state])]
+        [lobby-update-card^~ this]
       ::
           %table-closed
         =.  lobby.state  (~(del by lobby.state) table-id.upd)
-        ?~  our-table.state  `this
-        ?.  =(u.our-table.state table-id.upd)  `this
+        ?~  our-table.state
+          [lobby-update-card^~ this]
+        ?.  =(u.our-table.state table-id.upd)
+          [lobby-update-card^~ this]
         ::  if our table closed, clear
         :_  this(our-table.state ~, messages.state ~)
-        :+  :^  %give  %fact  ~[/lobby-updates]
-            [%pokur-update !>(`update`[%lobby lobby.state])]
+        :+  lobby-update-card
           :^  %give  %fact  ~[/lobby-updates]
           [%pokur-update !>(`update`[%table-closed table-id.upd])]
         ~
@@ -236,9 +230,12 @@
         ?~  table=(~(get by lobby.state) game-id.upd)
           `this
         =.  lobby.state  (~(del by lobby.state) game-id.upd)
-        ?~  our-table.state  `this
-        ?.  =(game-id.upd u.our-table.state)  `this
-        ?.  =(src.bowl ship.host-info.u.table)  `this
+        ?~  our-table.state
+          [lobby-update-card^~ this]
+        ?.  =(game-id.upd u.our-table.state)
+          [lobby-update-card^~ this]
+        ?.  =(src.bowl ship.host-info.u.table)
+          [lobby-update-card^~ this]
         :_  this(our-table.state ~, game-host.state `ship.host-info.u.table)
         :~  :^  %give  %fact  ~[/game-updates]
             [%pokur-update !>(`update`upd)]
@@ -655,6 +652,13 @@
       ==
     ==
   ==
+::
+++  lobby-update-card
+  ^-  card
+  ~&  >>  "tables available:"
+  ~&  >>  lobby.state
+  :^  %give  %fact  ~[/lobby-updates]
+  [%pokur-update !>(`update`[%lobby lobby.state])]
 ::
 ++  poke-pass-through
   |=  [host=ship action=player-action]

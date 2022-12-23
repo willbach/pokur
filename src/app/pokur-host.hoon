@@ -447,7 +447,7 @@
     ::  if all players left, close table
     ::  if table was tokenized, refund all depositors
     ?:  =(0 ~(wyt in players.u.table))
-      =+  (~(del by tables.state) id.action u.table)
+      =+  (~(del by tables.state) id.action)
       :_  state(tables -)
       :+  (table-closed-card id.action)
         (table-gossip-card [%closed id.action])
