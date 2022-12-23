@@ -49,15 +49,18 @@
 ++  on-load
   |=  =old=vase
   ^-  (quip card _this)
-  =/  old-state  !<(versioned-state old-vase)
-  ?-    -.old-state
-      %1
-    `this(state old-state)
-      %0
-    :_  this(state (zero-to-one old-state))
-    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
-    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
-  ==
+  ::  one-update-only manual reset of state type
+  =+  0xabcd.abcd
+  `this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  ::  =/  old-state  !<(versioned-state old-vase)
+  ::  ?-    -.old-state
+  ::      %1
+  ::    `this(state old-state)
+  ::      %0
+  ::    :_  this(state (zero-to-one old-state))
+  ::    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
+  ::    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
+  ::  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -98,6 +101,17 @@
         %poke  %pokur-host-action
         !>(`host-action`[%host-info our-info.state])
     ==
+  ::
+      [%lobby-updates @ ~]
+    ::  watcher seeks updates about a private table
+    =/  table-id=@da  (slav %da i.t.path)
+    ~&  >  "player {<src.bowl>} watching private table {<table-id>}"
+    :_  this
+    ?~  table=(~(get by tables.state) table-id)  ~
+    :_  ~
+    :^  %give  %fact  ~
+    :-  %pokur-host-update
+    !>(`host-update`[%new-table u.table])
   ::
       [%game-updates @ @ ~]
     ::  assert the player is in game and on their path
@@ -418,6 +432,7 @@
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
+    ?.  public.action  (private-table-card table)^~
     :~  (new-table-card table)
         (table-gossip-card [%open table])
     ==
@@ -433,6 +448,7 @@
     =.  players.u.table  (~(put in players.u.table) src.bowl)
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
+    ?.  public.u.table  (private-table-card u.table)^~
     :~  (new-table-card u.table)
         (table-gossip-card [%open u.table])
     ==
@@ -471,6 +487,7 @@
       ==
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
+    ?.  public.u.table  (private-table-card u.table)^~
     :~  (new-table-card u.table)
         (table-gossip-card [%open u.table])
     ==
@@ -600,6 +617,7 @@
     =+  %+  ~(put by tables.state)  id.action
         u.table(players (~(del in players.u.table) who.action))
     :_  state(tables -)
+    ?.  public.u.table  (private-table-card u.table)^refund-card
     :+  (new-table-card u.table)
       (table-gossip-card [%open u.table])
     refund-card
@@ -749,6 +767,13 @@
   |=  =table
   ^-  card
   :^  %give  %fact  ~[/lobby-updates]
+  :-  %pokur-host-update
+  !>(`host-update`[%new-table table])
+::
+++  private-table-card
+  |=  =table
+  ^-  card
+  :^  %give  %fact  ~[/lobby-updates/(scot %da id.table)]
   :-  %pokur-host-update
   !>(`host-update`[%new-table table])
 ::

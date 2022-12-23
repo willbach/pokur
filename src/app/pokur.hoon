@@ -44,18 +44,20 @@
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
-  =/  old-state  !<(versioned-state old)
-  :-  :~  :*  %pass  /lobby-updates
-              %agent  [fixed-lobby-source %pokur-host]
-              %leave  ~
-          ==
-          :*  %pass  /lobby-updates
-              %agent  [fixed-lobby-source %pokur-host]
-              %watch  /lobby-updates
-      ==  ==
-  ?-  -.old-state
-    %0  this(state old-state)
-  ==
+  ::  one-update-only manual reset of state type
+  `this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
+  ::  =/  old-state  !<(versioned-state old)
+  ::  :-  :~  :*  %pass  /lobby-updates
+  ::              %agent  [fixed-lobby-source %pokur-host]
+  ::              %leave  ~
+  ::          ==
+  ::          :*  %pass  /lobby-updates
+  ::              %agent  [fixed-lobby-source %pokur-host]
+  ::              %watch  /lobby-updates
+  ::      ==  ==
+  ::  ?-  -.old-state
+  ::    %0  this(state old-state)
+  ::  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -184,7 +186,8 @@
       ==  ==
     ==
   ::
-      [%lobby-updates ~]
+      ?([%lobby-updates ~] [%lobby-updates @ ~])
+    ::  updates about public lobby, and table-specific private tables
     ?+    -.sign  (on-agent:def wire sign)
         %watch-ack
       ?~  p.sign
@@ -364,6 +367,16 @@
 ++  handle-player-action
   |=  action=player-action
   ^-  (quip card _state)
+  ::  all other pokes can only be sent from FE
+  ?:  ?=(%invite -.action)
+    ::  got invite from another player for a private table.
+    ::  only accept invites from ships you trust.
+    ::  integrate invite-tables into our lobby state
+    ~&  >>  "%pokur: got invite to game {<id.table.action>}"
+    :_  state(lobby (~(put by lobby.state) id.table.action table.action))
+    :_  ~
+    :^  %give  %fact  ~[/lobby-updates]
+    [%pokur-update !>(`update`[%new-invite src.bowl table.action])]
   ?>  =(src.bowl our.bowl)
   ?-    -.action
       %new-table
@@ -378,10 +391,17 @@
       ~|("%pokur: error: need to %find-host first" !!)
     =.  id.action  now.bowl
     ?~  tokenized.action
-      :_  state  :_  ~
-      :*  %pass  /start-table-poke/(scot %da id.action)
+      :_  state
+      :-  :*  %pass  /start-table-poke/(scot %da id.action)
+              %agent  [host.action %pokur-host]
+              %poke  %pokur-player-action  !>(action)
+          ==
+      ?:  public.action  ~
+      ::  if private table, sub to table-specific update path
+      :_  ~
+      :*  %pass  /lobby-updates/(scot %da id.action)
           %agent  [host.action %pokur-host]
-          %poke  %pokur-player-action  !>(action)
+          %watch  /lobby-updates/(scot %da id.action)
       ==
     ::  generate new escrow bond with host
     ::  [%new-bond custodian=address timelock=@ud asset-metadata=id]
@@ -420,7 +440,13 @@
     ::  table if tokenized until transaction is received
     ?~  tokenized.table
       :_  state(our-table `id.action)
-      (poke-pass-through ship.host-info.table action)^join-host-card
+      =+  (poke-pass-through ship.host-info.table action)^join-host-card
+      ?:  public.action  -
+      %+  snoc  -
+      :*  %pass  /lobby-updates/(scot %da id.action)
+          %agent  [ship.host-info.table %pokur-host]
+          %watch  /lobby-updates/(scot %da id.action)
+      ==
     ::  escrow work -- set pending join poke
     :_  state(pending-poke `action)
     ?~  our-address.state
@@ -521,15 +547,6 @@
         %poke  %pokur-player-action
         !>(`player-action`[%invite table])
     ==
-  ::
-      %invite
-    ::  got invite from another player for a private table.
-    ::  only accept invites from ships you trust.
-    ::  integrate invite-tables into our lobby state
-    :_  state(lobby (~(put by lobby.state) id.table.action table.action))
-    :_  ~
-    :^  %give  %fact  ~[/lobby-updates]
-    [%pokur-update !>(`update`[%new-invite src.bowl table.action])]
   ==
 ::
 ++  handle-message-action
@@ -627,12 +644,18 @@
       =.  bond-id.u.tokenized.u.pending-poke.state
         ((se:dejs:format %ux) json.event)
       :_  state(pending-poke ~)
+      :-  :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
+              %agent  [host.u.pending-poke.state %pokur-host]
+              %poke   %pokur-txn-player-action
+              !>  ^-  txn-player-action
+              [%new-table-txn batch.update u.pending-poke.state]
+          ==
+      ?:  public.u.pending-poke.state  ~
+      ::  if private table, sub to table-specific update path
       :_  ~
-      :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
+      :*  %pass  /lobby-updates/(scot %da id.u.pending-poke.state)
           %agent  [host.u.pending-poke.state %pokur-host]
-          %poke   %pokur-txn-player-action
-          !>  ^-  txn-player-action
-          [%new-table-txn batch.update u.pending-poke.state]
+          %watch  /lobby-updates/(scot %da id.u.pending-poke.state)
       ==
     ::
         [%deposit-confirmation @ ~]
@@ -643,12 +666,17 @@
       ?>  =(%200 status.transaction.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
       :_  state(pending-poke ~)
+      :-  :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
+              %agent  [host %pokur-host]
+              %poke   %pokur-txn-player-action
+              !>  ^-  txn-player-action
+              [%join-table-txn batch.update u.pending-poke.state]
+          ==
+      ?:  public.u.pending-poke.state  ~
       :_  ~
-      :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
+      :*  %pass  /lobby-updates/(scot %da id.u.pending-poke.state)
           %agent  [host %pokur-host]
-          %poke   %pokur-txn-player-action
-          !>  ^-  txn-player-action
-          [%join-table-txn batch.update u.pending-poke.state]
+          %watch  /lobby-updates/(scot %da id.u.pending-poke.state)
       ==
     ==
   ==

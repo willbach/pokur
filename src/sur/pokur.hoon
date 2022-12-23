@@ -152,7 +152,7 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da]  ::  pokes to the HOST, must first pay escrow!
+      [%join-table id=@da public=?]  ::  pokes to the HOST must first pay escrow!
       [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
