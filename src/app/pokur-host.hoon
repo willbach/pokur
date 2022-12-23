@@ -182,7 +182,7 @@
         !>  ^-  game-action
         ::  if there is a required bet, auto-fold
         ::  otherwise, auto-check
-        ?:  =-  =(current-bet.game (need -))
+        ?:  =-  =(current-bet.game committed:(need -))
             (get-player-info whose-turn.game players.game)
           [%check game-id ~]
         [%fold game-id ~]
@@ -385,7 +385,7 @@
         ==
     ?<  (~(has by tables.state) id.action)
     ?>  (lte turn-time-limit.action ~s999)
-    ?>  (gte turn-time-limit.action ~s10)
+    ?>  (gte turn-time-limit.action ~s20)
     ?>  (gte min-players.action 2)
     ?>  (lte max-players.action 10)
     =/  =table

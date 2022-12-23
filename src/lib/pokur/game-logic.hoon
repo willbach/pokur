@@ -110,13 +110,11 @@
   ::
   ++  pokur-flop
     ^-  host-game-state
-    =.  last-aggressor.game.state  ~
     =.  state  committed-chips-to-pot
     (deal-to-board 3)
   ::
   ++  turn-or-river
     ^-  host-game-state
-    =.  last-aggressor.game.state  ~
     =.  state  committed-chips-to-pot
     (deal-to-board 1)
   ::  draws n cards (after burning 1) from deck,
