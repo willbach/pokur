@@ -68,7 +68,7 @@ const GameInfo = ({ game, gameMessages }) => {
     <>
       <div className={styles.game_info}>
         <p>Game ID: {game.id}</p>
-        <p>Host: {"~" + game.host}</p>
+        <p>Lobby: {"~" + game.host}</p>
         <p>Hands played: {game.hands_played}</p>
         <p>SB/BB: ${game.min_bet / 2}/${game.min_bet}</p>
       </div>

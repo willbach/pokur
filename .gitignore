@@ -4,6 +4,7 @@ src/app/pokur/js/index.js
 src/install.sh
 src/app/pokur/index.html
 
+
 urbitrc-sample
 
 # dependencies
@@ -16,6 +17,7 @@ urbitrc-sample
 
 # production
 /build
+frontend/build
 
 # misc
 .DS_Store

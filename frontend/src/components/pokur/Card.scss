@@ -46,11 +46,11 @@
   }
     
   .card-value.large {
-    font-size: 4vw;
+    font-size: min(4vw, 48px);
   }
     
   .card-suit.large {
-    font-size: 4vw;
+    font-size: min(4vw, 48px);
     margin-top: -4px;
     align-self: flex-end;
   }

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import useExplorerStore from './store/pokurStore';
-import Navbar from './components/nav/Navbar';
-import LoadingOverlay from './components/popups/LoadingOverlay';
+import { useWalletStore } from '@uqbar/wallet-ui';
 
+import useExplorerStore from './store/pokurStore';
+import LoadingOverlay from './components/popups/LoadingOverlay';
 import LobbyView from './views/LobbyView';
 import TableView from './views/TableView';
 import GameView from './views/GameView';
@@ -11,17 +11,23 @@ import GameView from './views/GameView';
 import './App.scss'
 
 function App() {
-  const { init, loadingText } = useExplorerStore()
+  const { init, setOurAddress, getHosts, loadingText } = useExplorerStore()
+  const { initWallet, selectedAccount } = useWalletStore()
   const [redirectPath, setRedirectPath] = useState('')
 
   useEffect(() => {
     (async () => {
+      initWallet({ prompt: true })
+      getHosts()
       const initialRoute = await init()
-      console.log(initialRoute)
       setRedirectPath(initialRoute || '')
       setRedirectPath('')
     })()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedAccount) setOurAddress(selectedAccount.rawAddress)
+  }, [selectedAccount, setOurAddress])
 
   return (
     <BrowserRouter basename={'/apps/pokur'}>

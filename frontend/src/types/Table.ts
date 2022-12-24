@@ -1,10 +1,26 @@
 import { CashGame, GameType, TournamentGame } from "./Game"
 
+export interface CreateTokenized {
+  metadata: string
+  amount: number
+  'bond-id': string
+  symbol: string
+}
+
+export interface Tokenized {
+  metadata: string
+  amount: string
+  bond_id: string
+  symbol: string
+}
+
 export interface CreateTableValues {
   'min-players': number
   'max-players': number
   'game-type': GameType
-  tokenized?: boolean
+  host: string
+  'custom-host': string
+  tokenized: CreateTokenized
   public: boolean
   'spectators-allowed': boolean
   'turn-time-limit': string // in seconds
@@ -12,7 +28,7 @@ export interface CreateTableValues {
   'small-blind'?: number
   'big-blind'?: number
   'round-duration'?: string // in minutes
-  'blinds-schedule'?: { small: number, big: number }[]
+  'starting-blinds'?: string
   // 'current-round': number
   // 'round-is-over': boolean
 }
@@ -24,10 +40,7 @@ export interface Table {
   min_players: string
   max_players: string
   game_type: CashGame | TournamentGame
-  tokenized: {
-    metadata: string
-    amount: string
-  } | null
+  tokenized: Tokenized | null
   bond_id: string | null
   spectators_allowed: boolean
   turn_time_limit: string

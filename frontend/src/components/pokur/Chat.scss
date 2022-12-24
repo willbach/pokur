@@ -9,6 +9,7 @@
   bottom: 0;
   width: 50%;
   max-width: calc(100% - 200px);
+  max-height: 200px;
 
   &.hidden {
     width: 106px;
@@ -32,6 +33,16 @@
     max-height: 300px;
     overflow-y: scroll;
 
+    .game-update {
+      margin: 2px;
+      padding: 2px 8px;
+      max-width: 80%;
+      width: fit-content;
+      align-items: flex-start;
+      color: gray;
+      font-size: 13px;
+    }
+
     .message {
       border-radius: 4px;
       margin: 2px;
@@ -39,22 +50,44 @@
       padding: 2px 8px;
       max-width: 80%;
       width: fit-content;
+      align-items: flex-start;
+      display: inline;
+
+      .sigil-container {
+        display: inline;
+      }
       
       .author {
-  
+        margin-right: 8px;
+        display: inline;
+        
+        .text {
+          font-size: 13px;
+        }
+        .moon-prefix {
+          font-size: 12px;
+          vertical-align: top;
+        }
       }
       .msg-text {
-  
+        font-size: 13px;
       }
 
       &.self {
         background: gray;
         color: white;
         align-self: flex-end;
-        text-align: end;
 
         .author {
           justify-content: flex-end;
+          
+          .text {
+            font-size: 13px;
+          }
+          .moon-prefix {
+            font-size: 12px;
+            vertical-align: top;
+          }
         }
       }
     }

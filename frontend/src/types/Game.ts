@@ -2,7 +2,7 @@ import { Card } from "./Card"
 import { Player } from "./Player"
 import { Pot } from "./Pot"
 
-export type GameType = 'cash' | 'tournament'
+export type GameType = 'cash' | 'sng'
 
 interface GameTypeInfo {
   type: GameType
@@ -30,6 +30,7 @@ export interface Game {
   pots: Pot[]
   current_bet: string
   last_bet: string
+  min_bet: string
   board: Card[]
   hand: Card[]
   current_turn: string
@@ -39,8 +40,13 @@ export interface Game {
   spectators_allowed: boolean
   spectators: string[]
   hands_played: string
-  update_message: {
-    text: string
-    winning_hand: Card[]
-  }
+  update_message: string
+  revealed_hands: { [ship: string /*includes sig*/]: Card[] }
+  hand_rank: string
+  turn_start: string // hoon date
+  last_action: null | 'fold' | 'check' | 'call' | 'raise'
+  // update_message: {
+  //   text: string
+  //   winning_hand: Card[]
+  // }
 }

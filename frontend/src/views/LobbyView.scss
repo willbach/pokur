@@ -34,13 +34,12 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: url('../assets/img/lobby-pink.jpeg');
     background-size: cover;
     opacity: 0.6;
     z-index: 0;
   }
 
-  .content {
+  .main {
     z-index: 1;
     height: calc(100% - 80px);
     width: 100%;
@@ -50,7 +49,6 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      margin-top: -60px;
 
       button {
         width: 165.5px;
@@ -62,6 +60,17 @@
       // color: colors.$charcoal;
       text-align: center;
       margin: 12px 0 0;
+    }
+  }
+
+  .modal {
+    form {
+      select {
+        min-width: 120px;
+      }
+      input {
+        width: 120px;
+      }
     }
   }
 }
