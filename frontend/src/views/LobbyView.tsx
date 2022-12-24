@@ -64,9 +64,9 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           <Text mono>POKUR</Text>
         </Row>
         <Row>
-          {/* {selectedAccount && <Button onClick={() => zigFaucet(selectedAccount.rawAddress)}>
+          {selectedAccount && <Button onClick={() => zigFaucet(selectedAccount.rawAddress)}>
             Zig Faucet
-          </Button>} */}
+          </Button>}
           {Object.values(assets[selectedAccount?.rawAddress || '0x0'] || {}).length > 0 && (
             <Button style={{ margin: 'auto 16px' }} onClick={() => setShowNewTableModal(true)}>
               Create Table
