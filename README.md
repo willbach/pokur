@@ -56,7 +56,7 @@ Now the table will be created and available from host. ~bus should see the updat
 Make the join transaction:
 ```hoon
 :pokur &pokur-player-action [%set-our-address 0xd6dc.c8ff.7ec5.4416.6d4e.b701.d1a6.8e97.b464.76de]
-:pokur &pokur-player-action [%join-table <table-id>]
+:pokur &pokur-player-action [%join-table public=%.y]
 :uqbar &wallet-poke [%submit from=0xd6dc.c8ff.7ec5.4416.6d4e.b701.d1a6.8e97.b464.76de hash=[yourhash] gas=[rate=1 bud=1.000.000]]
 ```
 
@@ -83,7 +83,7 @@ On ship ~zod:
 
 On ship ~bus:
 ```
-:pokur &pokur-player-action [%join-table <id>]
+:pokur &pokur-player-action [%join-table <id> public=%.y]
 ```
 
 On ~zod:
