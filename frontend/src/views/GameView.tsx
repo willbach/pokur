@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
+import cn from 'classnames'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
@@ -17,6 +18,7 @@ import { renderSigil } from '../utils/player'
 import { fromUd } from '../utils/number'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { getSecondsFromNow } from '../utils/time'
+import TableBackground from '../components/pokur/TableBackground'
 
 import './GameView.scss'
 
@@ -68,21 +70,42 @@ const GameView = ({ redirectPath }: GameViewProps) => {
   const secondsLeft = getSecondsFromNow(game?.turn_start, game?.turn_time_limit)
 
   return (
-    <Col className={`game-view ${gameOver ? 'game-over' : ''}`}>
+    <Col className={cn('game-view', gameOver && 'game-over')}>
       {!game ? (
-        <Col className='content'>
-          <h3>{gameOver ? 'Game Ended' : 'Game Not Found'}</h3>
-          {Boolean(gameEndMessage) && <>
-            <p>{gameEndMessage}</p>
-            <p>Payouts will be made from the escrow contract soon.</p>
-          </>}
-          <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
-            Return to Lobby
-          </Button>
-        </Col>
+        <>
+          <TableBackground />
+          <Col className='content'>
+            <h3>{gameOver ? 'Game Ended' : 'Game Not Found'}</h3>
+            {Boolean(gameEndMessage) && <>
+              <p>{gameEndMessage}</p>
+              <p>Payouts will be made from the escrow contract soon.</p>
+            </>}
+            <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
+              Return to Lobby
+            </Button>
+          </Col>
+        </>
       ) : (
         <Col className="game">
+          {Boolean(gameEndMessage) && (
+            <Col className='game-end-popup'>
+              <h3>Game Ended</h3>
+              {Boolean(gameEndMessage) && <>
+                <p>{gameEndMessage}</p>
+                <p>Payouts will be made from the escrow contract soon.</p>
+              </>}
+              <Row style={{ marginTop: 16 }}>
+                <Button variant='dark' style={{ width: 150, marginRight: 16 }} onClick={() => null}>
+                  Rematch
+                </Button>
+                <Button variant='dark' style={{ width: 150 }} onClick={leave}>
+                  Return to Lobby
+                </Button>
+              </Row>
+            </Col>
+          )}
           <div className='players'>
+            <TableBackground />
             <Col className="center-table">
               <Row className='branding'>
                 <img src={logo} alt='uqbar logo' />
@@ -113,6 +136,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               const curTurn = game.current_turn.includes(p.ship)
               const isSelf = (window as any).ship === p.ship
               const hand = game.revealed_hands[`~${p.ship}`]
+              const folded = p.folded
               
               const buttonIndicator = arr.length === 2 && game?.dealer.includes(p.ship) ? 'D' :
                 arr.length === 2 ? '' :
@@ -123,7 +147,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               return (
                 <Col className={`player-display ${PLAYER_POSITIONS[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
                   <Row className='cards'>
-                    {isSelf ? (
+                    {isSelf && !folded ? (
                       <>
                         {game?.hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
@@ -133,11 +157,11 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                       </>
                     ) : (
                       <div className='sigil-container avatar'>
-                        {renderSigil({ ship: p.ship, className: 'avatar-sigil' })}
+                        {renderSigil({ ship: p.ship, className: 'avatar-sigil', colors: [folded ? 'grey' : 'black', 'white'] })}
                       </div>
                     )}
                   </Row>
-                  <div className={`player-info ${curTurn ? 'current-turn' : ''}`}>
+                  <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>
                     <Player hideSigil ship={p.ship} />
                     <Text className='stack' bold>{p.left ? 'Left the game' : `$${p.stack}`}</Text>
                   </div>
@@ -158,6 +182,9 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                         strokeWidth={3}
                       />
                     </div>
+                  )}
+                  {game?.hand_rank && game.hand_rank.length > 1 && isSelf && (
+                    <Text className='hand-rank'>{game?.hand_rank}</Text>
                   )}
                 </Col>
               )

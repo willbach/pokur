@@ -95,6 +95,9 @@ export const TURN_TIMES = [
   { display: '15 seconds', value: '~s15' },
   { display: '18 seconds', value: '~s18' },
   { display: '20 seconds', value: '~s20' },
+  { display: '30 seconds', value: '~s30' },
+  { display: '40 seconds', value: '~s40' },
+  { display: '50 seconds', value: '~s50' },
   { display: '60 seconds', value: '~s60' },
 ]
 
@@ -109,6 +112,6 @@ export const ROUND_TIMES = [
   { display: '8 minutes', value: '~m8' },
 ]
 
-export const NUMBER_OF_PLAYERS = [2, 6, 9]
-export const STACK_SIZES = [1000, 1500]
+export const NUMBER_OF_PLAYERS = [2, 3, 4, 5, 6, 7, 8, 9]
+export const STACK_SIZES = [500, 1000, 1500]
 export const STARTING_BLINDS = ['10/20', '15/30']

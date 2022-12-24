@@ -10,9 +10,11 @@ import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
 import { formatTimeLimit } from '../utils/format'
 import { getGameType } from '../utils/game'
+import { ONE_SECOND } from '../utils/constants'
+import TableBackground from '../components/pokur/TableBackground'
+import { tokenAmount } from '../utils/number'
 
 import './TableView.scss'
-import { ONE_SECOND } from '../utils/constants'
 
 interface TableViewProps {
   redirectPath: string
@@ -32,12 +34,12 @@ const TableView = ({ redirectPath }: TableViewProps) => {
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const buyIn = table?.tokenized ? `${table.tokenized?.amount.slice(0,-24)} ${table.tokenized.symbol}` : 'none'
+  const buyIn = table?.tokenized ? `${tokenAmount(table.tokenized?.amount)} ${table.tokenized.symbol}` : 'none'
   const gameStarting = gameStartingIn !== undefined
 
   return (
     <Col className='table-view'>
-      <div className='background' />
+      <TableBackground />
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
         <AccountSelector onSelectAccount={(a: any) => setOurAddress(a.rawAddress)} />
       </div>
@@ -132,7 +134,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
                   Start Game
                 </Button>
               )}
-              <Button disabled={gameStarting} onClick={async () => { nav('/'); leaveTable(table.id) }}>
+              <Button disabled={gameStarting} onClick={async () => { await leaveTable(table.id); setTimeout(() => nav('/'), 500) }}>
                 Leave Table
               </Button>
             </Row>

@@ -44,6 +44,7 @@ export interface Game {
   revealed_hands: { [ship: string /*includes sig*/]: Card[] }
   hand_rank: string
   turn_start: string // hoon date
+  last_action: null | 'fold' | 'check' | 'call' | 'raise'
   // update_message: {
   //   text: string
   //   winning_hand: Card[]

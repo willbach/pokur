@@ -26,3 +26,5 @@ export const displayTokenAmount = (amount: number, decimals: number, decimalPlac
   formatAmount(amount / Math.pow(10, decimals || 1), decimalPlaces)
 
 export const fromUd = (amount?: string) => amount ? Number(amount.replace(/\./g, '')) : 0
+
+export const tokenAmount = (amount?: string) => fromUd(amount) / Math.pow(10, 18);

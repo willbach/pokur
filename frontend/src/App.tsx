@@ -11,13 +11,14 @@ import GameView from './views/GameView';
 import './App.scss'
 
 function App() {
-  const { init, setOurAddress, loadingText } = useExplorerStore()
+  const { init, setOurAddress, getHosts, loadingText } = useExplorerStore()
   const { initWallet, selectedAccount } = useWalletStore()
   const [redirectPath, setRedirectPath] = useState('')
 
   useEffect(() => {
     (async () => {
-      initWallet({})
+      initWallet({ prompt: true })
+      getHosts()
       const initialRoute = await init()
       setRedirectPath(initialRoute || '')
       setRedirectPath('')

@@ -1,58 +1,32 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from "react-router-dom"
-import { AccountSelector, HardwareWallet, HotWallet, useWalletStore, DEFAULT_TOWN_TEST } from "@uqbar/wallet-ui"
+import { AccountSelector, HardwareWallet, HotWallet, useWalletStore } from "@uqbar/wallet-ui"
 import api from '../api'
 import Button from '../components/form/Button'
 import Input from '../components/form/Input'
-import { Select } from '../components/form/Select';
 import Tables from '../components/pokur/Tables';
-import Modal from '../components/popups/Modal';
 import Col from '../components/spacing/Col'
 import Row from '../components/spacing/Row';
 import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
-import { CreateTableValues } from '../types/Table';
 import logo from '../assets/img/logo192.png'
-import { getGameType } from '../utils/game';
-import { DEFAULT_HOST_DEV, DEFAULT_HOST_PROD, NUMBER_OF_PLAYERS, ROUND_TIMES, STACK_SIZES, STARTING_BLINDS, TURN_TIMES } from '../utils/constants'
-
-
+import CreateTableModal from '../components/pokur/CreateTableModal'
 
 import './LobbyView.scss'
-
-const BLANK_TABLE: CreateTableValues = {
-  'game-type': 'sng',
-  'host': process.env.NODE_ENV === 'production' ? DEFAULT_HOST_PROD : DEFAULT_HOST_DEV,
-  'min-players': 2,
-  'max-players': 2,
-  'starting-stack': 1500,
-  'turn-time-limit': '~s18', // in seconds
-  // tokenized: undefined,
-  'tokenized': { metadata: '0x61.7461.6461.7465.6d2d.7367.697a', amount: 1, 'bond-id': DEFAULT_TOWN_TEST, symbol: 'ZIG' },
-  'public': true,
-  'spectators-allowed': true,
-  'small-blind': 1,
-  'big-blind': 2,
-  'round-duration': '~m3', // in minutes
-  'starting-blinds': '10/20',
-}
 
 interface LobbyViewProps {
   redirectPath: string
 }
 
 const LobbyView = ({ redirectPath }: LobbyViewProps) => {
-  const { host, lobby, joinHost, createTable, subscribeToPath, setOurAddress, setLoading, setTable } = usePokurStore()
-  const { assets, metadata, setInsetView, selectedAccount, setMostRecentTransaction } = useWalletStore()
+  const { lobby, addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet } = usePokurStore()
+  const { selectedAccount, assets, setInsetView } = useWalletStore()
   const nav = useNavigate()
 
   const [newHost, setNewHost] = useState('')
   const [hostError, setHostError] = useState(false)
   const [showNewTableModal, setShowNewTableModal] = useState(false)
-  const [tableForm, setTableForm] = useState<CreateTableValues>(BLANK_TABLE)
 
-  const uniqueAssetList = useMemo(() => Object.values(assets[selectedAccount?.rawAddress || 'none'] || {}), [assets, selectedAccount])
-  
   useEffect(() => {
     const lobbySub = subscribeToPath('/lobby-updates')
     return () => {
@@ -72,53 +46,15 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     }
   }, [lobby, setInsetView, nav, setLoading, setTable])
 
-  const changeTableForm = useCallback((key: string, isNumeric: boolean = false) => (e: any) => {
-    if (key.includes('tokenized')) {
-      const [,tokenizedKey] = key.split('/')
-
-      setTableForm({
-        ...tableForm,
-        tokenized: {
-          ...(tableForm.tokenized || {}),
-          [tokenizedKey]: isNumeric ? Number(e.target.value.replace(/[^0-9]/g, '')) : e.target.value,
-          symbol: tokenizedKey === 'metadata' ? metadata[e.target.value]?.data.symbol : tableForm.tokenized.symbol,
-        }
-      })
-    } else {
-      setTableForm({ ...tableForm, [key]: isNumeric ? Number(e.target.value.replace(/[^0-9]/g, '')) : e.target.value })
-    }
-  }, [metadata, tableForm, setTableForm])
-
-  const submitNewTable = useCallback(async (e: any) => {
-    e.preventDefault()
-
-    try {
-      const decimals = metadata[tableForm.tokenized.metadata]?.data.decimals
-      const amount = tableForm.tokenized.amount * (decimals ? Math.pow(10, decimals) : 1)
-
-      const formatedValues = {
-        ...tableForm,
-        tokenized: { ...tableForm.tokenized, amount }
-      }
-      await createTable(formatedValues)
-      setTableForm(BLANK_TABLE)
-      setMostRecentTransaction(undefined)
-      setInsetView('confirm-most-recent')
-      setShowNewTableModal(false)
-    } catch (err) {
-      setLoading(null)
-    }
-  }, [tableForm, metadata, createTable, setInsetView, setMostRecentTransaction, setLoading])
-
   const submitNewHost = useCallback(async (e) => {
     try {
-      await joinHost(`~${newHost.replace(/~/g, '')}`)
+      await addHost(`~${newHost.replace(/~/g, '')}`)
       setNewHost('')
     } catch (error) {
       setHostError(true)
       e.preventDefault()
     }
-  }, [newHost, setNewHost, joinHost])
+  }, [newHost, setNewHost, addHost])
 
   return (
     <Col className='lobby-view'>
@@ -128,7 +64,10 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           <Text mono>POKUR</Text>
         </Row>
         <Row>
-          {true && (
+          {/* {selectedAccount && <Button onClick={() => zigFaucet(selectedAccount.rawAddress)}>
+            Zig Faucet
+          </Button>} */}
+          {Object.values(assets[selectedAccount?.rawAddress || '0x0'] || {}).length > 0 && (
             <Button style={{ margin: 'auto 16px' }} onClick={() => setShowNewTableModal(true)}>
               Create Table
             </Button>
@@ -152,7 +91,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       </Row>
 
       <Col className='main'>
-        {true || Boolean(host) ? (
+        {true ? (
           <>
             {Object.keys(lobby).length > 0 ? (
               <Tables tables={Object.values(lobby)} />
@@ -181,122 +120,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           </>
         )}
       </Col>
-      <Modal show={showNewTableModal} hide={() => setShowNewTableModal(false)}>
-        <Col style={{ minWidth: 400 }}>
-          <h3 style={{ marginTop: 0 }}>Create New Table</h3>
-          <form className="create-table" onSubmit={submitNewTable}>
-            <Row>
-              <label>Game Type</label>
-              <Select value={tableForm['game-type']} onChange={(e) => {
-                const gameSpecificInfo = e.target.value === 'cash' ?
-                  { ...tableForm, 'game-type': 'cash', 'small-blind': 1, 'big-blind': 2, 'round-duration': undefined, 'blinds-schedule': undefined } :
-                  { ...tableForm, 'game-type': 'sng', 'small-blind': undefined, 'big-blind': undefined, 'round-duration': '~m5'  }
-                setTableForm(gameSpecificInfo as any)
-              }}>
-                {['sng'].map(gt => <option key={gt} value={gt}>{getGameType(gt)}</option>)}
-              </Select>
-            </Row>
-            <Row>
-              <label>Host</label>
-              <Input value={tableForm.host} onChange={changeTableForm('host')} />
-            </Row>
-            {tableForm['game-type'] === 'sng' ? (
-              <Row>
-                <label>Players</label>
-                <Select value={tableForm['min-players']} onChange={(e) => { changeTableForm('min-players', true)(e); changeTableForm('max-players', true)}}>
-                  {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-                </Select>
-              </Row>
-            ) : (
-              <>
-                <Row>
-                  <label>Min Players</label>
-                  <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
-                    {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-                  </Select>
-                </Row>
-                <Row>
-                  <label>Max Players</label>
-                  <Select value={tableForm['max-players']} onChange={changeTableForm('max-players', true)}>
-                    {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-                  </Select>
-                </Row>
-              </>
-            )}
-            <Row>
-              <label>Turn Time</label>
-              <Select value={tableForm['turn-time-limit']} onChange={changeTableForm('turn-time-limit')}>
-                {TURN_TIMES.map(tt => <option key={tt.value} value={tt.value}>{tt.display}</option>)}
-              </Select>
-            </Row>
-            
-            {tableForm['game-type'] === 'sng' ? (
-              <>
-                <Row>
-                  <label>Buy-in Token</label>
-                  <Select value={tableForm.tokenized?.metadata} onChange={changeTableForm('tokenized/metadata')}>
-                    {uniqueAssetList.map(ua => <option key={ua.id} value={ua?.data.metadata}>{metadata[ua?.data.metadata]?.data.symbol}</option>)}
-                  </Select>
-                </Row>
-                <Row>
-                  <label>Buy-in Amount</label>
-                  <Input value={tableForm.tokenized?.amount} onChange={changeTableForm('tokenized/amount', true)} />
-                </Row>
-                <Row>
-                  <label>Starting Stack</label>
-                  <Select value={tableForm['starting-stack']} onChange={changeTableForm('starting-stack', true)}>
-                    {STACK_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </Select>
-                </Row>
-                <Row>
-                  <label>Blinds Increase Every</label>
-                  <Select value={tableForm['round-duration']} onChange={changeTableForm('round-duration')}>
-                    {ROUND_TIMES.map(rd => <option key={rd.value} value={rd.value}>{rd.display}</option>)}
-                  </Select>
-                </Row>
-                <Row>
-                  <label>Starting Blinds</label>
-                  <Select value={tableForm['starting-blinds']} onChange={changeTableForm('starting-blinds')}>
-                    {STARTING_BLINDS.map(sb => <option key={sb} value={sb}>{sb}</option>)}
-                  </Select>
-                </Row>
-              </>
-            ) : (
-              <>
-                <Row>
-                  <label>Big Blind</label>
-                  <Input value={tableForm['big-blind']} onChange={changeTableForm('big-blind', true)} />
-                </Row>
-                <Row>
-                  <label>Small Blind</label>
-                  <Input value={tableForm['small-blind']} onChange={changeTableForm('small-blind', true)} />
-                </Row>
-              </>
-            )}
-
-            <Row>
-              <label>Public</label>
-              <Select value={tableForm['public'] ? 'yes' : 'no'} onChange={(e) => changeTableForm('public')(e.target.value === 'yes')}>
-                {['yes', 'no'].map(sa => <option key={sa} value={sa}>{sa}</option>)}
-              </Select>
-            </Row>
-            <Row>
-              <label>Spectators Allowed</label>
-              <Select value={tableForm['spectators-allowed'] ? 'yes' : 'no'} onChange={(e) => changeTableForm('spectators-allowed')(e.target.value === 'yes')}>
-                {['yes', 'no'].map(sa => <option key={sa} value={sa}>{sa}</option>)}
-              </Select>
-            </Row>
-            <Button type='submit' variant='dark' style={{ marginBottom: 24 }}>Create</Button>
-            {/* {Object.keys(tableForm).map(key => (
-              tableForm[key as CreateTableKey] === undefined ? null :
-              <Row key={key} style={key === 'blinds-schedule' ? { flexDirection: 'column', alignItems: 'flex-start' } : {}}>
-                <label>{capitalizeSpine(key)}</label>
-                {renderInput(key)}
-              </Row>
-            ))} */}
-          </form>
-        </Col>
-      </Modal>
+      <CreateTableModal show={showNewTableModal} hide={() => setShowNewTableModal(false)} />
     </Col>
   )
 }

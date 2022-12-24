@@ -13,7 +13,7 @@ import { createSubscription, handleGameUpdate, handleLobbyUpdate, handleNewMessa
 export interface PokurStore {
   loadingText: string | null
   
-  host?: string
+  hosts: string[]
   lobby: Lobby
   table?: Table
   game?: Game
@@ -24,6 +24,7 @@ export interface PokurStore {
   gameStartingIn?: number
 
   init: () => Promise<'/table' | '/game' | '/' | void>
+  getHosts: () => Promise<string[]>
   getMessages: () => Promise<void>
   getOurTable: () => Promise<Table | undefined>
   getTable: (id: string) => Promise<Table | undefined>
@@ -31,10 +32,11 @@ export interface PokurStore {
   getMutedPlayers: () => Promise<void>
   subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => Promise<number>
   setLoading: (loadingText: string | null) => void
+  zigFaucet: (address: string) => Promise<void>
 
   // pokur-player-action
-  joinHost: (host: string) => Promise<void>
-  leaveHost: () => Promise<void>
+  addHost: (who: string) => Promise<void>
+  removeHost: (who: string) => Promise<void>
   createTable: (values: CreateTableValues) => Promise<void> // [%new-lobby parse-lobby]
   joinTable: (table: string) => Promise<void>
   setTable: (table: Table) => void
@@ -53,14 +55,12 @@ export interface PokurStore {
   check: (table: string) => Promise<void>
   fold: (table: string) => Promise<void>
   bet: (table: string, amount: number) => Promise<void>
-
-  // pokur-host-action: TODO
 }
 
 const usePokurStore = create<PokurStore>((set, get) => ({
   loadingText: 'Loading Pokur...',
 
-  host: undefined,
+  hosts: [],
   lobby: {},
   table: undefined,
   game: undefined,
@@ -96,6 +96,11 @@ const usePokurStore = create<PokurStore>((set, get) => ({
       set({ loadingText: null })
     }
   },
+  getHosts: async () => {
+    const hosts = Object.keys(await api.scry<{ [host: string]: any }>({ app: 'pokur', path: '/known-hosts' }))
+    set({ hosts })
+    return hosts
+  },
   getMessages: async () => {
     const messages = await api.scry({ app: 'pokur', path: '/messages' })
     set({ messages })
@@ -112,7 +117,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     set({ table: undefined })
   },
   getTable: async (id: string) => {
-    const table = await api.scry({ app: 'pokur', path: `/table/${id}` })
+    const table = await api.scry<Table>({ app: 'pokur', path: `/table/${id}` })
     set({ table })
     return table
   },
@@ -136,19 +141,25 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     }
   },
   setLoading: (loadingText: string | null) => set({ loadingText }),
-  joinHost: async (host: string) => {
-    const json = { 'join-host': { host } }
-    await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
+  zigFaucet: async (address: string) => {
+    try {
+      await api.poke({ app: 'uqbar', mark: 'faucet-action', json: { 'open-faucet': { town: '0x0', 'send-to': address } } })
+    } catch (err) {}
   },
-  leaveHost: async () => {
-    const json = { 'leave-host': null }
+  addHost: async (who: string) => {
+    const json = { 'find-host': { who } }
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
-    set({ host: undefined })
+    set({ hosts: get().hosts.concat([who]) })
+  },
+  removeHost: async (who: string) => {
+    const json = { 'remove-host': { who } }
+    await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
+    set({ hosts: get().hosts.filter(h => h !== who) })
   },
   createTable: async (values: CreateTableValues) => {
     set({ loadingText: 'Creating table...' })
 
-    const tokenized = { ...values.tokenized, amount: numToUd(values.tokenized.amount) }
+    const tokenized = { ...values.tokenized, amount: numToUd(Number(values.tokenized.amount)) }
     const json: any = {
       'new-table': { ...values, tokenized, id: '~2000.1.1' }
     }

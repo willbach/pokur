@@ -5,17 +5,12 @@ import { Game } from "../types/Game";
 import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
 import { ONE_SECOND } from "../utils/constants";
+import { abbreviateCard, playSounds } from '../utils/game';
 import { PokurStore } from "./pokurStore";
 
-const flopSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/flop.mov')
-const turnSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/turn.mov')
-const foldSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/fold.mov')
-const checkSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/check.mov')
-const betSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/bet.mp3')
-const callSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/call.mp3')
-const newHandSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/new-hand.mov')
-
 export type SubscriptionPath = '/lobby-updates' | '/game-updates' | '/messages'
+
+const newHandSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/new-hand.mov')
 
 export const handleLobbyUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>, nav?: NavigateFunction) => async (lobby: Lobby) => {
   console.log('Lobby Update:'.toUpperCase(), lobby)
@@ -48,24 +43,16 @@ export const handleLobbyUpdate = (get: GetState<PokurStore>, set: SetState<Pokur
 
 export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>) => (gameUpdate: any) => {
   console.log('Game Update:'.toUpperCase(), gameUpdate)
+  const curGame = get().game
 
   if (gameUpdate.game) {
     const { game, hand_rank } = gameUpdate as { game: Game, hand_rank: string }
+    set({ gameEndMessage: undefined })
 
     // Sounds
-    if (get().game?.hands_played !== game.hands_played) {
-      newHandSound.play()
-    } else if (game.board.length && get().game?.board.length !== undefined) {
-      const curBoardLength = get().game?.board.length
+    playSounds(game, curGame)
 
-      if (curBoardLength === 0 && game.board.length === 3) {
-        flopSound.play()
-      } else if (game.board.length === (curBoardLength || 0) + 1) {
-        turnSound.play()
-      }
-    }
-
-    if (game.update_message && game.update_message !== get().game?.update_message) {
+    if (game.update_message && game.update_message !== curGame?.update_message) {
       set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
     }
 
@@ -74,27 +61,48 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
       set({ gameEndMessage: game.update_message })
     }
 
-    // if hands should be revealed, reveal the hands and then update the game in 4 seconds
-    if (Object.keys(game.revealed_hands || {}).length) {
+    if (JSON.stringify(curGame?.revealed_hands) !== JSON.stringify(game.revealed_hands) && Object.keys(game.revealed_hands).length) {
       set({
-        game: { ...get().game!, revealed_hands: game.revealed_hands, hand_rank },
         messages: [{ from: 'game-update', msg: `Hands: ${
           Object.keys(game.revealed_hands).reduce((msg, p) =>
-            msg + `${p}: ${game.revealed_hands[p].map(({ val, suit }) => `${val} of ${suit}`).join(', ')}.`
+            msg + `${p}: ${game.revealed_hands[p].map(c => abbreviateCard(c)).join('')}. `
           , '')
-        }` }].concat(get().messages),
+        }` }].concat(get().messages)
       })
+    }
+
+    // Print board when hand ends
+    if (curGame?.board.length && !game.board.length) {
+      set({ messages: [{ from: 'game-update', msg: `Board: ${curGame?.board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
+    }
+
+    // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds
+    if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
+      set({ game: { ...curGame!, revealed_hands: game.revealed_hands, hand_rank } })
       setTimeout(() => {
+        if (curGame?.hands_played !== game.hands_played) {
+          newHandSound.play()
+        }
         set({ game: { ...game, hand_rank, revealed_hands: {} } })
-      }, 4 * ONE_SECOND)
+      }, 5 * ONE_SECOND)
+
+    // when hand ends, pause for 2s
+    } else if (curGame?.hands_played !== game.hands_played) {
+      setTimeout(() => {
+        newHandSound.play()
+        set({ game: { ...game, hand_rank } })
+      }, 3 * ONE_SECOND)
     } else {
       set({ game: { ...game, hand_rank } })
     }
   } else if (gameUpdate.id) {
-    if (gameUpdate.id === get().game?.id) {
-      const gameEndMessage = `Game has ended. Placement:\n\n ${gameUpdate.placements.join(', ')}`
+    if (gameUpdate.id === curGame?.id) {
+      const gameEndMessage = `Total winnings: ${2}. Placement:\n\n ${gameUpdate.placements.join(', ')}.`
       set({ messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
-      setTimeout(() => set({ gameEndMessage }), 5 * ONE_SECOND)
+      setTimeout(() => set({
+        gameEndMessage,
+        game: curGame ? { ...curGame, revealed_hands: {}, board: [] } : undefined
+      }), 5 * ONE_SECOND)
     }
   }
 }
@@ -113,6 +121,5 @@ export function createSubscription(app: string, path: string, e: (data: any) => 
       throw new Error('subscription clogged')
     }
   }
-  // TODO: err, quit handling (resubscribe?)
   return request
 }

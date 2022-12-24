@@ -19,6 +19,7 @@ export interface CreateTableValues {
   'max-players': number
   'game-type': GameType
   host: string
+  'custom-host': string
   tokenized: CreateTokenized
   public: boolean
   'spectators-allowed': boolean

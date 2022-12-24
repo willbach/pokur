@@ -12,7 +12,7 @@ import Text from '../text/Text'
 import Player from './Player'
 
 import './Tables.scss'
-import { fromUd } from '../../utils/number'
+import { fromUd, tokenAmount } from '../../utils/number'
 
 const TableRow = ({ table, onClick }: { table: Table, onClick: () => void }) => {
   const { id, leader, game_type, players, max_players, tokenized, turn_time_limit } = table
@@ -74,7 +74,7 @@ const Tables = ({ tables }: TablesProps) => {
     }, '')
   }, ''), [assets, selected])
 
-  const disableJoin = selected && hasAsset === selectedAccount?.rawAddress && selected.players.length >= Number(selected.max_players)
+  const disableJoin = selected && (!hasAsset || hasAsset !== selectedAccount?.rawAddress || selected.players.length >= Number(selected.max_players))
 
   return (
     <div className='tables'>
@@ -109,7 +109,7 @@ const Tables = ({ tables }: TablesProps) => {
             </Row>
             <Row className='table-info'>
               <h4>Buy-in:</h4>
-              <Text>{selected.tokenized ? `${selected.tokenized.amount.slice(0,-24)} ${selected.tokenized.symbol}` : 'none'}</Text>
+              <Text>{selected.tokenized ? `${tokenAmount(selected.tokenized.amount)} ${selected.tokenized.symbol}` : 'none'}</Text>
             </Row>
             {!hasAsset && <Text style={{ color: 'red' }}>You do not have enough assets</Text>}
             {hasAsset && hasAsset !== selectedAccount?.rawAddress &&

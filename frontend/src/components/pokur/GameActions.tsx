@@ -21,25 +21,27 @@ interface GameActionsProps {
 
 const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   const { game, check, fold, bet } = usePokurStore()
+  const [lock, setLock] = useState(false)
 
   const minBet = Number(game?.min_bet ? game.min_bet.replace(/[^0-9]/g, '') : '20')
   const currentBet = useMemo(() => fromUd(game?.current_bet), [game])
   const me = useMemo(() => game?.players.find(({ ship }) => ship === (window as any).ship), [game])
-  const committed = useMemo(() => Number(me?.committed || 0), [me])
+  const committed = useMemo(() => fromUd(me?.committed), [me])
   const isTurn = useMemo(() => isSelf(game?.current_turn), [game])
   const canCheck = useMemo(() => me?.committed === game?.current_bet, [game, me])
   const myStack = useMemo(() => fromUd(me?.stack), [me])
-  const largestStack = useMemo(() => game?.players.reduce((largest, { ship, stack }) =>
-    ship.includes((window as any).ship) ? largest : Math.max(largest, fromUd(stack))
+  const largestStack = useMemo(() => game?.players.reduce((largest, { ship, stack, committed, folded, left }) =>
+    ship.includes((window as any).ship) || folded || left ? largest : Math.max(largest, fromUd(stack) + fromUd(committed))
   , 0) || myStack, [game, myStack])
-  const maxBet = Math.min(myStack, largestStack)
-  const minRaise = Math.min(minBet + currentBet, maxBet + currentBet)
+  const maxBet = Math.min(myStack + committed, largestStack)
+  const minRaise = Math.min(minBet + currentBet, maxBet)
   const callAmount = currentBet - committed
 
   const [myBet, setMyBet] = useState(minRaise)
 
   useEffect(() => {
-    if (game) {
+    if (game && !game.current_turn.includes((window as any).ship)) {
+      setLock(false)
       setMyBet(minRaise)
     }
   }, [game, minRaise])
@@ -49,25 +51,45 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
       if ((Number(myBet) - committed) < Number(game.min_bet) && myBet !== maxBet) {
         return window.alert(`Your raise must be at least ${Number(game.min_bet) + committed}`)
       }
-      await bet(game.id, myBet - committed)
+      setLock(true)
+      try {
+        await bet(game.id, Math.min(maxBet, myBet) - committed)
+      } catch (err) {
+        setLock(false)
+      }
     }
   }, [game, myBet, maxBet, committed, bet])
 
   const checkAction = useCallback(async () => {
     if (game) {
-      check(game.id)
+      setLock(true)
+      try {
+        await check(game.id)
+      } catch (err) {
+        setLock(false)
+      }
     }
   }, [game, check])
 
   const callAction = useCallback(async () => {
     if (game) {
-      await bet(game.id, callAmount)
+      setLock(true)
+      try {
+        await bet(game.id, callAmount)
+      } catch (err) {
+        setLock(false)
+      }
     }
   }, [game, callAmount, bet])
 
   const foldAction = useCallback(async () => {
     if (game) {
-      fold(game.id)
+      setLock(true)
+      try {
+        await fold(game.id)
+      } catch (err) {
+        setLock(false)
+      }
     }
   }, [game, fold])
 
@@ -83,23 +105,8 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
 
   return (
     <Col className='game-actions'>
-      {isTurn && (
+      {isTurn && !lock && (
         <>
-          <Row style={{ width: 140, justifyContent: 'space-between', fontSize: 20, color: 'white', fontWeight: 600, marginBottom: 8 }}>
-            <Text style={{ fontSize: 18 }}>Time Left:</Text>
-            <CountdownCircleTimer
-              key={game?.turn_start}
-              isPlaying
-              trailColor='#383838s'
-              duration={secondsLeft}
-              colors={['#ffffff', '#ff0000']}
-              colorsTime={[secondsLeft, 0]}
-              size={40}
-              strokeWidth={4}
-            >
-              {({ remainingTime }) => remainingTime}
-            </CountdownCircleTimer>
-          </Row>
           <Row className='quick-bet'>
             <Row className='bet-buttons'>
               {Number(game?.pots[0].amount || 0) > 0 && (
@@ -117,12 +124,21 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               )}
             </Row>
             <Row style={{ fontSize: 20, color: 'white', fontWeight: 600, marginBottom: 4, justifyContent: 'flex-end' }}>
-              {game?.hand_rank && game.hand_rank.length > 1 && (
-                <>
-                  <Text style={{ marginRight: 8 }}>Hand Rank:</Text>
-                  <Text>{game?.hand_rank}</Text>
-                </>
-              )}
+              <Row style={{ width: 140, justifyContent: 'space-between', color: 'white' }}>
+                <Text style={{ fontSize: 18 }}>Time Left:</Text>
+                <CountdownCircleTimer
+                  key={(game?.current_turn ?? 'ship') + (game?.turn_start ?? 'now')}
+                  isPlaying
+                  trailColor='#383838s'
+                  duration={secondsLeft}
+                  colors={['#ffffff', '#ff0000']}
+                  colorsTime={[secondsLeft, 0]}
+                  size={40}
+                  strokeWidth={4}
+                >
+                  {({ remainingTime }) => remainingTime}
+                </CountdownCircleTimer>
+              </Row>
             </Row>
           </Row>
           <Row className='bet-amount'>
@@ -139,7 +155,11 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               className="bet-text"
               placeholder='your bet'
               value={myBet}
-              onChange={e => setMyBet(Number(e.target.value.replace(/[^0-9]/g, '')))}
+              onChange={e =>
+                setMyBet(
+                  Math.min(maxBet, Number(e.target.value.replace(/[^0-9]/g, '')))
+                )
+              }
               min={minRaise}
               max={maxBet}
             />

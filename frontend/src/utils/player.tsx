@@ -18,7 +18,7 @@ export const renderShip = (ship: string) => {
     </>
   }
 
-  return '~' + (clean.length > 28 ? `${clean.slice(0, 7)}_${clean.slice(-6)}` : ship)
+  return '~' + (clean.length > 28 ? `${clean.slice(0, 7)}_${clean.slice(-6)}` : clean)
 }
 
 export interface RenderSigilProps {
@@ -26,12 +26,13 @@ export interface RenderSigilProps {
   alt?: boolean
   className?: string
   size?: number
+  colors?: [string, string]
 }
 
-export const renderSigil = ({ ship, alt = false, className = '', size = 24 }: RenderSigilProps) => {
+export const renderSigil = ({ ship, alt = false, className = '', size = 24, colors }: RenderSigilProps) => {
   if (ship.length > 14) {
     return <div className={className} style={{ height: size, width: size, background: 'black', borderRadius: 2 }} />
   }
 
-  return sigil({ patp: ship, renderer: reactRenderer, size, class: className, colors: alt ? ['white', 'black'] : ['black', 'white'] })
+  return sigil({ patp: ship, renderer: reactRenderer, size, class: className, colors: colors || (alt ? ['white', 'black'] : ['black', 'white']) })
 }

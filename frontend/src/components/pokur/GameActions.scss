@@ -76,10 +76,11 @@
   }
 
   .quick-bet {
-    justify-content: space-between;
     margin-bottom: 8px;
+    width: 100%;
 
     .bet-buttons {
+      width: 50%;
 
       button {
         font-size: 16px;
