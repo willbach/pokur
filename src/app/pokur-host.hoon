@@ -34,11 +34,7 @@
   ::  ID of escrow contract
   =+  0xabcd.abcd
   :_  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
-  :~  :*  %pass  /pokur-wallet-poke
-          %agent  [our.bowl %uqbar]
-          %poke  %wallet-poke
-          !>([%approve-origin [%pokur-host /awards] [1 1.000.000]])
-      ==
+  :~  approve-origin-poke
   ::  always be watching for new batch, to handle any pending tables
       =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
       [%pass /new-batch %agent [our.bowl %uqbar] %watch -]
@@ -51,7 +47,8 @@
   ^-  (quip card _this)
   ::  one-update-only manual reset of state type
   =+  0xabcd.abcd
-  `this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  :-  approve-origin-poke^~
+  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
   ::  =/  old-state  !<(versioned-state old-vase)
   ::  ?-    -.old-state
   ::      %1
@@ -461,12 +458,8 @@
     =.  players.u.table
       (~(del in players.u.table) src.bowl)
     ::  if all players left, close table
-    ::  if table was tokenized, refund all depositors
-    ?:  =(0 ~(wyt in players.u.table))
-      =+  (~(del by tables.state) id.action)
-      :_  state(tables -)
-      :+  (table-closed-card id.action)
-        (table-gossip-card [%closed id.action])
+    ::  if table was tokenized, refund leaving player
+    =/  award-card
       ?~  tokenized.u.table  ~
       :_  ~
       :*  %pass  /pokur-wallet-poke
@@ -480,17 +473,26 @@
               town=town.contract.host-info.u.table
               :-  %noun
               ^-  action:escrow
-              :*  %refund
+              :*  %award
                   bond-id.u.tokenized.u.table
+                  src.bowl
+                  amount.u.tokenized.u.table
               ==
           ==
       ==
+    ?:  =(0 ~(wyt in players.u.table))
+      =+  (~(del by tables.state) id.action)
+      :_  state(tables -)
+      :+  (table-closed-card id.action)
+        (table-gossip-card [%closed id.action])
+      award-card
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
-    ?.  public.u.table  (private-table-card u.table)^~
-    :~  (new-table-card u.table)
-        (table-gossip-card [%open u.table])
-    ==
+    ?.  public.u.table
+      (private-table-card u.table)^award-card
+    :+  (new-table-card u.table)
+      (table-gossip-card [%open u.table])
+    award-card
   ::
       %start-game
     ::  table creator starts game
@@ -776,6 +778,14 @@
   :^  %give  %fact  ~[/lobby-updates/(scot %da id.table)]
   :-  %pokur-host-update
   !>(`host-update`[%new-table table])
+::
+++  approve-origin-poke
+  ^-  card
+  :*  %pass  /pokur-wallet-poke
+      %agent  [our.bowl %uqbar]
+      %poke  %wallet-poke
+      !>([%approve-origin [%pokur-host /awards] [1 1.000.000]])
+  ==
 ::
 ++  public-tables
   |=  m=(map @da table)
