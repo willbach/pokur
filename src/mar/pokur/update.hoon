@@ -42,6 +42,12 @@
       ==
     ::
         %left-game  ~
+    ::
+        %new-invite
+      %-  pairs
+      :~  ['from' s+(scot %p from.upd)]
+          ['table' (enjs-table table.upd)]
+      ==
     ==
   --
 ++  grad  %noun

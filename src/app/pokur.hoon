@@ -45,7 +45,8 @@
   |=  old=vase
   ^-  (quip card _this)
   ::  one-update-only manual reset of state type
-  `this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
+  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]~
   ::  =/  old-state  !<(versioned-state old)
   ::  :-  :~  :*  %pass  /lobby-updates
   ::              %agent  [fixed-lobby-source %pokur-host]
@@ -73,6 +74,8 @@
       (handle-host-action:hc !<(host-action vase))
         %wallet-update
       (handle-wallet-update:hc !<(wallet-update:wallet vase))
+        %handle-http-request
+      (handle-link:hc vase)
     ==
   [cards this]
 ++  on-watch
@@ -96,6 +99,10 @@
       [%messages ~]
     ::  don't send all messages, rather scry for those and
     ::  send subsequent messages along this path
+    `this
+  ::
+      [%http-response *]
+    ::  handling game invites/links
     `this
   ==
 ++  on-agent
@@ -345,6 +352,10 @@
         %poke  %pokur-game-action
         !>(`game-action`[%check id.u.game.state ~])
     ==
+  ::
+      [%link-handler ~]
+    ~&  >>  sign-arvo
+    `this
   ==
 
 ++  on-leave  on-leave:def
@@ -678,6 +689,51 @@
           %agent  [host %pokur-host]
           %watch  /lobby-updates/(scot %da id.u.pending-poke.state)
       ==
+    ==
+  ==
+::
+++  handle-link
+  |=  =vase
+  ^-  (quip card _state)
+  ::  mark = %handle-http-request
+  =/  load  !<((pair @ta inbound-request:eyre) vase)
+  ?+    method.request.q.load
+    =/  data=octs
+      (as-octs:mimes:html '<h1>405 Method Not Allowed</h1>')
+    =/  content-length=@t
+      (crip ((d-co:co 1) p.data))
+    =/  =response-header:http
+      :-  405
+      :~  ['Content-Length' content-length]
+          ['Content-Type' 'text/html']
+          ['Allow' 'GET']
+      ==
+    :_  state
+    :~  [%give %fact [/http-response/[p.load]]~ %http-response-header !>(response-header)]
+        [%give %fact [/http-response/[p.load]]~ %http-response-data !>(`data)]
+        [%give %kick [/http-response/[p.load]]~ ~]
+    ==
+  ::
+      %'GET'
+    =/  url=path  (stab url.request.q.load)
+    ?.  ?=([@ @ @ @ @ ~] url)  !!
+    ::  url should be /apps/pokur/invites/[public or private]/[game-id]
+    =/  public=?  =('public' i.t.t.t.url)
+    =/  table-id=@da  (slav %da i.t.t.t.t.url)
+    =/  =response-header:http
+      [301 ['Location' '/apps/pokur']~]
+    :_  state
+    :~  :^  %give  %fact
+          [/http-response/[p.load]]~
+        http-response-header+!>(response-header)
+    ::
+        [%give %kick [/http-response/[p.load]]~ ~]
+    ::  prompt ourselves to join game
+        :*  %pass   /self-poke
+            %agent  [our.bowl %pokur]
+            %poke   %pokur-player-action
+            !>(`player-action`[%join-table table-id public])
+        ==
     ==
   ==
 ::
