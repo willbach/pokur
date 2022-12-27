@@ -1,0 +1,4 @@
+;>
+Pokur Documentation
+
+The `%pokur` desk contains two apps, `%pokur` and `%pokur-host`. Both apps integrate with the Uqbar Suite installed from `~dister-dozzod-bacdun`. %pokur is served from `~bacrys`.
