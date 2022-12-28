@@ -2,3 +2,41 @@
 Pokur Documentation
 
 The `%pokur` desk contains two apps, `%pokur` and `%pokur-host`. Both apps integrate with the Uqbar Suite installed from `~dister-dozzod-bacdun`. %pokur is served from `~bacrys`.
+
+##  Project Architecture
+
+> Playing poker online is best with a trusted third party. It's true that mental poker and trustless shuffling algorithms exist, but these alone do not enable a playing experience on par with centralized services. Player liveness is critical; it's extremely difficult to confirm liveness without a third party handling messaging between players. Therefore, Pokur *commiditizes* the host role, which provides many of the same benefits as total decentralization. Anyone can run the `%pokur-host` app and allow others to play games through them. I will soon implement trustless shuffling so that the table host cannot arbitrarily cheat in hard-to-detect ways.
+
+The game of poker is primarily played through the `%pokur-host` app. Hosts hold a "lobby" of available tables, and a map of ongoing games they are hosting. Players use the `%pokur` app. In order to build their own local "lobby", players must subscribe to hosts, which give updates to subscribers whenever their lobby changes (updates consist of an individual new table or notifications of an individual table's closure). Players can be subscribed to many hosts and will automatically integrate all their updates to keep a local lobby state. In order to bootstrap new players, the app has a default host hardcoded -- this is `~bacrys` on the standard distribution.
+
+Currently, Pokur is designed to support single-table Texas Hold'em games. New tables are created by players, with parameters such as who will host, public/private, spectators allowed/disallowed, amount of tokens required to buy-in, type of token, starting chip stack, and blind schedule. The table is sent to the designated host and reflected in their lobby. By default, all hosts gossip public tables in their lobby to the hardcoded default host.
+
+Once the designated minimum of players have joined a table, the player who created it may start the game. From there, the game is played until either one player remains with chips or every player leaves. Moves are sent from players to the host, who uses the `guts` core in `lib/pokur/game-logic.hoon` to transition the game's state as a result of moves. `%pokur-host` also manages the turn timers for all players, as well as round timers for tournament-style play.
+
+##  Uqbar Integration
+
+Pokur was built primarily to showcase how Uqbar can be used in Urbit applications. It makes use of an escrow contract (`/con/escrow.hoon`) deployed on Uqbar and connects to the %wallet and %indexer apps in Uqbar Suite.
+
+To play a tokenized sit-n-go tournament, the player creating the table selects which token to use and how much the buy-in will be. Not yet surfaced in the frontend, but available in the backend, are customization options regarding how the winnings are distributed among players placing in the tournament. The player's `%pokur` app asks the selected `%pokur-host` for its contract information. Then, `%pokur` prepares a new escrow bond and deposits the initial player's buy-in in a single transaction -- this transaction is sent to `%wallet` and awaits signing by the player.
+
+Meanwhile, `%pokur-host` has been initialized with the escrow contract ID and the host's chosen Uqbar address, and `%pokur-host` has poked `%wallet` telling it to *automatically* sign and submit transactions it creates. This is simple now because Urbit apps are not yet sandboxed, but in the near future this will require the host to give `%pokur-host` certain permissions over `%wallet`.
+
+Back to the player making a tokenized table. Once their initial new-escrow-and-deposit transaction goes through, `%pokur` is notified of this fact by a poke from `%wallet`. The player's app then pokes `%pokur-host` with the transaction hash and other information, which allows the host to confirm that the escrow was set up properly -- the table is then saved in the host's lobby.
+
+> Note: It's important for peers sharing references to on-chain data, like the player sharing their new deposit with the host, to make sure they are looking at the same chain history. For example, when a player makes their transaction, and notifies the host, it's very possible that the host has not yet locally received the update from the Uqbar chain containing that completed transaction. So, in Pokur, we always share the Uqbar batch ID along with a notification like this. That way, the receiver knows to wait until they receive a batch with that ID to "check the chain".
+
+After other players join the table, and the game is played out, the host is assigned with rewarding tokens according to the results. Currently, the host is trusted to comply with the game result. If a host misbehaves, they will be punished by losing social reputation (both within Pokur and in the Urbit network at large) -- this is an example of *commiditization* matching the benefits of *trustlessness*.
+
+The escrow contract stipulates that if tokens remain in a bond after the timelock (measured in ETH blocks) has expired, anyone can submit a transaction to return all remaining tokens to their depositors.
+
+##  Updates to come
+
+- Further documentation here; poke/scry/subscription API
+
+- Detailed walkthrough of chain integration code
+
+- Cash games!
+
+- Cryptographic trustless shuffling with Golle algorithm
+
+- Ability for host to provide proof of game result?
