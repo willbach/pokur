@@ -45,20 +45,21 @@
   |=  old=vase
   ^-  (quip card _this)
   ::  one-update-only manual reset of state type
-  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
-  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]~
-  ::  =/  old-state  !<(versioned-state old)
-  ::  :-  :~  :*  %pass  /lobby-updates
-  ::              %agent  [fixed-lobby-source %pokur-host]
-  ::              %leave  ~
-  ::          ==
-  ::          :*  %pass  /lobby-updates
-  ::              %agent  [fixed-lobby-source %pokur-host]
-  ::              %watch  /lobby-updates
-  ::      ==  ==
-  ::  ?-  -.old-state
-  ::    %0  this(state old-state)
-  ::  ==
+  ::  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
+  ::  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]~
+  =/  old-state  !<(versioned-state old)
+  :-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
+          :*  %pass  /lobby-updates
+              %agent  [fixed-lobby-source %pokur-host]
+              %leave  ~
+          ==
+          :*  %pass  /lobby-updates
+              %agent  [fixed-lobby-source %pokur-host]
+              %watch  /lobby-updates
+      ==  ==
+  ?-  -.old-state
+    %0  this(state old-state)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)

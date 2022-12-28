@@ -46,18 +46,18 @@
   |=  =old=vase
   ^-  (quip card _this)
   ::  one-update-only manual reset of state type
-  =+  0xabcd.abcd
-  :-  approve-origin-poke^~
-  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
-  ::  =/  old-state  !<(versioned-state old-vase)
-  ::  ?-    -.old-state
-  ::      %1
-  ::    `this(state old-state)
-  ::      %0
-  ::    :_  this(state (zero-to-one old-state))
-  ::    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
-  ::    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
-  ::  ==
+  ::  =+  0xabcd.abcd
+  ::  :-  approve-origin-poke^~
+  ::  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  =/  old-state  !<(versioned-state old-vase)
+  ?-    -.old-state
+      %1
+    `this(state old-state)
+      %0
+    :_  this(state (zero-to-one old-state))
+    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
+    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
+  ==
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
