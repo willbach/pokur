@@ -125,19 +125,27 @@
   $%  [%game =game my-hand-rank=@t]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over =game placements=(list [ship @ud])]
       [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
       [%new-invite from=ship =table]
+      $:  %game-over
+          =game
+          placements=(list [ship @ud])
+          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+      ==
   ==
 +$  host-update  ::  from host to player app
   $%  [%game =game]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over =game placements=(list [ship @ud])]
       [%new-table =table]
       [%lobby tables=(map @da table)]
+      $:  %game-over
+          =game
+          placements=(list [ship @ud])
+          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+      ==
   ==
 ::
 +$  player-action

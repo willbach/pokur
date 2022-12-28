@@ -26,6 +26,7 @@
         %game-over
       %-  pairs
       :~  ['game' (enjs-game game.upd)]
+          ['tokenized' ?~(tokenized.upd ~ (enjs-tokenized u.tokenized.upd))]
           :+  'placements'  %a
           %+  turn  placements.upd
           |=  [p=@p win=@ud]
