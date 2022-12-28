@@ -26,7 +26,10 @@
         %game-over
       %-  pairs
       :~  ['game' (enjs-game game.upd)]
-          ['placements' a+(turn placements.upd ship)]
+          :+  'placements'  %a
+          %+  turn  placements.upd
+          |=  [p=@p win=@ud]
+          (pairs ~[['ship' (ship p)] ['winnings' s+(scot %ud win)]])
       ==
     ::
         %lobby

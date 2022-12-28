@@ -657,7 +657,7 @@
   [%pokur-host-update !>(`host-update`[%game game.host-game])]
 ::
 ++  game-over-updates
-  |=  host-game=host-game-state
+  |=  [host-game=host-game-state winnings=(list [ship @ud])]
   ^-  (list card)
   %+  weld
     %+  turn  players.game.host-game
@@ -665,13 +665,13 @@
     ^-  card
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-    [%pokur-host-update !>(`host-update`[%game-over [game placements]:host-game])]
+    [%pokur-host-update !>(`host-update`[%game-over game.host-game winnings])]
   %+  turn  ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
   :^  %give  %fact
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
-  [%pokur-host-update !>(`host-update`[%game-over [game placements]:host-game])]
+  [%pokur-host-update !>(`host-update`[%game-over game.host-game winnings])]
 ::
 ++  initialize-new-hand
   |=  host-game=host-game-state
@@ -685,7 +685,7 @@
   ^-  (quip card _state)
   ::  if non-token game, just delete and update
   ?~  tokenized.host-game
-    :-  (game-over-updates host-game)
+    :-  (game-over-updates host-game (turn placements.host-game |=(p=@p [p 0])))
     state(games (~(del by games.state) id.game.host-game))
   ::  pay tokens based on game type (only handling %sng now)
   ::  TODO handle cash
@@ -702,25 +702,10 @@
     :-  (snag place placements.host-game)
     (mul award-pct (div total-payout 100))
   ~&  >  "winnings: {<winnings>}"
-  =.  update-message.game.host-game
-    %+  rsh  [3 2]  ::  remove first ', '
-    %+  roll
-      %+  turn  winnings
-      |=  [=ship amount=@ud]
-      ^-  @t
-      ;:  (cury cat 3)
-          ', '
-          (scot %p ship)
-          ' wins '
-          (scot %ud amount)
-          ' '
-          symbol.u.tokenized.host-game
-      ==
-    (cury cat 3)
   ::
   :_  state(games (~(del by games.state) id.game.host-game))
   %+  welp
-    (game-over-updates host-game)
+    (game-over-updates host-game winnings)
   %+  turn  winnings
   |=  [=ship amount=@ud]
   ::  build an award transaction for each paid placement

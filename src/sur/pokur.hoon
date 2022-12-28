@@ -125,7 +125,7 @@
   $%  [%game =game my-hand-rank=@t]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over =game placements=(list ship)]
+      [%game-over =game placements=(list [ship @ud])]
       [%lobby tables=(map @da table)]
       [%new-message from=ship msg=@t]
       [%left-game ~]
@@ -135,7 +135,7 @@
   $%  [%game =game]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
-      [%game-over =game placements=(list ship)]
+      [%game-over =game placements=(list [ship @ud])]
       [%new-table =table]
       [%lobby tables=(map @da table)]
   ==
