@@ -25,7 +25,7 @@
     ::
         %game-over
       %-  pairs
-      :~  ['id' s+(scot %da id.game.upd)]
+      :~  ['game' (enjs-game game.upd)]
           ['placements' a+(turn placements.upd ship)]
       ==
     ::
