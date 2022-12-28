@@ -683,30 +683,49 @@
 ++  end-game-pay-winners
   |=  host-game=host-game-state
   ^-  (quip card _state)
-  :_  state(games (~(del by games.state) id.game.host-game))
-  %+  welp
-    (game-over-updates host-game)
-  ::  if game isn't tokenized, just delete
+  ::  if non-token game, just delete and update
   ?~  tokenized.host-game
-    ~&  >  "placements: {<placements.host-game>}"
-    ~
-  ::  pay based on game type (only handling %sng now)
+    :-  (game-over-updates host-game)
+    state(games (~(del by games.state) id.game.host-game))
+  ::  pay tokens based on game type (only handling %sng now)
   ::  TODO handle cash
   ?>  ?=(%sng -.game-type.game.host-game)
   =/  total-payout=@ud
     %-  ~(total-payout fetch [our now]:bowl our-info.state)
     bond-id.u.tokenized.host-game
   ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
-  ~&  >  "payouts: {<payouts.game-type.game.host-game>}"
-  ~&  >  "placements: {<placements.host-game>}"
-  =<  p
-  %^  spin  payouts.game-type.game.host-game  0
-  |=  [award-pct=@ud place=@ud]
+  =/  winnings=(list [ship @ud])
+    =<  p
+    %^  spin  payouts.game-type.game.host-game  0
+    |=  [award-pct=@ud place=@ud]
+    :_  +(place)
+    :-  (snag place placements.host-game)
+    (mul award-pct (div total-payout 100))
+  ~&  >  "winnings: {<winnings>}"
+  =.  update-message.game.host-game
+    %+  rsh  [3 2]  ::  remove first ', '
+    %+  roll
+      %+  turn  winnings
+      |=  [=ship amount=@ud]
+      ^-  @t
+      ;:  (cury cat 3)
+          ', '
+          (scot %p ship)
+          ' wins '
+          (scot %ud amount)
+          ' '
+          symbol.u.tokenized.host-game
+      ==
+    (cury cat 3)
+  ::
+  :_  state(games (~(del by games.state) id.game.host-game))
+  %+  welp
+    (game-over-updates host-game)
+  %+  turn  winnings
+  |=  [=ship amount=@ud]
   ::  build an award transaction for each paid placement
   ::  automatically sign+submit these by poking %wallet
   ::  in advance to automate txns from this origin
-  ^-  [card @ud]
-  :_  +(place)
   :*  %pass  /pokur-wallet-poke
       %agent  [our.bowl %uqbar]
       %poke  %wallet-poke
@@ -718,16 +737,11 @@
           town=town.contract.our-info.state
           :-  %noun
           ^-  action:escrow
-          :*  %award
+          :^    %award
               bond-id.u.tokenized.host-game
-              (snag place placements.host-game)
-              ::  calculate payout
-              ::  TODO verify this is accurate
-              %+  mul  award-pct
-              (div total-payout 100)
-          ==
-      ==
-  ==
+            ship
+          amount
+  ==  ==
 ::
 ++  valid-sng-spec
   |=  act=player-action
