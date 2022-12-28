@@ -13,7 +13,7 @@
     "@types/react": "^17.0.20",
     "@types/react-dom": "^17.0.9",
     "@types/react-transition-group": "^4.4.5",
-    "@uqbar/wallet-ui": "^0.1.5",
+    "@uqbar/wallet-ui": "^0.1.7",
     "@urbit/http-api": "^2.1.1",
     "classnames": "^2.3.2",
     "moment": "^2.29.3",
