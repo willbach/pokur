@@ -3054,8 +3054,10 @@
     "@typescript-eslint/types" "5.44.0"
     eslint-visitor-keys "^3.3.0"
 
-"@uqbar/wallet-ui@../../../../../uqbar/wallet-ui":
+"@uqbar/wallet-ui@^0.1.5":
   version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@uqbar/wallet-ui/-/wallet-ui-0.1.5.tgz#7f5877af8dff0ff9b312bf1e85929bdb7fdd37c2"
+  integrity sha512-JSbf1d6S0feK7vokfKQhRQu8Q5DSwpl/JbGUWzY9GMu0sKF3n1yHgqqs6BcAEBGtV0CQzkwKTORIUW7E1r1New==
   dependencies:
     "@ledgerhq/hw-app-eth" "^6.27.1"
     "@ledgerhq/hw-transport-webusb" "^6.27.1"

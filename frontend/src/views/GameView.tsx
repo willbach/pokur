@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo } from 'react'
 import cn from 'classnames'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
+import { AccountSelector, HardwareWallet, HotWallet, useWalletStore } from '@uqbar/wallet-ui'
 import api from '../api'
 import Button from '../components/form/Button'
 import Col from '../components/spacing/Col'
@@ -12,13 +13,14 @@ import Chat from '../components/pokur/Chat';
 import CardDisplay from '../components/pokur/Card';
 import Player from '../components/pokur/Player'
 import GameActions from '../components/pokur/GameActions'
-import { PLAYER_POSITIONS } from '../utils/constants'
+import { PLAYER_POSITIONS, REMATCH_PARAMS_KEY, REMATCH_LEADER_KEY } from '../utils/constants'
 import logo from '../assets/img/logo192.png'
 import { renderSigil } from '../utils/player'
 import { fromUd } from '../utils/number'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { getSecondsFromNow } from '../utils/time'
 import TableBackground from '../components/pokur/TableBackground'
+import { isSelf } from '../utils/game'
 
 import './GameView.scss'
 
@@ -27,20 +29,24 @@ interface GameViewProps {
 }
 
 const GameView = ({ redirectPath }: GameViewProps) => {
-  const { game, gameEndMessage, leaveGame, subscribeToPath } = usePokurStore()
+  const { lobby, game, gameEndMessage,
+    leaveGame, subscribeToPath, createTable, joinTable, setOurAddress, setInvites, setJoinTableId } = usePokurStore()
+  const { setInsetView, setMostRecentTransaction } = useWalletStore()
   const nav = useNavigate()
 
   useEffect(() => {
     const gameSub = subscribeToPath('/game-updates')
+    const lobbySub = subscribeToPath('/lobby-updates')
     return () => {
+      lobbySub.then((sub: number) => api.unsubscribe(sub))
       gameSub.then((sub: number) => api.unsubscribe(sub))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const leave = useCallback(async () => {
-    if (window.confirm('Are you sure you want to leave the game?')) {
+  const leave = useCallback((skipConfirmation = false) => async () => {
+    if (skipConfirmation || window.confirm('Are you sure you want to leave the game?')) {
       try {
         await leaveGame(game?.id!)
       } catch (err) {}
@@ -58,7 +64,6 @@ const GameView = ({ redirectPath }: GameViewProps) => {
   }, [game])
 
   console.log('GAME:', game)
-  const gameOver = game?.game_is_over || (gameEndMessage && !game)
 
   const computedPots = useMemo(() =>
     (game?.pots || []).map(
@@ -68,22 +73,56 @@ const GameView = ({ redirectPath }: GameViewProps) => {
   , [game])
 
   const secondsLeft = getSecondsFromNow(game?.turn_start, game?.turn_time_limit)
+  const rematchParams = localStorage.getItem(REMATCH_PARAMS_KEY)
+  const rematchLeader = localStorage.getItem(REMATCH_LEADER_KEY)
+  const rematchId = Object.values(lobby).find(
+    t => rematchLeader === t.leader && !t.public && JSON.stringify(game?.game_type) === JSON.stringify(t.game_type)
+  )?.id
+  const canRematch = Boolean(rematchParams || rematchId)
+
+  const rematch = useCallback(async () => {
+    if (game && rematchParams) {
+      await leaveGame(game.id)
+      nav('/')
+      setMostRecentTransaction(undefined)
+      setInsetView('confirm-most-recent')
+      setInvites(game.players.map(({ ship }) => ship).filter(s => !isSelf(s)))
+      createTable({ ...JSON.parse(rematchParams), public: false })
+    } else if (game && rematchId) {
+      await leaveGame(game.id)
+      nav('/')
+      setMostRecentTransaction(undefined)
+      setInsetView('confirm-most-recent')
+      setJoinTableId(rematchId)
+      joinTable(rematchId, false)
+    }
+  }, [
+    rematchParams, rematchId, game,
+    nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, setInvites, setJoinTableId
+  ])
 
   return (
-    <Col className={cn('game-view', gameOver && 'game-over')}>
+    <Col className={cn('game-view', Boolean(gameEndMessage) && 'game-over')}>
       {!game ? (
         <>
           <TableBackground />
           <Col className='content'>
-            <h3>{gameOver ? 'Game Ended' : 'Game Not Found'}</h3>
+            <h3>Game Ended</h3>
             {Boolean(gameEndMessage) && <>
               <p>{gameEndMessage}</p>
               <p>Payouts will be made from the escrow contract soon.</p>
+              <p>The original table organizer can initiate a rematch, this may take up to a minute.</p>
             </>}
             <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
               Return to Lobby
             </Button>
           </Col>
+          <Row className='top-nav'>
+            <Row className='game-id'>
+              Game Over
+            </Row>
+            <AccountSelector onSelectAccount={(a: HotWallet | HardwareWallet) => setOurAddress(a.rawAddress)} />
+          </Row>
         </>
       ) : (
         <Col className="game">
@@ -95,10 +134,10 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                 <p>Payouts will be made from the escrow contract soon.</p>
               </>}
               <Row style={{ marginTop: 16 }}>
-                <Button variant='dark' style={{ width: 150, marginRight: 16 }} onClick={() => null}>
+                <Button variant='dark' disabled={!canRematch} style={{ width: 150, marginRight: 16 }} onClick={rematch}>
                   Rematch
                 </Button>
-                <Button variant='dark' style={{ width: 150 }} onClick={leave}>
+                <Button variant='dark' style={{ width: 150 }} onClick={leave(true)}>
                   Return to Lobby
                 </Button>
               </Row>
@@ -192,9 +231,9 @@ const GameView = ({ redirectPath }: GameViewProps) => {
           </div>
           <div className='table' />
           <Chat />
-          {game.current_turn.includes((window as any).ship) && !Object.keys(game?.revealed_hands || {}).length &&
+          {!Object.keys(game?.revealed_hands || {}).length && !gameEndMessage && (
             <GameActions pots={computedPots} secondsLeft={secondsLeft} />
-          }
+          )}
         </Col>
       )}
       {Boolean(game) && (
@@ -202,7 +241,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
           <Row className='game-id'>
             Game: {game?.id}
           </Row>
-          <Button onClick={leave}>
+          <Button onClick={leave()}>
             Leave Game
           </Button>
         </Row>

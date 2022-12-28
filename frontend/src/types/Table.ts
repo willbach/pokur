@@ -44,4 +44,5 @@ export interface Table {
   bond_id: string | null
   spectators_allowed: boolean
   turn_time_limit: string
+  public: boolean
 }

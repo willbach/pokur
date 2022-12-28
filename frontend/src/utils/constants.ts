@@ -115,3 +115,5 @@ export const ROUND_TIMES = [
 export const NUMBER_OF_PLAYERS = [2, 3, 4, 5, 6, 7, 8, 9]
 export const STACK_SIZES = [500, 1000, 1500]
 export const STARTING_BLINDS = ['10/20', '15/30']
+export const REMATCH_PARAMS_KEY = 'rematch-params'
+export const REMATCH_LEADER_KEY = 'rematch-leader'

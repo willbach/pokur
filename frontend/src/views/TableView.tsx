@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { AccountSelector } from '@uqbar/wallet-ui'
 import api from '../api'
@@ -21,11 +21,21 @@ interface TableViewProps {
 }
 
 const TableView = ({ redirectPath }: TableViewProps) => {
-  const { table, gameStartingIn, leaveTable, startGame, subscribeToPath, setOurAddress } = usePokurStore()
+  const { table, gameStartingIn, invites,
+    setInvites, leaveTable, startGame, subscribeToPath, setOurAddress, sendInvite } = usePokurStore()
   const nav = useNavigate()
   const location = useLocation()
+  const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
+    if (invites && table?.leader.includes((window as any).ship)) {
+      Promise.all(
+        invites.map(ship => sendInvite(`~${ship.replace('~', '')}`))
+      )
+      .catch(console.warn)
+      .finally(() => setInvites([]))
+    }
+
     const lobbySub = subscribeToPath('/lobby-updates', nav)
     return () => {
       lobbySub.then((sub: number) => api.unsubscribe(sub))
@@ -34,8 +44,21 @@ const TableView = ({ redirectPath }: TableViewProps) => {
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!table) {
+      nav('/')
+    }
+  }, [table, nav])
+
   const buyIn = table?.tokenized ? `${tokenAmount(table.tokenized?.amount)} ${table.tokenized.symbol}` : 'none'
   const gameStarting = gameStartingIn !== undefined
+
+  const leave = useCallback(() => {
+    if (table) {
+      setLeaving(true)
+      leaveTable(table.id)
+    }
+  }, [table, leaveTable])
 
   return (
     <Col className='table-view'>
@@ -134,7 +157,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
                   Start Game
                 </Button>
               )}
-              <Button disabled={gameStarting} onClick={async () => { await leaveTable(table.id); setTimeout(() => nav('/'), 500) }}>
+              <Button disabled={gameStarting || leaving} onClick={leave}>
                 Leave Table
               </Button>
             </Row>

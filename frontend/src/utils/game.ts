@@ -25,7 +25,7 @@ export const getPayoutAmounts = (numPlayers: number) => {
   return [100]
 }
 
-export const isSelf = (ship?: string) => ship && (window as any).ship === ship.replace('~', '')
+export const isSelf = (ship?: string) => ship && (window as any).ship.replace('~', '') === ship.replace('~', '')
 
 export const abbreviateCard = ({ val, suit }: Card) => (val === '10' ? val : val.slice(0, 1).toUpperCase()) + suit.slice(0,1)
 

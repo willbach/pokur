@@ -247,7 +247,7 @@
         ?.  =(src.bowl ship.host-info.u.table)
           [lobby-update-card^~ this]
         :_  this(our-table.state ~, game-host.state `ship.host-info.u.table)
-        :~  :^  %give  %fact  ~[/game-updates]
+        :~  :^  %give  %fact  ~[/lobby-updates]
             [%pokur-update !>(`update`upd)]
         ::
             :*  %pass  /game-updates/(scot %da id.u.table)/(scot %p our.bowl)

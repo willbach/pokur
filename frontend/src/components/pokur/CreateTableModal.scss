@@ -1,0 +1,16 @@
+@use '../../styles/colors.scss' as colors;
+@use '../../styles/border.scss' as border;
+
+.create-table-modal {
+  .list-input-container {
+    width: 60%;
+
+    input {
+      width: 160px;
+    }
+
+    button {
+      margin-top: 0;
+    }
+  }
+}
