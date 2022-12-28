@@ -15,6 +15,8 @@ export interface PokurStore {
   
   hosts: string[]
   lobby: Lobby
+  invites: string[]
+  joinTableId?: string
   table?: Table
   game?: Game
 
@@ -30,6 +32,7 @@ export interface PokurStore {
   getTable: (id: string) => Promise<Table | undefined>
   getGame: () => Promise<Game | undefined>
   getMutedPlayers: () => Promise<void>
+  setJoinTableId: (joinTableId?: string) => void
   subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => Promise<number>
   setLoading: (loadingText: string | null) => void
   zigFaucet: (address: string) => Promise<void>
@@ -38,7 +41,9 @@ export interface PokurStore {
   addHost: (who: string) => Promise<void>
   removeHost: (who: string) => Promise<void>
   createTable: (values: CreateTableValues) => Promise<void> // [%new-lobby parse-lobby]
-  joinTable: (table: string) => Promise<void>
+  sendInvite: (ship: string) => Promise<void>
+  setInvites: (invites: string[]) => void
+  joinTable: (table: string, isPublic?: boolean) => Promise<void>
   setTable: (table: Table) => void
   leaveTable: (table: string) => Promise<void>
   startGame: (table: string) => Promise<void>
@@ -62,8 +67,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
 
   hosts: [],
   lobby: {},
-  table: undefined,
-  game: undefined,
+  invites: [],
   messages: [],
   mutedPlayers: [],
 
@@ -130,6 +134,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     const mutedPlayers = await api.scry({ app: 'pokur', path: '/muted-players' })
     set({ mutedPlayers })
   },
+  setJoinTableId: (joinTableId?: string) => set({ joinTableId }),
   subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => {
     switch (path) {
       case '/lobby-updates':
@@ -143,8 +148,10 @@ const usePokurStore = create<PokurStore>((set, get) => ({
   setLoading: (loadingText: string | null) => set({ loadingText }),
   zigFaucet: async (address: string) => {
     try {
-      await api.poke({ app: 'uqbar', mark: 'faucet-action', json: { 'open-faucet': { town: '0x0', 'send-to': address } } })
-    } catch (err) {}
+      await api.poke({ app: 'uqbar', mark: 'uqbar-action', json: { 'open-faucet': { town: '0x0', 'send-to': address } } })
+    } catch (err) {
+      alert('An error occurred. Note that you can only request zigs from the faucet once per hour.')
+    }
   },
   addHost: async (who: string) => {
     const json = { 'find-host': { who } }
@@ -185,15 +192,25 @@ const usePokurStore = create<PokurStore>((set, get) => ({
       setTimeout(() => set({ loadingText: null }), 200)
     }, 200)
   },
-  joinTable: async (table: string) => {
-    const json = { 'join-table': { id: table } }
+  sendInvite: async (ship: string) => {
+    const json = { 'send-invite': { to: ship } }
+    await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
+  },
+  setInvites: (invites: string[]) => set({ invites }),
+  joinTable: async (table: string, isPublic = false) => {
+    const json = { 'join-table': { id: table, public: isPublic } }
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
   },
   setTable: (table: Table) => set({ table }),
   leaveTable: async (table: string) => {
     const json = { 'leave-table': { id: table } }
     await api.poke({ app: 'pokur', mark: 'pokur-player-action', json })
-    set({ table: undefined })
+    const interval = setInterval(async () => {
+      const table = await get().getOurTable()
+      if (!table) {
+        clearInterval(interval)
+      }
+    }, 500)
   },
   startGame: async (table: string) => {
     const json = { 'start-game': { id: table } }

@@ -11,6 +11,7 @@ import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
 import logo from '../assets/img/logo192.png'
 import CreateTableModal from '../components/pokur/CreateTableModal'
+import JoinTableModal from '../components/pokur/JoinTableModal'
 
 import './LobbyView.scss'
 
@@ -19,13 +20,15 @@ interface LobbyViewProps {
 }
 
 const LobbyView = ({ redirectPath }: LobbyViewProps) => {
-  const { lobby, addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet } = usePokurStore()
+  const { lobby, joinTableId, game,
+    addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet, setJoinTableId } = usePokurStore()
   const { selectedAccount, assets, setInsetView } = useWalletStore()
   const nav = useNavigate()
 
   const [newHost, setNewHost] = useState('')
   const [hostError, setHostError] = useState(false)
-  const [showNewTableModal, setShowNewTableModal] = useState(false)
+  const [showCreateTableModal, setShowCreateTableModal] = useState(false)
+  const [showJoinTableModal, setShowJoinTableModal] = useState(false)
 
   useEffect(() => {
     const lobbySub = subscribeToPath('/lobby-updates')
@@ -34,10 +37,25 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (joinTableId && lobby[joinTableId]?.players.find(p => p.includes((window as any).ship))) {
+      setTable(lobby[joinTableId])
+      nav('/table')
+      setInsetView()
+    } else if (joinTableId && lobby[joinTableId]?.players?.length === Number(lobby[joinTableId]?.max_players)) {
+      alert('Another player joined before you, please join a different table.')
+      setJoinTableId(undefined)
+    } else if (game && game.id === joinTableId) {
+      nav('/game')
+    }
+  }, [lobby, joinTableId, game, setInsetView, nav, setTable, setJoinTableId])
+
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const table = Object.values(lobby).find(({ leader }) => leader.includes((window as any).ship))
+    const table = Object.values(lobby).find(
+      ({ leader, players }) => leader.includes((window as any).ship) && players.find(p => p.replace('~', '') === (window as any).ship)
+    )
     if (table) {
       setInsetView()
       setTable(table)
@@ -64,11 +82,14 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           <Text mono>POKUR</Text>
         </Row>
         <Row>
-          {selectedAccount && <Button onClick={() => zigFaucet(selectedAccount.rawAddress)}>
+          {selectedAccount && <Button style={{ marginRight: 16 }} onClick={() => zigFaucet(selectedAccount.rawAddress)}>
             Zig Faucet
           </Button>}
+          <Button style={{ marginRight: 16 }} onClick={() => setShowJoinTableModal(true)}>
+            Join Table
+          </Button>
           {Object.values(assets[selectedAccount?.rawAddress || '0x0'] || {}).length > 0 && (
-            <Button style={{ margin: 'auto 16px' }} onClick={() => setShowNewTableModal(true)}>
+            <Button style={{ marginRight: 16 }} onClick={() => setShowCreateTableModal(true)}>
               Create Table
             </Button>
           )}
@@ -120,7 +141,8 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           </>
         )}
       </Col>
-      <CreateTableModal show={showNewTableModal} hide={() => setShowNewTableModal(false)} />
+      <CreateTableModal show={showCreateTableModal} hide={() => setShowCreateTableModal(false)} />
+      <JoinTableModal show={showJoinTableModal} hide={() => setShowJoinTableModal(false)} />
     </Col>
   )
 }

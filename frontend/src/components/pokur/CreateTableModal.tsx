@@ -9,7 +9,10 @@ import Row from '../spacing/Row';
 import usePokurStore from '../../store/pokurStore'
 import { CreateTableValues } from '../../types/Table';
 import { getGameType } from '../../utils/game';
-import { DEFAULT_HOST_DEV, DEFAULT_HOST_PROD, NUMBER_OF_PLAYERS, ROUND_TIMES, STACK_SIZES, STARTING_BLINDS, TURN_TIMES } from '../../utils/constants'
+import { DEFAULT_HOST_DEV, DEFAULT_HOST_PROD, NUMBER_OF_PLAYERS, REMATCH_PARAMS_KEY, ROUND_TIMES, STACK_SIZES, STARTING_BLINDS, TURN_TIMES } from '../../utils/constants'
+import { ListInput } from '../form/ListInput';
+
+import './CreateTableModal.scss'
 
 const BLANK_TABLE: CreateTableValues = {
   'game-type': 'sng',
@@ -37,7 +40,7 @@ interface CreateTableModalProps {
 }
 
 const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
-  const { hosts, addHost, createTable, setLoading } = usePokurStore()
+  const { hosts, addHost, createTable, setLoading, invites, setInvites } = usePokurStore()
   const { assets, metadata, setInsetView, selectedAccount, setMostRecentTransaction } = useWalletStore()
 
   const [tableForm, setTableForm] = useState<CreateTableValues>(genBlankTable(hosts))
@@ -50,7 +53,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
     }
   }, [show, hosts])
 
-  const changeTableForm = useCallback((key: string, isNumeric: boolean = false) => (e: any) => {
+  const changeTableForm = useCallback((key: string, isNumeric: boolean = false, isBoolean = false) => (e: any) => {
     if (key.includes('tokenized')) {
       const [,tokenizedKey] = key.split('/')
 
@@ -69,7 +72,10 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
         "max-players": Number(e.target.value.replace(/[^0-9]/g, '')),
       })
     } else {
-      setTableForm({ ...tableForm, [key]: isNumeric ? Number(e.target.value.replace(/[^0-9]/g, '')) : e.target.value })
+      setTableForm({
+        ...tableForm,
+        [key]: isNumeric ? Number(e.target.value.replace(/[^0-9]/g, '')) : isBoolean ? e.target.value === 'yes' : e.target.value
+      })
     }
   }, [metadata, tableForm, setTableForm])
 
@@ -99,6 +105,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
       }
 
       await createTable(formatedValues)
+      localStorage.setItem(REMATCH_PARAMS_KEY, JSON.stringify(formatedValues))
       setTableForm(genBlankTable(newHosts))
       setMostRecentTransaction(undefined)
       setInsetView('confirm-most-recent')
@@ -109,7 +116,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
   }, [tableForm, metadata, hosts, hide, createTable, setInsetView, setMostRecentTransaction, setLoading, addHost])
 
   return (
-    <Modal show={show} hide={hide}>
+    <Modal show={show} hide={hide} className='create-table-modal'>
       <Col style={{ minWidth: 400 }}>
         <h3 style={{ marginTop: 0 }}>Create New Table</h3>
         <form className="create-table" onSubmit={submitNewTable}>
@@ -210,17 +217,24 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
           )}
 
           <Row>
-            <label>Public</label>
-            <Select value={tableForm['public'] ? 'yes' : 'no'} onChange={(e) => changeTableForm('public')(e.target.value === 'yes')}>
+            <label>Spectators Allowed</label>
+            <Select value={tableForm['spectators-allowed'] ? 'yes' : 'no'} onChange={changeTableForm('spectators-allowed', false, true)}>
               {['yes', 'no'].map(sa => <option key={sa} value={sa}>{sa}</option>)}
             </Select>
           </Row>
           <Row>
-            <label>Spectators Allowed</label>
-            <Select value={tableForm['spectators-allowed'] ? 'yes' : 'no'} onChange={(e) => changeTableForm('spectators-allowed')(e.target.value === 'yes')}>
+            <label>Public</label>
+            <Select value={tableForm['public'] ? 'yes' : 'no'} onChange={changeTableForm('public', false, true)}>
               {['yes', 'no'].map(sa => <option key={sa} value={sa}>{sa}</option>)}
             </Select>
           </Row>
+          {!tableForm.public && (
+            <Row style={{ marginTop: -4 }}>
+              <label>Invites</label>
+              <ListInput values={invites} setValues={setInvites} />
+            </Row>
+          )}
+
           <Button type='submit' variant='dark' style={{ marginBottom: 24 }}>Create</Button>
           {/* {Object.keys(tableForm).map(key => (
             tableForm[key as CreateTableKey] === undefined ? null :

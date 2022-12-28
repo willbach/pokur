@@ -4,41 +4,51 @@ import { GetState, SetState } from "zustand";
 import { Game } from "../types/Game";
 import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
-import { ONE_SECOND } from "../utils/constants";
-import { abbreviateCard, playSounds } from '../utils/game';
+import { Table } from "../types/Table";
+import { ONE_SECOND, REMATCH_LEADER_KEY, REMATCH_PARAMS_KEY } from "../utils/constants";
+import { abbreviateCard, isSelf, playSounds } from '../utils/game';
 import { PokurStore } from "./pokurStore";
 
 export type SubscriptionPath = '/lobby-updates' | '/game-updates' | '/messages'
 
 const newHandSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/new-hand.mov')
 
-export const handleLobbyUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>, nav?: NavigateFunction) => async (lobby: Lobby) => {
-  console.log('Lobby Update:'.toUpperCase(), lobby)
+export const handleLobbyUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>, nav?: NavigateFunction) =>
+async (update: Lobby | { id: string } | { from: string; table: Table }) => {
+  console.log('Lobby Update:'.toUpperCase(), update)
 
   const { table } = get()
 
-  if (table) {
-    if (lobby[table.id]) {
-      set({ table: lobby[table.id] })
+  if ('id' in update) {
+    if (!isSelf(table?.leader)) {
+      localStorage.removeItem(REMATCH_PARAMS_KEY)
+      localStorage.setItem(REMATCH_LEADER_KEY, table?.leader || '')
     } else {
-      if (nav && get().table) {
-        await new Promise((resolve) => setTimeout(() => resolve(true), 200))
-        const game = await get().getGame()
-  
-        if (game) {
-          for (let i = 1; i <= 4; i++) {
-            setTimeout(() => set({ gameStartingIn: i * ONE_SECOND }), (5 - i) * ONE_SECOND + 1)
-          }
+      localStorage.removeItem(REMATCH_LEADER_KEY)
+    }
+    await new Promise((resolve) => setTimeout(() => resolve(true), 100))
+    const game = await get().getGame()
 
-          setTimeout(() => {
-            set({ table: undefined, gameStartingIn: undefined })
-            nav('/game')
-          }, 5 * ONE_SECOND)
-        }
+    if (game && nav) {
+      for (let i = 1; i <= 3; i++) {
+        setTimeout(() => set({ gameStartingIn: i * ONE_SECOND }), (4 - i) * ONE_SECOND + 1)
+      }
+
+      setTimeout(() => {
+        nav('/game')
+        set({ table: undefined, gameStartingIn: undefined })
+      }, 4 * ONE_SECOND)
+    }
+  } else if ('from' in update) {
+    set({ lobby: { ...get().lobby, [update.table.id]: update.table } })
+  } else {
+    if (table && (update as Lobby)[table.id]) {
+      if ((update as Lobby)[table.id]?.players.find(ship => isSelf(ship))) {
+        set({ table: (update as Lobby)[table.id] })
       }
     }
+    set({ lobby: (update as Lobby) })
   }
-  set({ lobby })
 }
 
 export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>) => (gameUpdate: any) => {
@@ -93,11 +103,13 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
         set({ game: { ...game, hand_rank } })
       }, 3 * ONE_SECOND)
     } else {
+      // Set the game
       set({ game: { ...game, hand_rank } })
     }
   } else if (gameUpdate.id) {
     if (gameUpdate.id === curGame?.id) {
-      const gameEndMessage = `Total winnings: ${2}. Placement:\n\n ${gameUpdate.placements.join(', ')}.`
+      // TODO: add total winnings
+      const gameEndMessage = `Placement:\n\n ${gameUpdate.placements.join(', ')}.`
       set({ messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
       setTimeout(() => set({
         gameEndMessage,

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useCallback, useMemo, useState } from 'react'
+import cn from 'classnames'
 import { useWalletStore } from '@uqbar/wallet-ui'
 import usePokurStore from '../../store/pokurStore'
 import { Table } from '../../types/Table'
@@ -10,20 +10,19 @@ import Col from '../spacing/Col'
 import Row from '../spacing/Row'
 import Text from '../text/Text'
 import Player from './Player'
-
-import './Tables.scss'
 import { fromUd, tokenAmount } from '../../utils/number'
 
-const TableRow = ({ table, onClick }: { table: Table, onClick: () => void }) => {
+import './Tables.scss'
+
+const TableRow = ({ table, selected, onClick }: { table: Table, selected: boolean, onClick: () => void }) => {
   const { id, leader, game_type, players, max_players, tokenized, turn_time_limit } = table
-  const buyIn = tokenized ? `${tokenized?.amount.slice(0,-24)} ${tokenized.symbol}` : 'none'
+  const buyIn = tokenized ? `${tokenAmount(tokenized?.amount)} ${tokenized.symbol}` : 'none'
 
   const blindDisplay = 'blinds_schedule' in game_type ?
     `${game_type.blinds_schedule[0][0]} / ${game_type.blinds_schedule[0][1]} ${game_type.round_duration}` :
     `${game_type.small_blind} / ${game_type.big_blind}`
-
   return (
-    <tr className='table' onClick={onClick}>
+    <tr className={cn('table', selected && 'selected', !table.public && 'private')} onClick={onClick}>
       <td className='field'>{leader}...{id.slice(-4)}</td>
       <td className='field'>{getGameType(game_type.type)}</td>
       <td className='field'>{buyIn}</td>
@@ -40,31 +39,16 @@ interface TablesProps {
 }
 
 const Tables = ({ tables }: TablesProps) => {
-  const { joinTable, lobby, setTable, game } = usePokurStore()
+  const { setJoinTableId, joinTable } = usePokurStore()
   const { assets, selectedAccount, setMostRecentTransaction, setInsetView } = useWalletStore()
-  const [joinTableId, setJoinTableId] = useState<string | undefined>()
-  const nav = useNavigate()
   const [selected, setSelected] = useState<Table | undefined>()
 
-  useEffect(() => {
-    if (joinTableId && lobby[joinTableId]?.players.find(p => p.includes((window as any).ship))) {
-      setTable(lobby[joinTableId])
-      nav('/table')
-      setInsetView()
-    } else if (joinTableId && lobby[joinTableId]?.players?.length === Number(lobby[joinTableId]?.max_players)) {
-      alert('Another player joined before you, please join a different table.')
-      setJoinTableId(undefined)
-    } else if (game && game.id === joinTableId) {
-      nav('/game')
-    }
-  }, [lobby, joinTableId, setInsetView, game, nav, setTable])
-
-  const join = useCallback((tableId) => async () => {
+  const join = useCallback((t: Table) => async () => {
     setMostRecentTransaction(undefined)
     setInsetView('confirm-most-recent')
-    setJoinTableId(tableId)
-    joinTable(tableId)
-  }, [joinTable, setMostRecentTransaction, setInsetView])
+    setJoinTableId(t.id)
+    joinTable(t.id, t.public)
+  }, [joinTable, setMostRecentTransaction, setInsetView, setJoinTableId])
 
   const hasAsset = useMemo(() => Object.keys(assets).reduce((hasAccount, account) => {
     return hasAccount || Object.values(assets[account]).reduce((acc, asset) => {
@@ -89,7 +73,7 @@ const Tables = ({ tables }: TablesProps) => {
             <td className='field'>Plrs</td>
             <td className='field'>Turn Time</td>
           </tr>
-          {tables.map(t => <TableRow key={t.id} table={t} onClick={() => setSelected(t)} />)}
+          {tables.map(t => <TableRow key={t.id} table={t} selected={selected?.id === t.id} onClick={() => setSelected(t)} />)}
         </tbody>
       </table>
       <Col className='table-details'>
@@ -99,6 +83,7 @@ const Tables = ({ tables }: TablesProps) => {
               {/* Table: {table.id.slice(0, 11)}...{table.id.slice(-4)} */}
               Table: {selected.id}
             </h3>
+            {!selected.public && <Row className='invite'>Private invite</Row>}
             <Row className='table-info' style={{ alignItems: 'center' }}>
               <h4>Organizer:</h4>
               <Player ship={selected.leader} />
@@ -155,7 +140,7 @@ const Tables = ({ tables }: TablesProps) => {
 
             </div>
             <Button disabled={disableJoin}
-              variant='dark' style={{ marginTop: 16, alignSelf: 'center' }} onClick={join(selected.id)}>
+              variant='dark' style={{ marginTop: 16, alignSelf: 'center' }} onClick={join(selected)}>
               Join
             </Button>
           </>

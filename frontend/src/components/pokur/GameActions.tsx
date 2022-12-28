@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import usePokurStore from "../../store/pokurStore"
 import { isSelf } from "../../utils/game"
@@ -22,76 +22,70 @@ interface GameActionsProps {
 const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   const { game, check, fold, bet } = usePokurStore()
   const [lock, setLock] = useState(false)
+  const turnRef = useRef<string | undefined>(game?.current_turn)
 
-  const minBet = Number(game?.min_bet ? game.min_bet.replace(/[^0-9]/g, '') : '20')
+  const minBet = fromUd(game?.min_bet) || 20
   const currentBet = useMemo(() => fromUd(game?.current_bet), [game])
   const me = useMemo(() => game?.players.find(({ ship }) => ship === (window as any).ship), [game])
   const committed = useMemo(() => fromUd(me?.committed), [me])
   const isTurn = useMemo(() => isSelf(game?.current_turn), [game])
   const canCheck = useMemo(() => me?.committed === game?.current_bet, [game, me])
   const myStack = useMemo(() => fromUd(me?.stack), [me])
+  const myTotal = useMemo(() => myStack + committed, [myStack, committed])
   const largestStack = useMemo(() => game?.players.reduce((largest, { ship, stack, committed, folded, left }) =>
     ship.includes((window as any).ship) || folded || left ? largest : Math.max(largest, fromUd(stack) + fromUd(committed))
-  , 0) || myStack, [game, myStack])
-  const maxBet = Math.min(myStack + committed, largestStack)
+  , 0) || (myTotal), [game, myTotal])
+  const maxBet = Math.min(myTotal, largestStack)
   const minRaise = Math.min(minBet + currentBet, maxBet)
   const callAmount = currentBet - committed
 
   const [myBet, setMyBet] = useState(minRaise)
 
   useEffect(() => {
-    if (game && !game.current_turn.includes((window as any).ship)) {
-      setLock(false)
+    if (game && turnRef.current !== game.current_turn) {
       setMyBet(minRaise)
     }
+    if (game && game.current_turn.includes((window as any).ship)) {
+      setLock(false)
+    }
+    turnRef.current = game?.current_turn
   }, [game, minRaise])
+
+  const lockActions = useCallback(async (promise: Promise<void>) => {
+    setLock(true)
+      try {
+        await promise
+      } catch (err) {
+        console.warn('Issue taking action')
+      }
+  }, [setLock])
   
   const betAction = useCallback(async () => {
     if (game && myBet && Number(myBet) > 0) {
       if ((Number(myBet) - committed) < Number(game.min_bet) && myBet !== maxBet) {
         return window.alert(`Your raise must be at least ${Number(game.min_bet) + committed}`)
       }
-      setLock(true)
-      try {
-        await bet(game.id, Math.min(maxBet, myBet) - committed)
-      } catch (err) {
-        setLock(false)
-      }
+      await lockActions(bet(game.id, Math.min(maxBet, myBet) - committed))
     }
-  }, [game, myBet, maxBet, committed, bet])
+  }, [game, myBet, maxBet, committed, bet, lockActions])
 
   const checkAction = useCallback(async () => {
     if (game) {
-      setLock(true)
-      try {
-        await check(game.id)
-      } catch (err) {
-        setLock(false)
-      }
+      await lockActions(check(game.id))
     }
-  }, [game, check])
+  }, [game, check, lockActions])
 
   const callAction = useCallback(async () => {
     if (game) {
-      setLock(true)
-      try {
-        await bet(game.id, callAmount)
-      } catch (err) {
-        setLock(false)
-      }
+      await lockActions(bet(game.id, callAmount))
     }
-  }, [game, callAmount, bet])
+  }, [game, callAmount, bet, lockActions])
 
   const foldAction = useCallback(async () => {
     if (game) {
-      setLock(true)
-      try {
-        await fold(game.id)
-      } catch (err) {
-        setLock(false)
-      }
+      await lockActions(fold(game.id))
     }
-  }, [game, fold])
+  }, [game, fold, lockActions])
 
   const quickBet = useCallback((amount: '1/2' | '3/4' | 'pot') => async () => {
     if (amount === '1/2') {
@@ -171,7 +165,7 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
             <Button onClick={canCheck ? checkAction : callAction}>
               {canCheck ? 'Check' : `Call ${callAmount}`}
             </Button>
-            <Button onClick={betAction}>
+            <Button onClick={betAction} disabled={currentBet >= myTotal}>
               {currentBet > 0 ? `Raise to ${myBet}` : `Bet ${myBet}`}
             </Button>
           </Row>
