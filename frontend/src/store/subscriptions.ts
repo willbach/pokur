@@ -7,6 +7,7 @@ import { Message } from "../types/Message";
 import { Table } from "../types/Table";
 import { ONE_SECOND, REMATCH_LEADER_KEY, REMATCH_PARAMS_KEY } from "../utils/constants";
 import { abbreviateCard, isSelf, playSounds } from '../utils/game';
+import { tokenAmount } from '../utils/number'
 import { PokurStore } from "./pokurStore";
 
 export type SubscriptionPath = '/lobby-updates' | '/game-updates' | '/messages'
@@ -51,71 +52,68 @@ async (update: Lobby | { id: string } | { from: string; table: Table }) => {
   }
 }
 
-export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>) => (gameUpdate: any) => {
+export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>) =>
+(gameUpdate: { game: Game, hand_rank?: string, placements?: {ship: string, winnings: string}[] }) => {
   console.log('Game Update:'.toUpperCase(), gameUpdate)
   const curGame = get().game
 
-  if (gameUpdate.game) {
-    const { game, hand_rank } = gameUpdate as { game: Game, hand_rank: string }
-    set({ gameEndMessage: undefined })
+  const { game, hand_rank = '', placements } = gameUpdate
+  set({ gameEndMessage: undefined })
 
-    // Sounds
-    playSounds(game, curGame)
+  // Sounds
+  playSounds(game, curGame)
+  // TODO: show the last user action for 3 seconds
 
-    if (game.update_message && game.update_message !== curGame?.update_message) {
-      set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
-    }
+  if (game.update_message && game.update_message !== curGame?.update_message) {
+    set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
+  }
 
-    if (game.game_is_over) {
-      console.log('GAME ENDED')
-      set({ gameEndMessage: game.update_message })
-    }
+  if (JSON.stringify(curGame?.revealed_hands) !== JSON.stringify(game.revealed_hands) && Object.keys(game.revealed_hands).length) {
+    set({
+      messages: [{ from: 'game-update', msg: `Hands: ${
+        Object.keys(game.revealed_hands).reduce((msg, p) =>
+          msg + `${p}: ${game.revealed_hands[p].map(c => abbreviateCard(c)).join('')}. `
+        , '')
+      }` }].concat(get().messages)
+    })
+  }
 
-    if (JSON.stringify(curGame?.revealed_hands) !== JSON.stringify(game.revealed_hands) && Object.keys(game.revealed_hands).length) {
-      set({
-        messages: [{ from: 'game-update', msg: `Hands: ${
-          Object.keys(game.revealed_hands).reduce((msg, p) =>
-            msg + `${p}: ${game.revealed_hands[p].map(c => abbreviateCard(c)).join('')}. `
-          , '')
-        }` }].concat(get().messages)
-      })
-    }
+  // Print board when hand ends
+  if (curGame?.board.length && !game.board.length) {
+    set({ messages: [{ from: 'game-update', msg: `Board: ${curGame?.board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
+  }
 
-    // Print board when hand ends
-    if (curGame?.board.length && !game.board.length) {
-      set({ messages: [{ from: 'game-update', msg: `Board: ${curGame?.board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
-    }
+  if (game.game_is_over && placements) {
+    const gameEndMessage = `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)}`).join(', ')}.`
+    set({
+      messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages),
+      gameEndMessage
+    })
 
-    // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds
-    if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
-      set({ game: { ...curGame!, revealed_hands: game.revealed_hands, hand_rank } })
-      setTimeout(() => {
-        if (curGame?.hands_played !== game.hands_played) {
-          newHandSound.play()
-        }
-        set({ game: { ...game, hand_rank, revealed_hands: {} } })
-      }, 5 * ONE_SECOND)
+    setTimeout(() => set({
+      gameEndMessage,
+      game: curGame ? { ...curGame, revealed_hands: {}, board: [] } : undefined
+    }), 5 * ONE_SECOND)
 
-    // when hand ends, pause for 2s
-    } else if (curGame?.hands_played !== game.hands_played) {
-      setTimeout(() => {
+  // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds
+  } else if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
+    set({ game: { ...curGame!, revealed_hands: game.revealed_hands, hand_rank } })
+    setTimeout(() => {
+      if (curGame?.hands_played !== game.hands_played) {
         newHandSound.play()
-        set({ game: { ...game, hand_rank } })
-      }, 3 * ONE_SECOND)
-    } else {
-      // Set the game
+      }
+      set({ game: { ...game, hand_rank, revealed_hands: {} } })
+    }, 5 * ONE_SECOND)
+
+  // when hand ends, pause for 2s
+  } else if (curGame?.hands_played !== game.hands_played) {
+    setTimeout(() => {
+      newHandSound.play()
       set({ game: { ...game, hand_rank } })
-    }
-  } else if (gameUpdate.id) {
-    if (gameUpdate.id === curGame?.id) {
-      // TODO: add total winnings
-      const gameEndMessage = `Placement:\n\n ${gameUpdate.placements.join(', ')}.`
-      set({ messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
-      setTimeout(() => set({
-        gameEndMessage,
-        game: curGame ? { ...curGame, revealed_hands: {}, board: [] } : undefined
-      }), 5 * ONE_SECOND)
-    }
+    }, 4 * ONE_SECOND)
+  } else {
+    // Set the game
+    set({ game: { ...game, hand_rank } })
   }
 }
 export const handleNewMessage = (get: GetState<PokurStore>, set: SetState<PokurStore>) => (message: Message) => {
