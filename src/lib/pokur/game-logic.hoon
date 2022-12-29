@@ -84,8 +84,8 @@
       %+  get-next-unfolded-player
         dealer
       players.game.state
-    =.  state  assign-blinds
     =.  state  deal-hands
+    =.  state  assign-blinds
     =.  whose-turn.game.state
       %+  get-next-unfolded-player
         big-blind.game.state
@@ -120,7 +120,7 @@
   ::  draws n cards (after burning 1) from deck,
   ::  appends them to end of board, and sets action
   ::  to the next unfolded player left of dealer
-  ++  deal-to-board  ::  TODO
+  ++  deal-to-board
     |=  n=@ud
     ^-  host-game-state
     =/  turn  (draw n rest:(draw 1 deck.state))
@@ -210,7 +210,7 @@
   ++  assign-blinds
     ^-  host-game-state
     =.  small-blind.game.state
-      ?:  =((lent players.game.state) 2)
+      ?:  =(~(wyt by hands.state) 2)
         dealer.game.state
       %+  get-next-unfolded-player
         dealer.game.state
@@ -230,6 +230,7 @@
       last-bet.game     big.blinds
       players.game  (commit-chips big-blind.game.state big.blinds)
     ==
+  ::
   ++  get-current-blinds
     ^-  [small=@ud big=@ud]
     ?:  ?=(%cash -.game-type.game.state)

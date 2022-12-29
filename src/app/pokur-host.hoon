@@ -642,10 +642,11 @@
   |=  host-game=host-game-state
   ^-  (list card)
   %+  weld
-    %+  turn  ~(tap by hands.host-game)
-    |=  [=ship hand=pokur-deck]
+    %+  turn  players.game.host-game
+    |=  [=ship player-info]
     ^-  card
-    =.  my-hand.game.host-game  hand
+    =.  my-hand.game.host-game
+      ?~(h=(~(get by hands.host-game) ship) ~ u.h)
     :^  %give  %fact
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
     [%pokur-host-update !>(`host-update`[%game game.host-game])]

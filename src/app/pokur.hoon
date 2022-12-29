@@ -33,14 +33,16 @@
 ++  on-init
   ^-  (quip card _this)
   :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
-  :_  ~
-  :*  %pass  /lobby-updates
-      %agent  [fixed-lobby-source %pokur-host]
-      %watch  /lobby-updates
-  ==
+  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
+      :*  %pass  /lobby-updates
+          %agent  [fixed-lobby-source %pokur-host]
+          %watch  /lobby-updates
+  ==  ==
+::
 ++  on-save
   ^-  vase
   !>(state)
+::
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
@@ -48,18 +50,20 @@
   ::  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
   ::  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]~
   =/  old-state  !<(versioned-state old)
-  :-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-          :*  %pass  /lobby-updates
-              %agent  [fixed-lobby-source %pokur-host]
-              %leave  ~
-          ==
-          :*  %pass  /lobby-updates
-              %agent  [fixed-lobby-source %pokur-host]
-              %watch  /lobby-updates
-      ==  ==
-  ?-  -.old-state
-    %0  this(state old-state)
-  ==
+  :_  ?-  -.old-state
+        %0  this(state old-state)
+      ==
+  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
+      :*  %pass  /lobby-updates
+          %agent  [fixed-lobby-source %pokur-host]
+          %leave  ~
+      ==
+      :*  %pass  /lobby-updates
+          %agent  [fixed-lobby-source %pokur-host]
+          %watch  /lobby-updates
+  ==  ==
+
+::
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -158,18 +162,19 @@
       :-  :^  %give  %fact  ~[/game-updates]
           [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
       ::  if we are all-in, or if we are last remaining player in hand
-      ::  who is not, auto-check
+      ::  who is not, and no action to us, auto-check
       ?.  ?&  =(our.bowl whose-turn.game.upd)
               ?|  ::  we're all-in
                   =-  =(0 stack:(need -))
                   (get-player-info our.bowl players.game.upd)
                   ::  everyone else is
-                  =-  (lte (lent -) 1)
-                  %+  murn  players.game.upd
-                  |=  [=ship player-info]
-                  ?.  &(!folded (gth stack 0))  ~
-                  `ship
-          ==  ==
+                  ?&  ?=(~ last-aggressor.game.upd)
+                      =-  (lte (lent -) 1)
+                      %+  murn  players.game.upd
+                      |=  [=ship player-info]
+                      ?.  &(!folded (gth stack 0))  ~
+                      `ship
+          ==  ==  ==
         ::  neither, let player choose action
         ~
       ::  wait 2 seconds, then auto-check
