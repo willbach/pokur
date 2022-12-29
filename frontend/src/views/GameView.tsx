@@ -101,6 +101,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, setInvites, setJoinTableId
   ])
 
+  const playersRemaining = game?.players.filter(({ left }) => !left).length ?? 2
+
   return (
     <Col className={cn('game-view', Boolean(gameEndMessage) && 'game-over')}>
       {!game ? (
@@ -177,8 +179,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               const hand = game.revealed_hands[`~${p.ship}`]
               const folded = p.folded
               
-              const buttonIndicator = arr.length === 2 && game?.dealer.includes(p.ship) ? 'D' :
-                arr.length === 2 ? '' :
+              const buttonIndicator = playersRemaining === 2 && game?.dealer.includes(p.ship) ? 'D' :
+                playersRemaining === 2 ? '' :
                 game?.big_blind.includes(p.ship) ? 'BB' :
                 game?.small_blind.includes(p.ship) ? 'SB' :
                 game?.dealer.includes(p.ship) ? 'D' : ''

@@ -113,14 +113,10 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
       }
       set({ game: { ...game, hand_rank, revealed_hands: {} } })
     }, 5 * ONE_SECOND)
-
-  // when hand ends, pause for 2s
-  } else if (curGame?.hands_played !== game.hands_played) {
-    setTimeout(() => {
-      newHandSound.play()
-      set({ game: { ...game, hand_rank } })
-    }, 4 * ONE_SECOND)
   } else {
+    if (curGame?.hands_played !== game.hands_played) {
+      newHandSound.play()
+    }
     // Set the game
     set({ game: { ...game, hand_rank } })
   }
