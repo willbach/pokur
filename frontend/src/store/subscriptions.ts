@@ -4,9 +4,9 @@ import { GetState, SetState } from "zustand";
 import { Game } from "../types/Game";
 import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
-import { Table } from "../types/Table";
+import { Table, Tokenized } from "../types/Table";
 import { ONE_SECOND, REMATCH_LEADER_KEY, REMATCH_PARAMS_KEY } from "../utils/constants";
-import { abbreviateCard, isSelf, playSounds } from '../utils/game';
+import { abbreviateCard, isSelf, playSounds, showLastAction } from '../utils/game';
 import { tokenAmount } from '../utils/number'
 import { PokurStore } from "./pokurStore";
 
@@ -53,16 +53,17 @@ async (update: Lobby | { id: string } | { from: string; table: Table }) => {
 }
 
 export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>) =>
-(gameUpdate: { game: Game, hand_rank?: string, placements?: {ship: string, winnings: string}[] }) => {
+(gameUpdate: { game: Game, hand_rank?: string, placements?: {ship: string, winnings: string}[], tokenized?: Tokenized }) => {
   console.log('Game Update:'.toUpperCase(), gameUpdate)
   const curGame = get().game
 
-  const { game, hand_rank = '', placements } = gameUpdate
+  const { game, hand_rank = '', placements, tokenized } = gameUpdate
   set({ gameEndMessage: undefined })
 
   // Sounds
   playSounds(game, curGame)
-  // TODO: show the last user action for 3 seconds
+  // Show the last user action for 3 seconds
+  showLastAction(game, set, curGame)
 
   if (game.update_message && game.update_message !== curGame?.update_message) {
     set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
@@ -84,7 +85,8 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
   }
 
   if (game.game_is_over && placements) {
-    const gameEndMessage = `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)}`).join(', ')}.`
+    const gameEndMessage =
+      `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
     set({
       messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages),
       gameEndMessage
@@ -95,9 +97,16 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
       game: curGame ? { ...curGame, revealed_hands: {}, board: [] } : undefined
     }), 5 * ONE_SECOND)
 
-  // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds
+  // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds, but update current_player immediately
   } else if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
-    set({ game: { ...curGame!, revealed_hands: game.revealed_hands, hand_rank } })
+    set({
+      game: {
+        ...curGame!,
+        revealed_hands: game.revealed_hands,
+        hand_rank,
+        current_turn: game.current_turn
+      }
+    })
     setTimeout(() => {
       if (curGame?.hands_played !== game.hands_played) {
         newHandSound.play()

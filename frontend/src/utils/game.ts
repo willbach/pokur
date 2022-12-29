@@ -1,6 +1,9 @@
+import { SetState } from "zustand"
+import { PokurStore } from "../store/pokurStore"
 import { Card } from "../types/Card"
 import { Game } from "../types/Game"
-import { capitalizeSpine } from "./format"
+import { ONE_SECOND } from "./constants"
+import { capitalize, capitalizeSpine } from "./format"
 
 const flopSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/flop.mov')
 const turnSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/turn.mov')
@@ -49,5 +52,14 @@ export const playSounds = (game: Game, curGame?: Game) => {
     } else if (game.last_action.includes('raise')) {
       raiseSound.play()
     }
+  }
+}
+
+export const showLastAction = (game: Game, set: SetState<PokurStore>, curGame?: Game) => {
+  console.log(1, game.last_action, curGame?.current_turn)
+  if (game.last_action && curGame?.current_turn) {
+    console.log(2)
+    set({ lastAction: { [curGame.current_turn.replace('~', '')]: capitalize(game.last_action.replace(/~/g, '')) || '' } })
+    setTimeout(() => set({ lastAction: {} }), 3 * ONE_SECOND)
   }
 }

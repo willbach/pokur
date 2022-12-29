@@ -61,13 +61,14 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   }, [setLock])
   
   const betAction = useCallback(async () => {
-    if (game && myBet && Number(myBet) > 0) {
-      if ((Number(myBet) - committed) < Number(game.min_bet) && myBet !== maxBet) {
-        return window.alert(`Your raise must be at least ${Number(game.min_bet) + committed}`)
+    if (game && myBet && myBet > 0) {
+      if ((myBet - committed) < fromUd(game.min_bet) && myBet !== maxBet) {
+        return window.alert(`Your raise must be at least ${fromUd(game.min_bet) + committed}`)
       }
       await lockActions(bet(game.id, Math.min(maxBet, myBet) - committed))
+      setMyBet(minRaise)
     }
-  }, [game, myBet, maxBet, committed, bet, lockActions])
+  }, [game, myBet, maxBet, committed, minRaise, bet, lockActions])
 
   const checkAction = useCallback(async () => {
     if (game) {
@@ -89,11 +90,11 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
 
   const quickBet = useCallback((amount: '1/2' | '3/4' | 'pot') => async () => {
     if (amount === '1/2') {
-      setMyBet(Math.min(callAmount + Number(pots[0].amount) / 2, maxBet))
+      setMyBet(Math.min(callAmount + Math.round(pots[0].amount / 2), maxBet))
     } else if (amount === '3/4') {
-      setMyBet(Math.min(callAmount + Number(pots[0].amount) * 3 / 4, maxBet))
+      setMyBet(Math.min(callAmount + Math.round(pots[0].amount * 3 / 4), maxBet))
     } else {
-      setMyBet(Math.min(callAmount + Number(pots[0].amount), maxBet))
+      setMyBet(Math.min(callAmount + pots[0].amount, maxBet))
     }
   }, [maxBet, callAmount, pots, setMyBet])
 
@@ -105,13 +106,13 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
             <Row className='bet-buttons'>
               {Number(game?.pots[0].amount || 0) > 0 && (
                 <>
-                  <Button disabled={Number(pots[0].amount) / 2 < minRaise} onClick={quickBet('1/2')}>
+                  <Button disabled={pots[0].amount / 2 < minRaise} onClick={quickBet('1/2')}>
                     1 / 2
                   </Button>
-                  <Button disabled={Number(pots[0].amount) / 4 * 3 < minRaise} onClick={quickBet('3/4')}>
+                  <Button disabled={pots[0].amount / 4 * 3 < minRaise} onClick={quickBet('3/4')}>
                     3 / 4
                   </Button>
-                  <Button disabled={Number(pots[0].amount) < minRaise} onClick={quickBet('pot')}>
+                  <Button disabled={pots[0].amount < minRaise} onClick={quickBet('pot')}>
                     Pot
                   </Button>
                 </>

@@ -117,3 +117,5 @@ export const STACK_SIZES = [500, 1000, 1500]
 export const STARTING_BLINDS = ['10/20', '15/30']
 export const REMATCH_PARAMS_KEY = 'rematch-params'
 export const REMATCH_LEADER_KEY = 'rematch-leader'
+export const REQUESTED_ZIGS_KEY = 'requested-zigs'
+export const POKUR_CHAT = '/apps/escape/groups/~datwet/pokur/channels/chat/~datwet/lobby?channel-inset=true'

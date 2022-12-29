@@ -11,6 +11,7 @@ import Row from '../spacing/Row'
 import Text from '../text/Text'
 import Player from './Player'
 import { fromUd, tokenAmount } from '../../utils/number'
+import { POKUR_CHAT } from '../../utils/constants'
 
 import './Tables.scss'
 
@@ -62,20 +63,23 @@ const Tables = ({ tables }: TablesProps) => {
 
   return (
     <div className='tables'>
-      <table className='grid-display'>
-        <tbody>
-          <tr className='fields'>
-            <td className='field'>Game</td>
-            <td className='field'>Type</td>
-            <td className='field'>Buy-in</td>
-            <td className='field'>Stack</td>
-            <td className='field'>Blinds</td>
-            <td className='field'>Plrs</td>
-            <td className='field'>Turn Time</td>
-          </tr>
-          {tables.map(t => <TableRow key={t.id} table={t} selected={selected?.id === t.id} onClick={() => setSelected(t)} />)}
-        </tbody>
-      </table>
+      <Col style={{ width: '75%', justifyContent: 'space-between' }}>
+        <table className='grid-display'>
+          <tbody>
+            <tr className='fields'>
+              <td className='field'>Game</td>
+              <td className='field'>Type</td>
+              <td className='field'>Buy-in</td>
+              <td className='field'>Stack</td>
+              <td className='field'>Blinds</td>
+              <td className='field'>Plrs</td>
+              <td className='field'>Turn Time</td>
+            </tr>
+            {tables.map(t => <TableRow key={t.id} table={t} selected={selected?.id === t.id} onClick={() => setSelected(t)} />)}
+          </tbody>
+        </table>
+        <iframe title='Pokur Chat' src={/*window.location.origin*/ 'http://localhost:8080' + POKUR_CHAT} className='pokur-chat' />
+      </Col>
       <Col className='table-details'>
         {selected && (
           <>

@@ -9,7 +9,7 @@ import Row from '../components/spacing/Row'
 import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
 import { formatTimeLimit } from '../utils/format'
-import { getGameType } from '../utils/game'
+import { getGameType, isSelf } from '../utils/game'
 import { ONE_SECOND } from '../utils/constants'
 import TableBackground from '../components/pokur/TableBackground'
 import { tokenAmount } from '../utils/number'
@@ -26,6 +26,13 @@ const TableView = ({ redirectPath }: TableViewProps) => {
   const nav = useNavigate()
   const location = useLocation()
   const [leaving, setLeaving] = useState(false)
+
+  const leave = useCallback(() => {
+    if (table && (!isSelf(table.leader) || window.confirm('Are you sure you want to leave?'))) {
+      setLeaving(true)
+      leaveTable(table.id)
+    }
+  }, [table, leaveTable])
 
   useEffect(() => {
     if (invites && table?.leader.includes((window as any).ship)) {
@@ -47,18 +54,14 @@ const TableView = ({ redirectPath }: TableViewProps) => {
   useEffect(() => {
     if (!table) {
       nav('/')
+    } else if (!table.players.includes(table.leader.replace('~', ''))) {
+      leave()
+      window.alert('The table organizer left.')
     }
-  }, [table, nav])
+  }, [table, nav, leave])
 
   const buyIn = table?.tokenized ? `${tokenAmount(table.tokenized?.amount)} ${table.tokenized.symbol}` : 'none'
   const gameStarting = gameStartingIn !== undefined
-
-  const leave = useCallback(() => {
-    if (table) {
-      setLeaving(true)
-      leaveTable(table.id)
-    }
-  }, [table, leaveTable])
 
   return (
     <Col className='table-view'>
