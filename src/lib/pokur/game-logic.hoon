@@ -266,8 +266,9 @@
   ++  award-pots
     |=  [winners=(list [ship [@ud pokur-deck]]) showdown=?]
     ^-  host-game-state
-    ?~  pots.game.state  state
     =.  update-message.game.state  ''
+    |-
+    ?~  pots.game.state  state
     ::  if we don't already have a set of revealed hands from an
     ::  all-in, reveal winner and last-aggressor (if we're at showdown)
     =?    revealed-hands.game.state
@@ -424,6 +425,7 @@
         %fold
       =.  players.game.state  (set-player-as-acted who)
       =.  players.game.state  (set-player-as-folded who)
+      =.  update-message.game.state  (crip "{<who>} folded.")
       ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state

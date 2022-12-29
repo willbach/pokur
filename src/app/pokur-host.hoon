@@ -326,13 +326,13 @@
   ::  poke ourself to set a turn timer
   =.  turn-timer.u.host-game
     ::  if hand is over, add 5s to next turn
-    ?.  hand-is-over.u.host-game
+    ::  ?.  hand-is-over.u.host-game
       `@da`(add now.bowl turn-time-limit.game)
-    `@da`(add now.bowl (add turn-time-limit.game ~s5))
+    ::  `@da`(add now.bowl (add turn-time-limit.game ~s5))
   =.  turn-start.game.u.host-game
-    ?.  hand-is-over.u.host-game
+    ::  ?.  hand-is-over.u.host-game
       now.bowl
-    `@da`(add now.bowl ~s5)
+    ::  `@da`(add now.bowl ~s5)
   ::
   =.  games.state  (~(put by games.state) id.game u.host-game)
   =^  cards  state
