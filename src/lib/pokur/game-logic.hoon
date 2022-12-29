@@ -266,7 +266,6 @@
   ++  award-pots
     |=  [winners=(list [ship [@ud pokur-deck]]) showdown=?]
     ^-  host-game-state
-    =.  update-message.game.state  ''
     |-
     ?~  pots.game.state  state
     ::  if we don't already have a set of revealed hands from an
@@ -304,11 +303,13 @@
       %^  cat  3
         ?:  =(1 (lent winners-in-pot))
           ;:  (cury cat 3)
+            update-message.game.state
             (scot %p -.-.winners-in-pot)
             ' wins pot of '
             (scot %ud amount.pot)
           ==
         ;:  (cury cat 3)
+          update-message.game.state
           %+  roll
             %+  turn  winners-in-pot
             |=([p=@ *] (cat 3 (scot %p p) ', '))
@@ -317,11 +318,11 @@
           (scot %ud amount.pot)
         ==
       ?.  showdown
-        (cat 3 '.  ' update-message.game.state)
+        '. '
       ;:  (cury cat 3)
         ' with hand '
         (hierarchy-to-rank -.+.-.winners-in-pot)
-        '.  '  update-message.game.state
+        '.  '
       ==
     ::
         players.game.state
@@ -408,6 +409,7 @@
     |=  [who=ship action=game-action]
     ^-  (unit host-game-state)
     ?>  =(who whose-turn.game.state)
+    =.  update-message.game.state  ''
     =/  =player-info
       (need (get-player-info who players.game.state))
     ?-    -.action
@@ -425,7 +427,7 @@
         %fold
       =.  players.game.state  (set-player-as-acted who)
       =.  players.game.state  (set-player-as-folded who)
-      =.  update-message.game.state  (crip "{<who>} folded.")
+      =.  update-message.game.state  (crip "{<who>} folded. ")
       ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state
@@ -461,7 +463,7 @@
           ==
         =.  players.game.state  (commit-chips who stack.player-info)
         =.  players.game.state  (set-player-as-acted who)
-        =.  update-message.game.state  (crip "{<who>} is all-in.")
+        =.  update-message.game.state  (crip "{<who>} is all-in. ")
         ?.  is-betting-over
           `next-player-turn
         `next-betting-round
@@ -546,7 +548,7 @@
       ?.  =(p who)  [p i]
       [p i(acted %.y, folded %.y, left %.y)]
     =.  update-message.game.state
-      '{<who>} left the game.'
+      '{<who>} left the game. '
     =/  players-left
       %+  skip  players.game.state
       |=([ship player-info] folded)
