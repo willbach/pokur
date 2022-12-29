@@ -22,7 +22,7 @@ interface GameActionsProps {
 const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   const { game, check, fold, bet } = usePokurStore()
   const [lock, setLock] = useState(false)
-  const turnRef = useRef<string | undefined>(game?.current_turn)
+  const turnRef = useRef<string | undefined>(game?.turn_start)
 
   const minBet = fromUd(game?.min_bet) || 20
   const currentBet = useMemo(() => fromUd(game?.current_bet), [game])
@@ -42,13 +42,13 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
   const [myBet, setMyBet] = useState(minRaise)
 
   useEffect(() => {
-    if (game && turnRef.current !== game.current_turn) {
+    if (game && (turnRef.current !== game.turn_start)) {
       setMyBet(minRaise)
     }
     if (game && game.current_turn.includes((window as any).ship)) {
       setLock(false)
     }
-    turnRef.current = game?.current_turn
+    turnRef.current = game?.turn_start
   }, [game, minRaise])
 
   const lockActions = useCallback(async (promise: Promise<void>) => {
