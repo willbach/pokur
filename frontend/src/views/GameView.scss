@@ -376,11 +376,10 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
         }
 
         .blank-card {
-          height: 50px;
-          width: 35px;
+          height: 45px;
+          width: 32px;
           background: url('../assets/img/card-back-red.png');
           background-size: cover;
-          margin-bottom: 4px;
           border-radius: 2px;
 
           &:first-of-type {

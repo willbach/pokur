@@ -195,9 +195,14 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                         {hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
                     ) : (
-                      <div className='sigil-container avatar'>
-                        {renderSigil({ ship: p.ship, className: 'avatar-sigil', colors: [folded ? 'grey' : 'black', 'white'] })}
-                      </div>
+                      <>
+                        {!folded && <Row style={{ position: 'absolute', top: -12, zIndex: 0 }}>
+                          {[1, 2].map(a => <div key={a} className='blank-card' />)}
+                        </Row>}
+                        <div className='sigil-container avatar' style={{ zIndex: 1 }}>
+                          {renderSigil({ ship: p.ship, className: 'avatar-sigil', colors: [folded ? 'grey' : 'black', 'white'] })}
+                        </div>
+                      </>
                     )}
                   </Row>
                   <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>

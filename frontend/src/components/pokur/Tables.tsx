@@ -78,7 +78,7 @@ const Tables = ({ tables }: TablesProps) => {
             {tables.map(t => <TableRow key={t.id} table={t} selected={selected?.id === t.id} onClick={() => setSelected(t)} />)}
           </tbody>
         </table>
-        <iframe title='Pokur Chat' src={/*window.location.origin*/ 'http://localhost:8080' + POKUR_CHAT} className='pokur-chat' />
+        <iframe title='Pokur Chat' src={window.location.origin + POKUR_CHAT} className='pokur-chat' />
       </Col>
       <Col className='table-details'>
         {selected && (
