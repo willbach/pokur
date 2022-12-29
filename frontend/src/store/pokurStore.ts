@@ -10,6 +10,10 @@ import { numToUd } from "../utils/number"
 import { getPayoutAmounts } from '../utils/game'
 import { createSubscription, handleGameUpdate, handleLobbyUpdate, handleNewMessage, SubscriptionPath } from "./subscriptions"
 
+export interface LastAction {
+  [ship: string]: string
+}
+
 export interface PokurStore {
   loadingText: string | null
   
@@ -19,6 +23,7 @@ export interface PokurStore {
   joinTableId?: string
   table?: Table
   game?: Game
+  lastAction: LastAction
 
   messages: Message[]
   mutedPlayers: string[]
@@ -70,6 +75,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
   invites: [],
   messages: [],
   mutedPlayers: [],
+  lastAction: {},
 
   init: async () => {
     set({ loadingText: 'Loading Pokur...' })

@@ -12,6 +12,8 @@ import usePokurStore from '../store/pokurStore'
 import logo from '../assets/img/logo192.png'
 import CreateTableModal from '../components/pokur/CreateTableModal'
 import JoinTableModal from '../components/pokur/JoinTableModal'
+import { REQUESTED_ZIGS_KEY } from '../utils/constants'
+import Modal from '../components/popups/Modal'
 
 import './LobbyView.scss'
 
@@ -29,6 +31,8 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
   const [hostError, setHostError] = useState(false)
   const [showCreateTableModal, setShowCreateTableModal] = useState(false)
   const [showJoinTableModal, setShowJoinTableModal] = useState(false)
+  const [showZigsModal, setShowZigsModal] = useState(false)
+  const [requestedZigs, setRequestedZigs] = useState(Boolean(sessionStorage.getItem(REQUESTED_ZIGS_KEY)))
 
   useEffect(() => {
     const lobbySub = subscribeToPath('/lobby-updates')
@@ -74,6 +78,15 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     }
   }, [newHost, setNewHost, addHost])
 
+  const requestZigs = useCallback(() => {
+    if (selectedAccount) {
+      zigFaucet(selectedAccount.rawAddress)
+      sessionStorage.setItem(REQUESTED_ZIGS_KEY, 'true')
+      setRequestedZigs(true)
+      setShowZigsModal(true)
+    }
+  }, [selectedAccount, zigFaucet])
+
   return (
     <Col className='lobby-view'>
       <Row className='header'>
@@ -82,7 +95,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           <Text mono>POKUR</Text>
         </Row>
         <Row>
-          {selectedAccount && <Button style={{ marginRight: 16 }} onClick={() => zigFaucet(selectedAccount.rawAddress)}>
+          {selectedAccount && <Button style={{ marginRight: 16 }} onClick={requestZigs} disabled={requestedZigs}>
             Zig Faucet
           </Button>}
           <Button style={{ marginRight: 16 }} onClick={() => setShowJoinTableModal(true)}>
@@ -113,13 +126,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
 
       <Col className='main'>
         {true ? (
-          <>
-            {Object.keys(lobby).length > 0 ? (
-              <Tables tables={Object.values(lobby)} />
-            ) : (
-              <h3>No tables under this host</h3>
-            )}
-          </>
+          <Tables tables={Object.values(lobby)} />
         ) : (
           <>
             <h3 style={{ marginTop: 24 }}>Connect to a Lobby:</h3>
@@ -143,6 +150,14 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       </Col>
       <CreateTableModal show={showCreateTableModal} hide={() => setShowCreateTableModal(false)} />
       <JoinTableModal show={showJoinTableModal} hide={() => setShowJoinTableModal(false)} />
+      <Modal show={showZigsModal} hide={() => setShowZigsModal(false)}>
+        <Col style={{ alignItems: 'center' }}>
+          <h3 style={{ marginBottom: 0 }}>Zigs Requested!</h3>
+          <p>You should receive 1 ZIG in the next few minutes.<br/>
+          If you don't see it in your wallet, try refreshing the page.</p>
+          <Button variant='dark' onClick={() => setShowZigsModal(false)}>OK</Button>
+        </Col>
+      </Modal>
     </Col>
   )
 }

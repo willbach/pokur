@@ -29,7 +29,7 @@ interface GameViewProps {
 }
 
 const GameView = ({ redirectPath }: GameViewProps) => {
-  const { lobby, game, gameEndMessage,
+  const { lobby, game, gameEndMessage, lastAction,
     leaveGame, subscribeToPath, createTable, joinTable, setOurAddress, setInvites, setJoinTableId } = usePokurStore()
   const { setInsetView, setMostRecentTransaction } = useWalletStore()
   const nav = useNavigate()
@@ -201,7 +201,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                     )}
                   </Row>
                   <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>
-                    <Player hideSigil ship={p.ship} />
+                    <Player hideSigil ship={p.ship} lastAction={lastAction} />
                     <Text className='stack' bold>{p.left ? 'Left the game' : `$${p.stack}`}</Text>
                   </div>
                   <Row className='bet'>
