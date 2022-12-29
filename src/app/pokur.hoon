@@ -168,13 +168,12 @@
                   =-  =(0 stack:(need -))
                   (get-player-info our.bowl players.game.upd)
                   ::  everyone else is
-                  ?&  ?=(~ last-aggressor.game.upd)
-                      =-  (lte (lent -) 1)
-                      %+  murn  players.game.upd
-                      |=  [=ship player-info]
-                      ?.  &(!folded (gth stack 0))  ~
-                      `ship
-          ==  ==  ==
+                  =-  (lte (lent -) 1)
+                  %+  murn  players.game.upd
+                  |=  [=ship player-info]
+                  ?.  &(!folded (gth stack 0))  ~
+                  `ship
+          ==  ==
         ::  neither, let player choose action
         ~
       ::  wait 2 seconds, then auto-check
