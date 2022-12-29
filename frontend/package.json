@@ -32,7 +32,7 @@
   "devDependencies": {
     "react-app-rewired": "^2.2.1"
   },
-  "proxy": "http://localhost:8080",
+  "proxy": "http://localhost:8081",
   "scripts": {
     "start": "sed -i.bak -e 's/compress: true/compress: false/' ./node_modules/react-scripts/config/webpackDevServer.config.js && react-app-rewired start",
     "start:mock": "REACT_APP_MOCK_DATA=true yarn start",
