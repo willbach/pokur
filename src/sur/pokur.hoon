@@ -3,41 +3,17 @@
 ::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
 ++  fixed-lobby-source  ~zod
 ::
-::  basic poker concepts
-::
-+$  suit
-  $?  %spades    %hearts
-      %diamonds  %clubs
-  ==
-+$  card-val
-  $?  %2  %3  %4
-      %5  %6  %7
-      %8  %9  %10
-      %jack  %queen
-      %king  %ace
-  ==
-+$  pokur-card  [card-val suit]
-+$  pokur-deck  (list pokur-card)
-+$  hand-rank
-  $?  %royal-flush
-      %straight-flush
-      %four-of-a-kind
-      %full-house
-      %flush
-      %straight
-      %wheel-straight  ::  A2345
-      %three-of-a-kind
-      %two-pair
-      %pair
-      %high-card
-  ==
++$  host-info
+  [=ship address=@ux contract=[id=@ux town=@ux]]
 ::
 +$  game-type
   $%  [%cash cash-spec]
       [%sng sng-spec]
   ==
 +$  cash-spec
-  $:  starting-stack=@ud
+  $:  min-buy-in=@ud  ::  in chips
+      max-buy-in=@ud  ::  in chips
+      equivalence=[tokens=@ud chips=@ud]  ::  ?>  =(0 q:(dvr tokens chips))
       small-blind=@ud
       big-blind=@ud
   ==
@@ -52,11 +28,11 @@
       payouts=(list @ud)
   ==
 ::
++$  player-info
+  [stack=@ud committed=@ud acted=? folded=? left=?]
 +$  players
   ::  list maintains table arrangement
   (list [=ship player-info])
-+$  player-info
-  [stack=@ud committed=@ud acted=? folded=? left=?]
 ::
 ::  the data a pokur-host holds for a given table
 ::
@@ -116,10 +92,7 @@
       turn-time-limit=@dr
   ==
 ::
-+$  host-info
-  [=ship address=@ux contract=[id=@ux town=@ux]]
-::
-::  gall actions, pokes
+::  updates
 ::
 +$  update  ::  from app to frontend
   $%  [%game =game my-hand-rank=@t]
@@ -148,6 +121,8 @@
       ==
   ==
 ::
+::  pokes
+::
 +$  player-action
   $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
@@ -160,11 +135,12 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da public=?]  ::  pokes to the HOST must first pay escrow!
+      [%join-table id=@da buy-in=@ud public=?]  ::  buy-in is in tokens
       [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
+      [%join-game id=@da buy-in=@ud public=?]  ::  only for cash games
       [%leave-game id=@da]
-      [%kick-player id=@da who=ship]  ::  creator of *private* table must perform
+      [%kick-player id=@da who=ship]  ::  only for leader of private tables
       ::  choose which wallet address we wish to use to pay escrow
       [%set-our-address address=@ux]
       ::  add a ship to our known-hosts
@@ -200,14 +176,32 @@
       [%turn-timers id=@da wake=@da rest=@da]
   ==
 ::
-::  historical states
+::  basic poker concepts
 ::
-+$  pokur-host-state-0
-  $:  %0
-      our-info=host-info
-      ::  host holds its own tables as well as gossipped ones from main host
-      tables=(map @da table)
-      ::  host holds all active games they are running
-      games=(map @da host-game-state)
++$  suit
+  $?  %spades    %hearts
+      %diamonds  %clubs
+  ==
++$  card-val
+  $?  %2  %3  %4
+      %5  %6  %7
+      %8  %9  %10
+      %jack  %queen
+      %king  %ace
+  ==
++$  pokur-card  [card-val suit]
++$  pokur-deck  (list pokur-card)
++$  hand-rank
+  $?  %royal-flush
+      %straight-flush
+      %four-of-a-kind
+      %full-house
+      %flush
+      %straight
+      %wheel-straight  ::  A2345
+      %three-of-a-kind
+      %two-pair
+      %pair
+      %high-card
   ==
 --

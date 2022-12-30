@@ -3,10 +3,9 @@
 |%
 +$  card  card:agent:gall
 +$  versioned-state
-  $%  pokur-host-state-0
-      state-1
+  $%  state-0
   ==
-+$  state-1
++$  state-0
   $:  %1
       our-info=host-info
       ::  host holds its own tables as well as gossipped ones from main host
@@ -15,13 +14,9 @@
       games=(map @da host-game-state)
       pending-player-txns=(jar batch=@ux [src=@p =txn-player-action])
   ==
-++  zero-to-one
-  |=  old=pokur-host-state-0
-  ^-  state-1
-  [%1 our-info.old tables.old games.old ~]
 --
 %-  agent:dbug
-=|  state=state-1
+=|  state=state-0
 ^-  agent:gall
 =<
 |_  =bowl:gall
@@ -33,7 +28,7 @@
   ^-  (quip card _this)
   ::  ID of escrow contract
   =+  0xabcd.abcd
-  :_  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  :_  this(state [%0 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
   :~  approve-origin-poke
   ::  always be watching for new batch, to handle any pending tables
       =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
@@ -49,15 +44,8 @@
   ::  =+  0xabcd.abcd
   ::  :-  approve-origin-poke^~
   ::  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
-  =/  old-state  !<(versioned-state old-vase)
-  ?-    -.old-state
-      %1
-    `this(state old-state)
-      %0
-    :_  this(state (zero-to-one old-state))
-    =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
-    /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
-  ==
+  `this(state !<(versioned-state old-vase))
+::
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
