@@ -10,11 +10,12 @@ import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
 import { formatTimeLimit } from '../utils/format'
 import { getGameType, isSelf } from '../utils/game'
-import { ONE_SECOND } from '../utils/constants'
+import { ONE_SECOND, POKUR_CHAT } from '../utils/constants'
 import TableBackground from '../components/pokur/TableBackground'
 import { tokenAmount } from '../utils/number'
 
 import './TableView.scss'
+import Chat from '../components/pokur/Chat'
 
 interface TableViewProps {
   redirectPath: string
@@ -71,7 +72,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
       </div>
       <Col className='content'>
         {!table ? (
-          <>
+          <Col style={{ padding: 24, width: '100%', height: '100%' }}>
             <h3>
               {location.search.includes('new=true') ?
                 'Table is being set up...' :
@@ -81,95 +82,101 @@ const TableView = ({ redirectPath }: TableViewProps) => {
             <Button variant='dark' style={{ marginTop: 16 }} onClick={() => nav('/')}>
               Return to Lobby
             </Button>
-          </>
+          </Col>
         ) : (
-          <>
-            <h3 style={{ marginBottom: 24 }}>
-              {/* Table: {table.id.slice(0, 11)}...{table.id.slice(-4)} */}
-              Table: {table.id}
-            </h3>
-            <Row style={{ alignItems: 'flex-start', width: '100%' }}>
-              <Col style={{ width: '70%', alignItems: 'flex-start' }}>
-                {/* <Row className='table-info'>
-                  <h4>ID:</h4>
-                  <Text>{table.id}</Text>
-                </Row> */}
-                <Row className='table-info' style={{ alignItems: 'center' }}>
-                  <h4>Organizer:</h4>
-                  <Player ship={table.leader} />
-                </Row>
-                <Row className='table-info'>
-                  <h4>Type:</h4>
-                  <Text>{getGameType(table.game_type.type)}</Text>
-                </Row>
-                {table.tokenized && <Row className='table-info'>
-                  <h4>Buy-in:</h4>
-                  <Text>{buyIn}</Text>
-                </Row>}
-                <Row className='table-info'>
-                  <h4>Starting Stack:</h4>
-                  <Text>{table.game_type.starting_stack}</Text>
-                </Row>
-                {'round_duration' in table.game_type && <Row className='table-info'>
-                  <h4>Blinds Increase Every:</h4>
-                  <Text>{formatTimeLimit(table.game_type.round_duration)}</Text>
-                </Row>}
-                {'blinds_schedule' in table.game_type && <Row className='table-info'>
-                  <h4>Starting Blinds:</h4>
-                  <Col style={{ alignItems: 'flex-start' }}>
-                    <Text style={{ whiteSpace: 'nowrap' }}>
-                      {table.game_type.blinds_schedule[0][0]} / {table.game_type.blinds_schedule[0][1]}
-                    </Text>
-                  </Col>
-                </Row>}
-                {'small_blind' in table.game_type && <Row className='table-info'>
-                  <h4>Small Blind:</h4>
-                  <Text>{table.game_type.small_blind}</Text>
-                </Row>}
-                {'big_blind' in table.game_type && <Row className='table-info'>
-                  <h4>Big Blind:</h4>
-                  <Text>{table.game_type.big_blind}</Text>
-                </Row>}
-                <Row className='table-info'>
-                  <h4>Spectators:</h4>
-                  <Text>{table.spectators_allowed ? 'Yes' : 'No'}</Text>
-                </Row>
-                {table.bond_id && <Row className='table-info'>
-                  <h4>Bond ID:</h4>
-                  <Text>{table.bond_id}</Text>
-                </Row>}
-                <Row className='table-info'>
-                  <h4>Turn Time Limit:</h4>
-                  <Text>{formatTimeLimit(table.turn_time_limit)}</Text>
-                </Row>
-              </Col>
-              <Col style={{ width: '30%', alignItems: 'flex-start' }}>
-                <div className='players'>
-                  <h4>Players: {table.players.length}/{table.max_players}</h4>
-                  {table.players.map(ship => <Player key={ship} ship={ship} className='mt-8' />)}
-                </div>
-                <div className='table-menu'>
+          <Row style={{ width: '100%', height: '100%' }}>
+            <iframe title='Pokur Chat' src={window.location.origin + POKUR_CHAT} className='pokur-chat' />
+            <Col style={{ width: '50%', alignItems: 'center', padding: 16 }}>
+              <h3 style={{ marginBottom: 24 }}>
+                {/* Table: {table.id.slice(0, 11)}...{table.id.slice(-4)} */}
+                Table: {table.id}
+              </h3>
+              <Row style={{ alignItems: 'flex-start', width: '100%' }}>
+                <Col style={{ width: '70%', alignItems: 'flex-start' }}>
+                  {/* <Row className='table-info'>
+                    <h4>ID:</h4>
+                    <Text>{table.id}</Text>
+                  </Row> */}
+                  <Row className='table-info' style={{ alignItems: 'center' }}>
+                    <h4>Organizer:</h4>
+                    <Player ship={table.leader} />
+                  </Row>
+                  <Row className='table-info'>
+                    <h4>Type:</h4>
+                    <Text>{getGameType(table.game_type.type)}</Text>
+                  </Row>
+                  {table.tokenized && <Row className='table-info'>
+                    <h4>Buy-in:</h4>
+                    <Text>{buyIn}</Text>
+                  </Row>}
+                  <Row className='table-info'>
+                    <h4>Starting Stack:</h4>
+                    <Text>{table.game_type.starting_stack}</Text>
+                  </Row>
+                  {'round_duration' in table.game_type && <Row className='table-info'>
+                    <h4>Blinds Increase Every:</h4>
+                    <Text>{formatTimeLimit(table.game_type.round_duration)}</Text>
+                  </Row>}
+                  {'blinds_schedule' in table.game_type && <Row className='table-info'>
+                    <h4>Starting Blinds:</h4>
+                    <Col style={{ alignItems: 'flex-start' }}>
+                      <Text style={{ whiteSpace: 'nowrap' }}>
+                        {table.game_type.blinds_schedule[0][0]} / {table.game_type.blinds_schedule[0][1]}
+                      </Text>
+                    </Col>
+                  </Row>}
+                  {'small_blind' in table.game_type && <Row className='table-info'>
+                    <h4>Small Blind:</h4>
+                    <Text>{table.game_type.small_blind}</Text>
+                  </Row>}
+                  {'big_blind' in table.game_type && <Row className='table-info'>
+                    <h4>Big Blind:</h4>
+                    <Text>{table.game_type.big_blind}</Text>
+                  </Row>}
+                  <Row className='table-info'>
+                    <h4>Spectators:</h4>
+                    <Text>{table.spectators_allowed ? 'Yes' : 'No'}</Text>
+                  </Row>
+                  {table.bond_id && <Row className='table-info'>
+                    <h4>Bond ID:</h4>
+                    <Text>{table.bond_id}</Text>
+                  </Row>}
+                  <Row className='table-info'>
+                    <h4>Turn Time Limit:</h4>
+                    <Text>{formatTimeLimit(table.turn_time_limit)}</Text>
+                  </Row>
+                </Col>
+                <Col style={{ width: '30%', alignItems: 'flex-start' }}>
+                  <div className='players'>
+                    <h4>Players: {table.players.length}/{table.max_players}</h4>
+                    {table.players.map(ship => <Player key={ship} ship={ship} className='mt-8' />)}
+                  </div>
+                  <div className='table-menu'>
 
-                </div>
-              </Col>
-            </Row>
-            <Row style={{ marginTop: 16 }}>
-              {(window as any).ship === table.leader.slice(1) && (
-                <Button disabled={table.players.length < Number(table.min_players) || gameStarting}
-                  variant='dark' style={{ marginRight: 16 }} onClick={() => startGame(table.id)}>
-                  Start Game
+                  </div>
+                </Col>
+              </Row>
+              <Row style={{ marginTop: 16 }}>
+                {(window as any).ship === table.leader.slice(1) && (
+                  <Button disabled={table.players.length < Number(table.min_players) || gameStarting}
+                    variant='dark' style={{ marginRight: 16 }} onClick={() => startGame(table.id)}>
+                    Start Game
+                  </Button>
+                )}
+                <Button disabled={gameStarting || leaving} onClick={leave}>
+                  Leave Table
                 </Button>
+              </Row>
+              {gameStarting && (
+                <h4 style={{ marginTop: 8 }}>
+                  Game starts in {(gameStartingIn || 0) / ONE_SECOND} second{(gameStartingIn || 0) / ONE_SECOND > 1 ? 's' : ''}
+                </h4>
               )}
-              <Button disabled={gameStarting || leaving} onClick={leave}>
-                Leave Table
-              </Button>
-            </Row>
-            {gameStarting && (
-              <h4 style={{ marginTop: 16 }}>
-                Game starts in {(gameStartingIn || 0) / ONE_SECOND} second{(gameStartingIn || 0) / ONE_SECOND > 1 ? 's' : ''}
-              </h4>
-            )}
-          </>
+              <div style={{ width: 'calc(100% + 32px)', margin: '16px 0 -16px' }}>
+                <Chat height={180} />
+              </div>
+            </Col>
+          </Row>
         )}
       </Col>
     </Col>

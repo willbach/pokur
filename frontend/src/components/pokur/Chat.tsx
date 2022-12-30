@@ -10,7 +10,12 @@ import { renderShip } from '../../utils/player';
 
 import './Chat.scss'
 
-const Chat = () => {
+interface ChatProps {
+  height: number;
+  className?: string;
+}
+
+const Chat = ({ height, className = '' }: ChatProps) => {
   const { messages, sendMessage } = usePokurStore()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [newMsg, setNewMsg] = useState('')
@@ -32,41 +37,41 @@ const Chat = () => {
   }, [scrollRef])
 
   return (
-    <Col className={`chat ${hide ? 'hidden' : 'shown'}`}>
-        <Row className='hide' onClick={() => setHide(!hide)}>
-          <Text>{hide ? 'Show' : 'Hide'} chat</Text>
-          {hide ? <FaChevronUp /> : <FaChevronDown />}
-        </Row>
-        {!hide && (
-        <>
-          <div className='messages' onScroll={onScroll} ref={scrollRef}>
-            {messages.map(({ from, msg }, i, arr) => from === 'game-update' ? (
-              <Row key={from + i} className='game-update'>
-                <span className='msg-text'>{msg}</span>
-              </Row>
-            ) : (
-              <Row key={from + i} className={`message ${(window as any).ship === from.replace(/~/, '') ? 'self' : ''}`}>
-                {(from !== arr[i + 1]?.from) && <span className='author'>
-                  <Text mono style={{ marginLeft: 4 }}>{renderShip(from)}:</Text>
-                </span>}
-                <span className='msg-text'>{msg}</span>
-              </Row>
-            ))}
-          </div>
-          <form onSubmit={submitMsg}>
-            <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} />
-            <Button variant='dark' type='submit'>
-              {/* <FaChevronCircleRight size={20} /> */}
-              Send
-            </Button>
-          </form>
-        </> 
-        )}
-        {!atBottom && (
-          <Button className='scroll-button' onClick={scrollToEnd}>
-            <FaChevronDown />
+    <Col className={`chat ${hide ? 'hidden' : 'shown'} ${className}`} style={{ maxHeight: height }}>
+      <Row className='hide' onClick={() => setHide(!hide)}>
+        <Text>{hide ? 'Show' : 'Hide game'} chat</Text>
+        {hide ? <FaChevronUp /> : <FaChevronDown />}
+      </Row>
+      {!hide && (
+      <>
+        <div className='messages' onScroll={onScroll} ref={scrollRef}>
+          {messages.map(({ from, msg }, i, arr) => from === 'game-update' ? (
+            <Row key={from + i} className='game-update'>
+              <span className='msg-text'>{msg}</span>
+            </Row>
+          ) : (
+            <Row key={from + i} className={`message ${(window as any).ship === from.replace(/~/, '') ? 'self' : ''}`}>
+              {(from !== arr[i + 1]?.from) && <span className='author'>
+                <Text mono style={{ marginLeft: 4 }}>{renderShip(from)}:</Text>
+              </span>}
+              <span className='msg-text'>{msg}</span>
+            </Row>
+          ))}
+        </div>
+        <form onSubmit={submitMsg}>
+          <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} />
+          <Button variant='dark' type='submit'>
+            {/* <FaChevronCircleRight size={20} /> */}
+            Send
           </Button>
-        )}
+        </form>
+      </> 
+      )}
+      {!atBottom && (
+        <Button className='scroll-button' onClick={scrollToEnd}>
+          <FaChevronDown />
+        </Button>
+      )}
     </Col>
   )
 }
