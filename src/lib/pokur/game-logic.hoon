@@ -427,7 +427,7 @@
         %fold
       =.  players.game.state  (set-player-as-acted who)
       =.  players.game.state  (set-player-as-folded who)
-      =.  update-message.game.state  (crip "{<who>} folded. ")
+      =.  update-message.game.state  '{<who>} folded. '
       ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state
@@ -463,7 +463,7 @@
           ==
         =.  players.game.state  (commit-chips who stack.player-info)
         =.  players.game.state  (set-player-as-acted who)
-        =.  update-message.game.state  (crip "{<who>} is all-in. ")
+        =.  update-message.game.state  '{<who>} is all-in. '
         ?.  is-betting-over
           `next-player-turn
         `next-betting-round
@@ -536,6 +536,24 @@
       `(list [ship @ud hand=pokur-deck])`player-ranks
     |=  [ship @ud hand=pokur-deck]
     (hands-equal hand best-hand)
+  ::
+  ::  if the game type is %cash, players can join at any time.
+  ::  players enter as folded, and will be set to active at the
+  ::  beginning of next hand. new players will be seated behind
+  ::  current dealer.
+  ::
+  ++  add-player
+    |=  [who=ship starting-stack=@ud]
+    ^-  host-game-state
+    %=    state
+        players.game
+      =+  pos=(need (find ~[dealer.game.state] (turn players.game.state head)))
+      %^  into  players.game.state  pos
+      [who `player-info`[starting-stack 0 %.n %.y %.n]]
+    ::
+        update-message.game
+      '{<who>} joined the game. '
+    ==
   ::
   ++  remove-player
     |=  who=ship

@@ -17,15 +17,17 @@
     ++  player-action
       %-  of
       :~  [%new-table parse-table]
-          [%join-table (ot ~[[%id (se %da)] [%public bo]])]
+          [%join-table (ot ~[[%id (se %da)] [%buy-in (se %ud)] [%public bo]])]
           [%leave-table parse-id]
           [%start-game parse-id]
+          [%join-game (ot ~[[%id (se %da)] [%buy-in (se %ud)] [%public bo]])]
           [%leave-game parse-id]
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
           [%set-our-address (ot ~[[%address (se %ux)]])]
           [%find-host (ot ~[[%who (se %p)]])]
           [%remove-host (ot ~[[%who (se %p)]])]
           [%send-invite (ot ~[[%to (se %p)]])]
+          ::  %invite not used by FE
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-table
