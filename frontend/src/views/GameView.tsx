@@ -237,7 +237,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
             })}
           </div>
           <div className='table' />
-          <Chat />
+          <Chat className='fixed' height={160} />
           {!Object.keys(game?.revealed_hands || {}).length && !gameEndMessage && (
             <GameActions pots={computedPots} secondsLeft={secondsLeft} />
           )}

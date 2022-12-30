@@ -4,12 +4,15 @@
 .chat {
   background: white;
   border-radius: 4px;
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 50%;
-  max-width: calc(100% - 200px);
-  max-height: 160px;
+  width: 100%;
+
+  &.fixed {
+    max-width: calc(100% - 200px);
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 50%;
+  }
 
   &.hidden {
     width: 106px;
