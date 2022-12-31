@@ -81,15 +81,11 @@
       %+  skip  players.game.state
       |=([ship player-info] left)
     =.  dealer.game.state
-      %+  get-next-unfolded-player
-        dealer
-      players.game.state
+      (get-next-active-player dealer)
     =.  state  deal-hands
     =.  state  assign-blinds
     =.  whose-turn.game.state
-      %+  get-next-unfolded-player
-        big-blind.game.state
-      players.game.state
+      (get-next-active-player big-blind.game.state)
     =.  hand-is-over.state  %.n
     state
   ::  deals 2 cards from deck to each player in game
@@ -140,25 +136,26 @@
     ^-  host-game-state
     %=    state
         whose-turn.game
-      %+  get-next-unfolded-player
-        whose-turn.game.state
-      players.game.state
+      (get-next-active-player whose-turn.game.state)
     ==
   ::
-  ++  get-next-unfolded-player
-    |=  [current=ship =players]
+  ++  get-next-active-player
+    |=  current=ship
     ^-  ship
     =/  unfolded-players
-      %+  skim  players
-      |=([p=ship player-info] |(!folded =(p current)))
-    ?:  =(~ unfolded-players)
+      %+  skim  players.game.state
+      |=  [p=ship player-info]
+      ::  player must be either current player or
+      ::  not folded, not left, and stack > 0
+      ?|  =(p current)
+          ?&(!folded !left !=(0 stack))
+      ==
+    ?~  pos=(find [current]~ (turn unfolded-players head))
       ::  everyone left, just return something so server can delete
       current
     %-  head
     %+  snag
-      %+  mod
-        +((need (find [current]~ (turn unfolded-players head))))
-      (lent unfolded-players)
+      (mod +(u.pos) (lent unfolded-players))
     unfolded-players
   ::  sends chips from player's 'stack' to their
   ::  'committed' pile. used after a bet, call, raise
@@ -223,12 +220,12 @@
         (weld (snip pots.game.state) new-pots)
       ==
     ::  take lowest commitment and add from all to current pot
-    =/  lowest=@ud  committed:(head sorted-commitments)
+    =/  lowest=[ship player-info]  (head sorted-commitments)
     =/  [less=players added-chips=@ud]
       %^  spin  sorted-commitments  -.this-pot
       |=  [[p=ship i=player-info] pot=@ud]
-      :-  [p i(committed (sub committed.i lowest))]
-      (add pot lowest)
+      :-  [p i(committed (sub committed.i committed.lowest))]
+      (add pot committed.lowest)
     %=    $
         sorted-commitments
       ::  remove not just the lowest commitment, but any player who now
@@ -236,25 +233,26 @@
       %+  skip  less
       |=([ship player-info] =(0 committed))
         new-pots
+      ::  only create a side pot if lowest-committed is NOT folded:
+      ::  if they are folded, there's no need for a side pot.
+      ?:  folded.lowest  new-pots
       (snoc new-pots this-pot(amount added-chips))
         this-pot
+      ?:  folded.lowest
+        this-pot(amount added-chips)
       [0 (turn (tail less) head)]
     ==
-  ::  takes blinds from the two unfolded players left of dealer
+  ::  takes blinds from the two active players left of dealer
   ::  (in heads up, dealer is small blind)
   ++  assign-blinds
     ^-  host-game-state
     =.  small-blind.game.state
       ?:  =(~(wyt by hands.state) 2)
         dealer.game.state
-      %+  get-next-unfolded-player
-        dealer.game.state
-      players.game.state
+      (get-next-active-player dealer.game.state)
     ::
     =.  big-blind.game.state
-      %+  get-next-unfolded-player
-        small-blind.game.state
-      players.game.state
+      (get-next-active-player small-blind.game.state)
     ::  if game type is %cash, use set blinds
     ::  if %tournament, set blinds based on round we're on
     =/  blinds  get-current-blinds
