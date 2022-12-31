@@ -208,12 +208,6 @@
     =/  this-pot  (rear pots.game.state)
     =|  new-pots=(list _this-pot)
     |-
-    ::  ~&  "this pot"
-    ::  ~&  this-pot
-    ::  ~&  >  "sorted commitments"
-    ::  ~&  >  sorted-commitments
-    ::  ~&  >>  "new pots"
-    ::  ~&  >>  new-pots
     ?:  =(~ sorted-commitments)
       ::  all pots built, finished
       %=  state
