@@ -236,7 +236,7 @@
       %+  skip  less
       |=([ship player-info] =(0 committed))
         new-pots
-      (snoc new-pots this-pot(amount (add amount.this-pot added-chips)))
+      (snoc new-pots this-pot(amount added-chips))
         this-pot
       [0 (turn (tail less) head)]
     ==
@@ -609,8 +609,8 @@
   ?:  (gth stack.a stack.b)  %.y
   ?:  (lth stack.a stack.b)  %.n
   %+  gth
-    (need (find ~[ship.a] places))
-  (need (find ~[ship.b] places))
+    ?~  ax=(find ~[ship.a] places)  0  u.ax
+  ?~  bx=(find ~[ship.b] places)  0  u.bx
 ::
 ::  Hand evaluation and sorted helper arms
 ::

@@ -154,14 +154,14 @@
         board.game  ~
         last-action.game  `%check
         update-message.game
-      '~tes wins pot of 300 with hand Full House.  ~bus wins pot of 400 with hand Two Pair.  '
+      '~tes wins pot of 300 with hand Full House.  ~bus wins pot of 200 with hand Two Pair.  '
         revealed-hands.game
       ~[[~bus ~[[%king %spades] [%king %clubs]]] [~tes ~[[%2 %spades] [%3 %spades]]]]
         board.game  ~
     ::
         players.game
       :~  [~tes 300 0 %.n %.n %.n]
-          [~bus 1.200 0 %.n %.n %.n]
+          [~bus 1.000 0 %.n %.n %.n]
           [~dev 1.800 0 %.n %.n %.n]
       ==
     ::  RELEVANT
