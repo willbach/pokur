@@ -147,8 +147,6 @@
     =/  upd  !<(host-update q.cage.sign)
     ?+    -.upd  (on-agent:def wire sign)
         %game
-      ~&  >  "new game state:"
-      ~&  >  game.upd
       =/  my-hand-rank=@t
         %-  hierarchy-to-rank
         =/  full-hand  (weld my-hand.game.upd board.game.upd)
@@ -184,9 +182,7 @@
       ==
     ::
         %game-over
-      ~&  >  "new game state:"
-      ~&  >  game.upd
-      ~&  >>  "host says: game is over."
+      ~&  >>  "%pokur: host says: game is over."
       ::  player must %leave-game to clear state and messages
       :_  this
       :~  :^  %give  %fact  ~[/game-updates]
@@ -744,8 +740,6 @@
 ::
 ++  lobby-update-card
   ^-  card
-  ~&  >>  "tables available:"
-  ~&  >>  lobby.state
   :^  %give  %fact  ~[/lobby-updates]
   [%pokur-update !>(`update`[%lobby lobby.state])]
 ::
