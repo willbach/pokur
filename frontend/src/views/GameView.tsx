@@ -101,7 +101,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, setInvites, setJoinTableId
   ])
 
-  const playersRemaining = game?.players.filter(({ left }) => !left).length ?? 2
+  const playersRemaining = game?.players.filter(({ left, committed, stack }) => !left && (fromUd(committed) + fromUd(stack) > 0)).length ?? 2
 
   return (
     <Col className={cn('game-view', Boolean(gameEndMessage) && 'game-over')}>
