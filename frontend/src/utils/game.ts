@@ -33,15 +33,6 @@ export const isSelf = (ship?: string) => ship && (window as any).ship.replace('~
 export const abbreviateCard = ({ val, suit }: Card) => (val === '10' ? val : val.slice(0, 1).toUpperCase()) + suit.slice(0,1)
 
 export const playSounds = (game: Game, curGame?: Game) => {
-  if (game.board.length && curGame?.board.length !== undefined) {
-    const curBoardLength = curGame?.board.length
-
-    if (curBoardLength === 0 && game.board.length === 3) {
-      flopSound.play()
-    } else if (game.board.length === (curBoardLength || 0) + 1) {
-      turnSound.play()
-    }
-  }
   if (game.last_action) {
     if (game.last_action.includes('fold')) {
       foldSound.play()
@@ -51,6 +42,15 @@ export const playSounds = (game: Game, curGame?: Game) => {
       callSound.play()
     } else if (game.last_action.includes('raise')) {
       raiseSound.play()
+    }
+  }
+  if (game.board.length && curGame?.board.length !== undefined) {
+    const curBoardLength = curGame?.board.length
+
+    if (curBoardLength === 0 && game.board.length === 3) {
+      setTimeout(() => flopSound.play(), 100)
+    } else if (game.board.length === (curBoardLength || 0) + 1) {
+      setTimeout(() => turnSound.play(), 100)
     }
   }
 }

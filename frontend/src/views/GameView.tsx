@@ -101,7 +101,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, setInvites, setJoinTableId
   ])
 
-  const playersRemaining = game?.players.filter(({ left }) => !left).length ?? 2
+  const playersRemaining = game?.players.filter(({ left, committed, stack }) => !left && (fromUd(committed) + fromUd(stack) > 0)).length ?? 2
 
   return (
     <Col className={cn('game-view', Boolean(gameEndMessage) && 'game-over')}>
@@ -209,7 +209,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                   </Row>
                   <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>
                     <Player hideSigil ship={p.ship} lastAction={lastAction} />
-                    <Text className='stack' bold>{p.left ? 'Left the game' : `$${p.stack}`}</Text>
+                    <Text className='stack' bold>{p.left ? 'Left' : `$${p.stack}`}</Text>
                   </div>
                   <Row className='bet'>
                     {Boolean(buttonIndicator) && <div className='button-indicator'>{buttonIndicator}</div>}
@@ -237,7 +237,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
             })}
           </div>
           <div className='table' />
-          <Chat />
+          <Chat className='fixed' height={160} />
           {!Object.keys(game?.revealed_hands || {}).length && !gameEndMessage && (
             <GameActions pots={computedPots} secondsLeft={secondsLeft} />
           )}

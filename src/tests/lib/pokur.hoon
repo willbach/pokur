@@ -2,6 +2,264 @@
 /+  *test, *pokur-game-logic
 |%
 ::
+::  side pot handling test
+::
+++  test-side-pot  ^-  tang
+  ::  ~tes went all in with 100 chips.
+  ::  then, ~bus raised the bet to 200.
+  ::  ~dev is about to call 200, which will
+  ::  initiate the flop and create 2 pots:
+  ::  300 available to all, and 200 available to ~bus and ~dev.
+  =/  state=host-game-state
+    :*  %-  ~(gas by *(map ship pokur-deck))
+        :~  [~bus ~[[%5 %spades] [%ace %spades]]]
+            [~tes ~[[%2 %spades] [%3 %spades]]]
+            [~dev ~[[%king %spades] [%jack %spades]]]
+        ==
+        generate-deck
+        hand-is-over=%.n
+        turn-timer=*@da
+        tokenized=~
+        placements=~[~tes ~bus ~dev]
+        :*  id=*@da
+            game-is-over=%.n
+            :*  %sng
+                1.000
+                *@dr
+                ~[[1 2] [3 4]]
+                0
+                %.n
+                ~[100]
+            ==
+            turn-time-limit=*@dr
+            turn-start=*@da
+            ::  RELEVANT
+            :~  [~tes 0 100 %.y %.n %.n]
+                [~bus 800 200 %.y %.n %.n]
+                [~dev 2.000 0 %.n %.n %.n]
+            ==
+            ::  RELEVANT
+            pots=~[[0 ~[~tes ~bus ~dev]]]
+            current-bet=200
+            last-bet=100
+            last-action=`%raise
+            last-aggressor=`~bus
+            board=~
+            my-hand=~
+            whose-turn=~dev
+            dealer=~tes
+            small-blind=~bus
+            big-blind=~dev
+            spectators-allowed=%.y
+            spectators=~
+            hands-played=10
+            update-message='~tes is all-in. '
+            revealed-hands=~
+        ==
+    ==
+  =/  new-state
+    (need (~(process-player-action guts state) ~dev [%bet *@da 200]))
+  =/  expected-state
+    %=    state
+        whose-turn.game  ~bus
+        last-aggressor.game  `~bus
+        current-bet.game  0
+        last-bet.game  0
+        last-action.game  `%call
+        update-message.game  ''
+        board.game
+      :~  [%king %diamonds]
+          [%queen %diamonds]
+          [%jack %diamonds]
+      ==
+    ::
+        players.game
+      :~  [~tes 0 0 %.n %.n %.n]
+          [~bus 800 0 %.n %.n %.n]
+          [~dev 1.800 0 %.n %.n %.n]
+      ==
+    ::  RELEVANT
+        pots.game
+      ~[[300 ~[~tes ~bus ~dev]] [200 ~[~bus ~dev]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+++  test-award-side-pot  ^-  tang
+  ::  side pots have been created
+  ::  tes has a small one, dev and bus compete for big one
+  ::  action is final check of game, so pots should be awarded
+  ::  tes wins their side pot, bus wins the main pot
+  =/  state=host-game-state
+    :*  %-  ~(gas by *(map ship pokur-deck))
+        :~  [~bus ~[[%king %spades] [%king %clubs]]]
+            [~tes ~[[%2 %spades] [%3 %spades]]]
+            [~dev ~[[%king %diamonds] [%jack %spades]]]
+        ==
+        generate-deck
+        hand-is-over=%.n
+        turn-timer=*@da
+        tokenized=~
+        placements=~[~tes ~bus ~dev]
+        :*  id=*@da
+            game-is-over=%.n
+            :*  %sng
+                1.000
+                *@dr
+                ~[[1 2] [3 4]]
+                0
+                %.n
+                ~[100]
+            ==
+            turn-time-limit=*@dr
+            turn-start=*@da
+            ::  RELEVANT
+            :~  [~tes 0 0 %.y %.n %.n]
+                [~bus 800 0 %.y %.n %.n]
+                [~dev 1.800 0 %.n %.n %.n]
+            ==
+            ::  RELEVANT
+            pots=~[[300 ~[~tes ~bus ~dev]] [200 ~[~bus ~dev]]]
+            current-bet=0
+            last-bet=0
+            last-action=`%check
+            last-aggressor=`~bus
+            ::  board
+            :~  [%2 %clubs]  [%2 %diamonds]
+                [%3 %clubs]  [%7 %spades]
+                [%queen %hearts]
+            ==
+            my-hand=~
+            whose-turn=~dev
+            dealer=~tes
+            small-blind=~bus
+            big-blind=~dev
+            spectators-allowed=%.y
+            spectators=~
+            hands-played=10
+            update-message='~tes is all-in. '
+            revealed-hands=~
+        ==
+    ==
+  =/  new-state
+    (need (~(process-player-action guts state) ~dev [%check *@da ~]))
+  =/  expected-state
+    %=    state
+        whose-turn.game  ~dev
+        last-aggressor.game  `~bus
+        hands-played.game  11
+        current-bet.game  0
+        last-bet.game  0
+        board.game  ~
+        last-action.game  `%check
+        update-message.game
+      '~tes wins pot of 300 with hand Full House.  ~bus wins pot of 400 with hand Two Pair.  '
+        revealed-hands.game
+      ~[[~bus ~[[%king %spades] [%king %clubs]]] [~tes ~[[%2 %spades] [%3 %spades]]]]
+        board.game  ~
+    ::
+        players.game
+      :~  [~tes 300 0 %.n %.n %.n]
+          [~bus 1.200 0 %.n %.n %.n]
+          [~dev 1.800 0 %.n %.n %.n]
+      ==
+    ::  RELEVANT
+        pots.game
+      ~[[amount=0 in=~[~tes ~bus ~dev]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+++  test-side-pot-2  ^-  tang
+  ::  ~tes went all in with 100 chips.
+  ::  then, ~bus raised the bet by going all-in with 200.
+  ::  ~dev is about to raise to 400, which will
+  ::  initiate the flop and create 3 pots:
+  ::  300 available to all,
+  ::  200 to ~bus and ~dev,
+  ::  200 to ~dev alone.
+  =/  state=host-game-state
+    :*  %-  ~(gas by *(map ship pokur-deck))
+        :~  [~bus ~[[%5 %spades] [%ace %spades]]]
+            [~tes ~[[%2 %spades] [%3 %spades]]]
+            [~dev ~[[%king %spades] [%jack %spades]]]
+        ==
+        generate-deck
+        hand-is-over=%.n
+        turn-timer=*@da
+        tokenized=~
+        placements=~[~tes ~bus ~dev]
+        :*  id=*@da
+            game-is-over=%.n
+            :*  %sng
+                1.000
+                *@dr
+                ~[[1 2] [3 4]]
+                0
+                %.n
+                ~[100]
+            ==
+            turn-time-limit=*@dr
+            turn-start=*@da
+            ::  RELEVANT
+            :~  [~tes 0 100 %.y %.n %.n]
+                [~bus 0 200 %.y %.n %.n]
+                [~dev 2.000 0 %.n %.n %.n]
+            ==
+            ::  RELEVANT
+            pots=~[[0 ~[~tes ~bus ~dev]]]
+            current-bet=200
+            last-bet=100
+            last-action=`%raise
+            last-aggressor=`~bus
+            board=~
+            my-hand=~
+            whose-turn=~dev
+            dealer=~tes
+            small-blind=~bus
+            big-blind=~dev
+            spectators-allowed=%.y
+            spectators=~
+            hands-played=10
+            update-message='~bus is all-in. '
+            revealed-hands=~
+        ==
+    ==
+  =/  new-state
+    (need (~(process-player-action guts state) ~dev [%bet *@da 400]))
+  =/  expected-state
+    %=    state
+        whose-turn.game  ~bus
+        last-aggressor.game  `~dev
+        current-bet.game  0
+        last-bet.game  0
+        last-action.game  `%raise
+        update-message.game  ''
+        board.game
+      :~  [%king %diamonds]
+          [%queen %diamonds]
+          [%jack %diamonds]
+      ==
+        revealed-hands.game
+      :~  [~dev ~[[%king %spades] [%jack %spades]]]
+          [~tes ~[[%2 %spades] [%3 %spades]]]
+          [~bus ~[[%5 %spades] [%ace %spades]]]
+      ==
+        players.game
+      :~  [~tes 0 0 %.n %.n %.n]
+          [~bus 0 0 %.n %.n %.n]
+          [~dev 1.600 0 %.n %.n %.n]
+      ==
+    ::  RELEVANT
+        pots.game
+      ~[[300 ~[~tes ~bus ~dev]] [200 ~[~bus ~dev]] [200 ~[~dev]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
 ::  determine-winner tests
 ::
 ++  test-winner-1  ^-  tang

@@ -192,18 +192,53 @@
     ?.  =(p who)  [p i]
     [p i(folded %.y)]
   ::
+  ::  put all committed chips from a single betting round into pot.
+  ::  a player can only be involved in a pot that they contribute to:
+  ::  we look at the smallest committed value, then add the matching values
+  ::  from each involved player into the current pot.
+  ::  then, look at next smallest until reaching highest committed value,
+  ::  producing a new pot at every discrete value, with ties matching
+  ::
   ++  committed-chips-to-pot
     ^-  host-game-state
-    =/  pot-to-update  (rear pots.game.state)
-    =/  [=players new-pot=@ud]
-      %^  spin  players.game.state  -.pot-to-update
+    =/  sorted-commitments=players
+      %+  sort  players.game.state
+      |=  [a=[ship player-info] b=[ship player-info]]
+      (lth committed.a committed.b)
+    =/  this-pot  (rear pots.game.state)
+    =|  new-pots=(list _this-pot)
+    |-
+    ?:  =(~ sorted-commitments)
+      ::  all pots built, finished
+      %=  state
+        current-bet.game  0
+        last-bet.game     0
+      ::
+          players.game
+        %+  turn  players.game.state
+        |=  [=ship i=player-info]
+        [ship i(committed 0, acted %.n)]
+      ::
+          pots.game
+        (weld (snip pots.game.state) new-pots)
+      ==
+    ::  take lowest commitment and add from all to current pot
+    =/  lowest=@ud  committed:(head sorted-commitments)
+    =/  [less=players added-chips=@ud]
+      %^  spin  sorted-commitments  -.this-pot
       |=  [[p=ship i=player-info] pot=@ud]
-      [p i(committed 0, acted %.n)]^(add pot committed.i)
-    %=  state
-      current-bet.game  0
-      last-bet.game     0
-      players.game      players
-      pots.game  (snoc (snip pots.game.state) [new-pot +.pot-to-update])
+      :-  [p i(committed (sub committed.i lowest))]
+      (add pot lowest)
+    %=    $
+        sorted-commitments
+      ::  remove not just the lowest commitment, but any player who now
+      ::  has 0 committed chips
+      %+  skip  less
+      |=([ship player-info] =(0 committed))
+        new-pots
+      (snoc new-pots this-pot(amount (add amount.this-pot added-chips)))
+        this-pot
+      [0 (turn (tail less) head)]
     ==
   ::  takes blinds from the two unfolded players left of dealer
   ::  (in heads up, dealer is small blind)
@@ -366,6 +401,10 @@
       %+  skip  players.game.state
       |=  [p=ship player-info]
       left
+    =/  active-with-chips
+      %+  skip  players.game.state
+      |=  [p=ship player-info]
+      =(0 stack)
     %=  state
       hands              ~
       board.game         ~
@@ -374,17 +413,11 @@
       hand-is-over       %.y
       deck               generate-deck
       hands-played.game  +(hands-played.game.state)
-      pots.game  [0 (turn players.game.state head)]~
+      pots.game  [0 (turn active-with-chips head)]~
     ::
         game-is-over.game
-      =/  active-with-chips
-        %-  lent
-        %+  skip  players.game.state
-        |=  [p=ship player-info]
-        =(0 stack)
-      ?|  =(1 active-with-chips)
-          =(0 active-with-chips)
-      ==
+      =-  |(=(1 -) =(0 -))
+      (lent active-with-chips)
     ::
         placements
       ::  re-order player placements based on stacks

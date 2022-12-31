@@ -195,7 +195,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
         .turn-timer {
           position: absolute;
           top: 0;
-          
+          z-index: 2;
         }
 
         .bet {
@@ -235,7 +235,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           right: calc(7% - 44px);
 
           .bet {
-            bottom: -20px;
+            bottom: -28px;
             left: -80px;
           }
         }
@@ -253,7 +253,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           right: calc(7% - 44px);
 
           .bet {
-            bottom: 110px;
+            bottom: 118px;
             left: -60px;
           }
         }
@@ -285,8 +285,8 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           left: calc(7% - 44px);
 
           .bet {
-            bottom: 110px;
-            right: -50px;
+            bottom: 118px;
+            right: -54px;
           }
         }
         &.pp-8 {
@@ -303,7 +303,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           left: calc(7% - 44px);
 
           .bet {
-            bottom: -20px;
+            bottom: -28px;
             right: -54px;
           }
         }
