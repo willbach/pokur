@@ -209,7 +209,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                   </Row>
                   <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>
                     <Player hideSigil ship={p.ship} lastAction={lastAction} />
-                    <Text className='stack' bold>{p.left ? 'Left the game' : `$${p.stack}`}</Text>
+                    <Text className='stack' bold>{p.left ? 'Left' : `$${p.stack}`}</Text>
                   </div>
                   <Row className='bet'>
                     {Boolean(buttonIndicator) && <div className='button-indicator'>{buttonIndicator}</div>}
