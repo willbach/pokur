@@ -294,6 +294,15 @@
         %arvo  %b  %rest
         rest.action
     ==
+  ::
+      %kick-table
+    ::  debugging tool for hosts
+    ::  **DOES NOT REFUND PLAYERS**
+    =+  (~(del by tables.state) id.action)
+    :_  state(tables -)
+    :~  (table-closed-card id.action)
+        (table-gossip-card [%closed id.action])
+    ==
   ==
 ::
 ++  handle-game-action

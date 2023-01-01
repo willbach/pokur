@@ -198,6 +198,8 @@
       [%closed-table id=@da]
       [%game-starting id=@da]
       [%turn-timers id=@da wake=@da rest=@da]
+      ::  debugging tool for hosts, remove a table from our lobby
+      [%kick-table id=@da]
   ==
 ::
 ::  historical states
