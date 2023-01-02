@@ -63,7 +63,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     return newOrder
   }, [game])
 
-  console.log('GAME:', game)
+  // console.log('GAME:', game)
 
   const computedPots = useMemo(() =>
     (game?.pots || []).map(

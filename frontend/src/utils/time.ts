@@ -2,10 +2,22 @@ import { ONE_SECOND } from "./constants"
 
 export const getHoonDate = (d: Date) => `~${d.getFullYear()}.${d.getMonth()}.${d.getDate()}..${d.getHours()}.${d.getMinutes()}.${d.getSeconds()}..${d.getMilliseconds().toString(16)}`
 
+export const padNumber = (number: string) => number.length === 1 ? `0${number}` : number
+
 export const hoonToJSDate = (hoonDate: string) => {
   // "2015-03-25T12:00:00Z"
   const [date, time, ms] = hoonDate.slice(1).split('..')
-  const isoDate = `${date.replace(/\./g, '-')}T${time.replace(/\./g, ':')}.${parseInt(ms, 16)}Z`
+  if (!date || !time || !ms) {
+    return new Date()
+  }
+
+  const [year, month, day] = date.split('.')
+
+  if (!day || !month || !year) {
+    return new Date()
+  }
+
+  const isoDate = `${year}-${padNumber(month)}-${padNumber(day)}T${time.replace(/\./g, ':')}.${parseInt(ms, 16)}Z`
   return new Date(isoDate)
 }
 

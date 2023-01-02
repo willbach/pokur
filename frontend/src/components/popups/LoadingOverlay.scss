@@ -11,8 +11,22 @@
   align-items: center;
   z-index: 1000;
 
+  &.secondary {
+    z-index: 2;
+  }
+
+  .close {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    font-size: 18px;
+    font-weight: 200;
+    cursor: pointer;
+    color: white;
+  }
+
   .solid {
-    width: 300px;
+    width: 320px;
     height: 160px;
     background-color: rgb(91, 91, 91);
     padding: 1rem 2rem 2rem;
@@ -21,12 +35,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
 
   .loader-text {
     color: white;
     margin-bottom: 2rem;
-    width: 200px;
+    width: 240px;
     text-align: center;
     line-height: 1.5rem;
   }

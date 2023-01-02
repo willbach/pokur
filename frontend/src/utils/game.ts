@@ -56,9 +56,7 @@ export const playSounds = (game: Game, curGame?: Game) => {
 }
 
 export const showLastAction = (game: Game, set: SetState<PokurStore>, curGame?: Game) => {
-  console.log(1, game.last_action, curGame?.current_turn)
   if (game.last_action && curGame?.current_turn) {
-    console.log(2)
     set({ lastAction: { [curGame.current_turn.replace('~', '')]: capitalize(game.last_action.replace(/~/g, '')) || '' } })
     setTimeout(() => set({ lastAction: {} }), 3 * ONE_SECOND)
   }

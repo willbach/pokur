@@ -13,9 +13,9 @@ import { getGameType, isSelf } from '../utils/game'
 import { ONE_SECOND, POKUR_CHAT } from '../utils/constants'
 import TableBackground from '../components/pokur/TableBackground'
 import { tokenAmount } from '../utils/number'
+import Chat from '../components/pokur/Chat'
 
 import './TableView.scss'
-import Chat from '../components/pokur/Chat'
 
 interface TableViewProps {
   redirectPath: string
@@ -27,6 +27,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
   const nav = useNavigate()
   const location = useLocation()
   const [leaving, setLeaving] = useState(false)
+  const [starting, setStarting] = useState(false)
 
   const leave = useCallback(() => {
     if (table && (!isSelf(table.leader) || window.confirm('Are you sure you want to leave?'))) {
@@ -62,7 +63,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
   }, [table, nav, leave])
 
   const buyIn = table?.tokenized ? `${tokenAmount(table.tokenized?.amount)} ${table.tokenized.symbol}` : 'none'
-  const gameStarting = gameStartingIn !== undefined
+  const gameStarting = gameStartingIn !== undefined || starting
 
   return (
     <Col className='table-view'>
@@ -159,7 +160,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
               <Row style={{ marginTop: 16 }}>
                 {(window as any).ship === table.leader.slice(1) && (
                   <Button disabled={table.players.length < Number(table.min_players) || gameStarting}
-                    variant='dark' style={{ marginRight: 16 }} onClick={() => startGame(table.id)}>
+                    variant='dark' style={{ marginRight: 16 }} onClick={() => {startGame(table.id); setStarting(true)}}>
                     Start Game
                   </Button>
                 )}
@@ -167,7 +168,7 @@ const TableView = ({ redirectPath }: TableViewProps) => {
                   Leave Table
                 </Button>
               </Row>
-              {gameStarting && (
+              {gameStartingIn !== undefined && (
                 <h4 style={{ marginTop: 8 }}>
                   Game starts in {(gameStartingIn || 0) / ONE_SECOND} second{(gameStartingIn || 0) / ONE_SECOND > 1 ? 's' : ''}
                 </h4>

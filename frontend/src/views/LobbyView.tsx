@@ -23,7 +23,7 @@ interface LobbyViewProps {
 
 const LobbyView = ({ redirectPath }: LobbyViewProps) => {
   const { lobby, joinTableId, game,
-    addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet, setJoinTableId } = usePokurStore()
+    addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet, setJoinTableId, setSecondaryLoading } = usePokurStore()
   const { selectedAccount, assets, setInsetView } = useWalletStore()
   const nav = useNavigate()
 
@@ -46,13 +46,15 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       setTable(lobby[joinTableId])
       nav('/table')
       setInsetView()
+      setSecondaryLoading(null)
     } else if (joinTableId && lobby[joinTableId]?.players?.length === Number(lobby[joinTableId]?.max_players)) {
       alert('Another player joined before you, please join a different table.')
       setJoinTableId(undefined)
+      setSecondaryLoading(null)
     } else if (game && game.id === joinTableId) {
       nav('/game')
     }
-  }, [lobby, joinTableId, game, setInsetView, nav, setTable, setJoinTableId])
+  }, [lobby, joinTableId, game, setInsetView, nav, setTable, setJoinTableId, setSecondaryLoading])
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -65,8 +67,9 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       setTable(table)
       nav('/table?new=true')
       setLoading(null)
+      setSecondaryLoading(null)
     }
-  }, [lobby, setInsetView, nav, setLoading, setTable])
+  }, [lobby, setInsetView, nav, setLoading, setTable, setSecondaryLoading])
 
   const submitNewHost = useCallback(async (e) => {
     try {
@@ -153,7 +156,7 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       <Modal show={showZigsModal} hide={() => setShowZigsModal(false)}>
         <Col style={{ alignItems: 'center' }}>
           <h3 style={{ marginBottom: 0 }}>Zigs Requested!</h3>
-          <p>You should receive 1 ZIG in the next few minutes.<br/>
+          <p>You should receive ~3 ZIGs in the next few minutes.<br/>
           If you don't see it in your wallet, try refreshing the page.</p>
           <Button variant='dark' onClick={() => setShowZigsModal(false)}>OK</Button>
         </Col>

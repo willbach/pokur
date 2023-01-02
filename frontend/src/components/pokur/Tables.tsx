@@ -40,16 +40,17 @@ interface TablesProps {
 }
 
 const Tables = ({ tables }: TablesProps) => {
-  const { setJoinTableId, joinTable } = usePokurStore()
+  const { setJoinTableId, joinTable, setSecondaryLoading } = usePokurStore()
   const { assets, selectedAccount, setMostRecentTransaction, setInsetView } = useWalletStore()
   const [selected, setSelected] = useState<Table | undefined>()
 
   const join = useCallback((t: Table) => async () => {
+    setSecondaryLoading('Waiting on transaction confirmation to join table...')
     setMostRecentTransaction(undefined)
     setInsetView('confirm-most-recent')
     setJoinTableId(t.id)
-    joinTable(t.id, t.public)
-  }, [joinTable, setMostRecentTransaction, setInsetView, setJoinTableId])
+    await joinTable(t.id, t.public)
+  }, [joinTable, setMostRecentTransaction, setInsetView, setJoinTableId, setSecondaryLoading])
 
   const hasAsset = useMemo(() => Object.keys(assets).reduce((hasAccount, account) => {
     return hasAccount || Object.values(assets[account]).reduce((acc, asset) => {

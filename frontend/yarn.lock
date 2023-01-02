@@ -1045,6 +1045,13 @@
   dependencies:
     regenerator-runtime "^0.13.10"
 
+"@babel/runtime@^7.16.0":
+  version "7.20.7"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.20.7.tgz#fcb41a5a70550e04a7b708037c7c32f7f356d8fd"
+  integrity sha512-UF0tvkUtxwAgZ5W/KrkHf0Rn0fdnLDU9ScxBrEVNUprE/MzirjK4MJUX1/BVDv00Sv8cljtukVK1aky++X1SjQ==
+  dependencies:
+    regenerator-runtime "^0.13.11"
+
 "@babel/template@^7.18.10", "@babel/template@^7.3.3":
   version "7.18.10"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.18.10.tgz#6f9134835970d1dbf0835c0d100c9f38de0c5e71"
@@ -3054,29 +3061,40 @@
     "@typescript-eslint/types" "5.44.0"
     eslint-visitor-keys "^3.3.0"
 
-"@uqbar/wallet-ui@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@uqbar/wallet-ui/-/wallet-ui-0.1.5.tgz#7f5877af8dff0ff9b312bf1e85929bdb7fdd37c2"
-  integrity sha512-JSbf1d6S0feK7vokfKQhRQu8Q5DSwpl/JbGUWzY9GMu0sKF3n1yHgqqs6BcAEBGtV0CQzkwKTORIUW7E1r1New==
+"@uqbar/wallet-ui@../../../../../uqbar/wallet-ui":
+  version "0.1.7"
   dependencies:
     "@ledgerhq/hw-app-eth" "^6.27.1"
     "@ledgerhq/hw-transport-webusb" "^6.27.1"
     "@trezor/connect" "^9.0.0"
     "@trezor/connect-web" "^9.0.0"
     "@types/node" "^16.7.13"
-    "@urbit/http-api" "^2.1.0"
+    "@urbit/api" "^2.1.1"
+    "@urbit/http-api" "^2.1.1"
     buffer "^6.0.3"
     classnames "^2.3.2"
     core-js "^3.22.2"
     ethers "^5.6.4"
     ipfs-core "^0.14.3"
+    lodash "^4.17.21"
     moment "^2.29.4"
     react-icons "^4.3.1"
     typescript "^4.9.3"
     util "^0.12.4"
     zustand "^3.7.1"
 
-"@urbit/http-api@^2.1.0", "@urbit/http-api@^2.1.1":
+"@urbit/api@^2.1.1":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@urbit/api/-/api-2.2.0.tgz#fa8d74d0fa2354a8d48e1c91e1f0be52956d4e02"
+  integrity sha512-W8kP9OT6yOK62n+4yCPO3i9QqU5xriLvZQ9WYW4SAV7ktbSrGuf2kmYbnoqfA/NybIs9Q/MbFkPewrz4XJ96Ag==
+  dependencies:
+    "@babel/runtime" "^7.16.0"
+    big-integer "^1.6.48"
+    core-js "^3.19.1"
+    immer "^9.0.1"
+    urbit-ob "^5.0.1"
+
+"@urbit/http-api@^2.1.1":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@urbit/http-api/-/http-api-2.3.0.tgz#3187c30e4d223da4245ad6282d5a6ca0da510bf6"
   integrity sha512-3cKSdbBVcpoHqZLvoV23UK+nkqK0nFEBFKbaEwfBQE/NpkWf/7iP+mT7ldXTk7Uv/5bzDEBPqPB2fJNwdMQwcA==
@@ -6544,6 +6562,11 @@ ignore@^5.2.0:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.2.1.tgz#c2b1f76cb999ede1502f3a226a9310fdfe88d46c"
   integrity sha512-d2qQLzTJ9WxQftPAuEQpSPmKqzxePjzVbpAVv62AQ64NTL+wR4JkrVqR/LqFsFEUsHDAiId52mJteHDFuDkElA==
 
+immer@^9.0.1:
+  version "9.0.17"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-9.0.17.tgz#7cfe8fbb8b461096444e9da7a5ec4a67c6c4adf4"
+  integrity sha512-+hBruaLSQvkPfxRiTLK/mi4vLH+/VQS6z2KJahdoxlleFOI8ARqzOF17uy12eFDlqWmPoygwc5evgwcp+dlHhg==
+
 immer@^9.0.7:
   version "9.0.16"
   resolved "https://registry.yarnpkg.com/immer/-/immer-9.0.16.tgz#8e7caab80118c2b54b37ad43e05758cdefad0198"
@@ -8800,10 +8823,20 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
+lodash.chunk@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/lodash.chunk/-/lodash.chunk-4.2.0.tgz#66e5ce1f76ed27b4303d8c6512e8d1216e8106bc"
+  integrity sha512-ZzydJKfUHJwHa+hF5X66zLFCBrWn5GeF28OHEr4WVWtNDXlQ/IjWKPBiikqKo2ne0+v6JgCgJ0GzJp8k8bHC7w==
+
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
+
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+  integrity sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==
 
 lodash.memoize@^4.1.2:
   version "4.1.2"
@@ -10745,7 +10778,7 @@ regenerate@^1.4.2:
   resolved "https://registry.yarnpkg.com/regenerate/-/regenerate-1.4.2.tgz#b9346d8827e8f5a32f7ba29637d398b69014848a"
   integrity sha512-zrceR/XhGYU/d/opr2EKO7aRHUeiBI8qjtfHqADTwZd6Szfy16la6kqD0MIUs5z5hx6AaKa+PixpPrR289+I0A==
 
-regenerator-runtime@^0.13.10, regenerator-runtime@^0.13.9:
+regenerator-runtime@^0.13.10, regenerator-runtime@^0.13.11, regenerator-runtime@^0.13.9:
   version "0.13.11"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.13.11.tgz#f6dca3e7ceec20590d07ada785636a90cdca17f9"
   integrity sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==
@@ -12143,6 +12176,15 @@ update-browserslist-db@^1.0.9:
   dependencies:
     escalade "^3.1.1"
     picocolors "^1.0.0"
+
+urbit-ob@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/urbit-ob/-/urbit-ob-5.0.1.tgz#4338580e883bcf80af91777890572f8e5001ceda"
+  integrity sha512-qGNAwu87XNkW3g8ah4fUwmh2EKXtsdhEbyEiE5qX4Op17rhLH3HSkvu8g9z+MhqX51Uz9sf8ktvqJj/IRwETIQ==
+  dependencies:
+    bn.js "^4.11.8"
+    lodash.chunk "^4.2.0"
+    lodash.isequal "^4.5.0"
 
 uri-js@^4.2.2:
   version "4.4.1"
