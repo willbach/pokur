@@ -556,7 +556,11 @@
       (~(del in spectators.game.u.host-game) src.bowl)
     ::  check if player left on their turn
     ?.  =(src.bowl whose-turn.game.u.host-game)
-      ::  if not, simply remove them from game
+      ::  player left out of turn, check for game over
+      ?:  game-is-over.game.u.host-game
+        ::  leaving resulted in game ending, handle
+        (end-game-pay-winners u.host-game)
+      ::  game not over, just send update showing they left
       :-  (send-game-updates u.host-game ~)
       state(games (~(put by games.state) id.action u.host-game))
     (resolve-player-turn u.host-game)

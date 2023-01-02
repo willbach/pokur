@@ -232,7 +232,97 @@
     !>(game.expected-state)
   !>(game.new-state)
 ::
-++  test-v-check  ^-  tang
+::  version where ~tes leaves on their turn, triggering ~dev winning hand
+::  and new hand starting with only ~bus and ~dev
+::
+++  test-vz-tes-leave
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+  =/  new-state
+    (~(remove-player guts last-state) ~tes)
+  =/  next-hand-init
+    ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
+  =/  expected-state
+    %=    last-state
+        whose-turn.game  ~tes
+        hands-played.game  1
+        update-message.game  '~tes left the game. ~dev wins pot of 4. '
+        pots.game  ~[[amount=0 in=~[~bus ~dev]]]
+    ::
+        players.game
+      :~  [~tes 998 0 %.n %.n %.y]
+          [~bus 1.000 0 %.n %.n %.n]
+          [~dev 1.002 0 %.n %.n %.n]
+      ==
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+::  version where ~bus leaves out of turn, while folded, leading to hand
+::  playing out normally with ~tes and ~dev
+::
+++  test-vy-bus-leave
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+  =/  new-state
+    (~(remove-player guts last-state) ~bus)
+  =/  expected-state
+    %=    last-state
+        whose-turn.game  ~tes
+        update-message.game  '~bus left the game. '
+        players.game
+      :~  [~tes 998 0 %.n %.n %.n]
+          [~bus 1.000 0 %.y %.y %.y]
+          [~dev 998 0 %.y %.n %.n]
+      ==
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+::  version where ~dev leaves out of turn, triggering ~tes winning hand
+::  and new hand starting with only ~tes and ~bus
+::
+++  test-vx-dev-leave
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+  =/  new-state
+    (~(remove-player guts last-state) ~dev)
+  =/  next-hand-init
+    ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
+  =/  expected-state
+    %=    last-state
+        whose-turn.game  ~tes
+        hands-played.game  1
+        update-message.game  '~dev left the game. ~tes wins pot of 4. '
+        pots.game  ~[[amount=0 in=~[~tes ~bus]]]
+    ::
+        players.game
+      :~  [~tes 1.002 0 %.n %.n %.n]
+          [~bus 1.000 0 %.n %.n %.n]
+          [~dev 998 0 %.n %.n %.y]
+      ==
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+::  version where ~tes checks and hand plays out
+::
+++  test-vw-check  ^-  tang
   =/  state  ~(initialize-hand guts game-state-1)
   =/  last-state
     =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))

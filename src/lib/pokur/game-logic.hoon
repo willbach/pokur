@@ -23,15 +23,15 @@
         last-bet.game.state        0
         hand-is-over.state         %.n
     ==
-    =.  players.game.state
-      %+  skip  players.game.state
-      |=([ship player-info] left)
     =.  dealer.game.state
       (next-active-player:gang dealer.game.state)
     =.  state  deal-hands
     =.  state  assign-blinds
     =.  whose-turn.game.state
       (next-active-player:gang big-blind.game.state)
+    =.  players.game.state
+      %+  skip  players.game.state
+      |=([ship player-info] left)
     state
   ::
   ::  other entry point for host
@@ -236,7 +236,7 @@
       |=  [a=[ship player-info] b=[ship player-info]]
       (lth committed.a committed.b)
     =/  this-pot  (rear pots.game.state)
-    =|  new-pots=(list _this-pot)
+    =/  new-pot=?  %.n
     |-
     ?:  =(~ sorted-commitments)
       ::  all pots built, finished
@@ -248,12 +248,10 @@
         %+  turn  players.game.state
         |=  [=ship i=player-info]
         [ship i(committed 0, acted %.n)]
-      ::
-          pots.game
-        (weld (snip pots.game.state) new-pots)
       ==
     ::  take lowest commitment and add from all to current pot
     =/  lowest=[ship player-info]  (head sorted-commitments)
+    ::  grab the current active pot from list to modify first
     =/  [less=players added-chips=@ud]
       %^  spin  sorted-commitments  -.this-pot
       |=  [[p=ship i=player-info] pot=@ud]
@@ -265,15 +263,24 @@
       ::  has 0 committed chips
       %+  skip  less
       |=([ship player-info] =(0 committed))
-        new-pots
-      ::  only create a side pot if lowest-committed is NOT folded:
-      ::  if they are folded, there's no need for a side pot.
-      ?:  folded.lowest  new-pots
-      (snoc new-pots this-pot(amount added-chips))
-        this-pot
-      ?:  folded.lowest
+    ::
+        pots.game.state
+      ::  if this is a new side pot, stack on top
+      ::  if not, replace current rear pot with this one
+      ::  ?:  |(folded.lowest =(0 committed.lowest))
+      ?:  new-pot  (snoc pots.game.state this-pot(amount added-chips))
+        %+  snoc
+          (snip pots.game.state)
         this-pot(amount added-chips)
-      [0 (turn (tail less) head)]
+      ::  (snoc pots.game.state this-pot(amount added-chips))
+    ::
+        new-pot
+      ?:  |(folded.lowest =(0 committed.lowest))  %.n  %.y
+    ::
+        this-pot
+      ?:  |(folded.lowest =(0 committed.lowest))
+        this-pot(amount added-chips)
+      [0 (turn (tail sorted-commitments) head)]
     ==
   ::
   ::  takes blinds from the two active players left of dealer
@@ -345,14 +352,14 @@
         %.n
       ==
     ::  remove players who have left the game since last hand
-    =.  players.game.state
-      %+  skip  players.game.state
-      |=  [p=ship player-info]
-      left
+    ::  =.  players.game.state
+    ::    %+  skip  players.game.state
+    ::    |=  [p=ship player-info]
+    ::    left
     =/  active-with-chips
       %+  skip  players.game.state
       |=  [p=ship player-info]
-      =(0 stack)
+      |(=(0 stack) left)
     %=  state
       hand-is-over       %.y
       deck               generate-deck  ::  need a fresh 52-card one
@@ -398,6 +405,7 @@
     ::
     =*  pot  i.pots.game.state
     =/  winners-in-pot=(list [ship [@ud pokur-deck]])
+      ?.  showdown  winners  ::  will be 1 player
       %+  skip  winners
       |=  [p=ship [@ud pokur-deck]]
       =(~ (find [p]~ in.pot))
@@ -458,11 +466,12 @@
       [p (add stack split) 0 %.n %.n left]
     ==
   ::
+  ::  set player to folded+acted+left
+  ::  if it was their turn, go to next player's turn
+  ::
   ++  remove-player
     |=  who=ship
     ^-  host-game-state
-    ::  set player to folded+acted+left
-    ::  if it was their turn, go to next player's turn
     =.  players.game.state
       %+  turn  players.game.state
       |=  [p=ship i=player-info]
@@ -506,6 +515,7 @@
             ?&(!folded !left !=(0 stack))
         ==
       ?~  pos=(find [current]~ (turn unfolded-players head))
+        ::  this will never happen
         current
       %-  head
       %+  snag

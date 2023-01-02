@@ -58,7 +58,7 @@
   ^-  pokur-deck
   (snoc state-2-turn [%ace %clubs])
 ::
-::  version where zod calls and loses
+::  version where ~zod calls and loses
 ::
 ++  test-z-call  ^-  tang
   =/  state  game-state-2
@@ -88,7 +88,7 @@
     !>(game.expected-state)
   !>(game.new-state)
 ::
-::  version where zod calls and wins, ending game
+::  version where ~zod calls and wins, ending game
 ::
 ++  test-y-call  ^-  tang
   =/  state  game-state-2
@@ -116,6 +116,34 @@
       ==
         pots.game
       ~[[0 ~[~zod]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+::  version where ~zod leaves, triggering ~bus win
+::
+++  test-x-leave  ^-  tang
+  =/  state  game-state-2
+  =/  new-state
+    (~(remove-player guts state) ~zod)
+  =/  expected-state
+    %=    state
+        game-is-over.game  %.y
+        current-bet.game  0
+        last-bet.game  0
+        whose-turn.game  ~zod
+        board.game  ~
+        hands-played.game  5
+        update-message.game
+      '~zod left the game. ~bus wins pot of 320. '
+    ::
+        players.game
+      :~  [~zod 2.680 0 %.n %.n %.y]
+          [~bus 320 0 %.n %.n %.n]
+      ==
+        pots.game
+      ~[[0 ~[~bus]]]
     ==
   %+  expect-eq
     !>(game.expected-state)
