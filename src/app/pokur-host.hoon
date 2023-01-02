@@ -282,6 +282,7 @@
     `state(tables (~(del by tables.state) id.u.table))
   ::
       %turn-timers
+    ?>  =(src.bowl our.bowl)
     :_  state
     ^-  (list card)
     :-  :*  %pass  /timer/(scot %da id.action)
