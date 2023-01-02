@@ -3,9 +3,6 @@
     *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
-+$  versioned-state
-  $%  state-0
-  ==
 +$  state-0
   $:  %0
       known-hosts=(map ship host-info)
@@ -46,13 +43,13 @@
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
-  ::  one-update-only manual reset of state type
-  ::  :_  this(state [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~])
-  ::  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]~
-  =/  old-state  !<(versioned-state old)
-  :_  ?-  -.old-state
-        %0  this(state old-state)
-      ==
+  =/  old-state
+    ::  if the old versioned state does not match what we expect, just
+    ::  bunt for a fresh new state.
+    ?~  new=((soft state-0) q.old)
+      [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~]
+    u.new
+  :_  this(state old-state)
   :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
       :*  %pass  /lobby-updates
           %agent  [fixed-lobby-source %pokur-host]
@@ -223,7 +220,10 @@
         ::  check if it's our game, if so, sub to path and notify FE
         ?~  table=(~(get by lobby.state) game-id.upd)
           `this
-        =.  lobby.state  (~(del by lobby.state) game-id.upd)
+        ::  remove table from lobby if tournament, leave it there otherwise
+        =?    lobby.state
+            ?=(%sng -.game-type.u.table)
+          (~(del by lobby.state) game-id.upd)
         ?~  our-table.state
           [lobby-update-card^~ this]
         ?.  =(game-id.upd u.our-table.state)

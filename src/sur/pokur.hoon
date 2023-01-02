@@ -82,6 +82,7 @@
 ::
 +$  table
   $:  id=@da
+      is-active=?
       =host-info
       =tokenized
       leader=ship  ::  created lobby, decides when to start

@@ -2,13 +2,12 @@
 /+  default-agent, dbug, *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
-+$  versioned-state
-  $%  state-0
-  ==
 +$  state-0
-  $:  %1
+  $:  %0
       our-info=host-info
       ::  host holds its own tables as well as gossipped ones from main host
+      ::  tables can either be tournaments that have *not* started, or cash
+      ::  tables that have or have not started (shown by is-active).
       tables=(map @da table)
       ::  host holds all active games they are running
       games=(map @da host-game-state)
@@ -26,9 +25,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  ::  ID of escrow contract
-  =+  0xabcd.abcd
-  :_  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  :_  this(state [%0 [our.bowl 0x0 [0xabcd.abcd 0x0]] ~ ~ ~])
   :~  approve-origin-poke
   ::  always be watching for new batch, to handle any pending tables
       =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
@@ -38,13 +35,15 @@
   ^-  vase
   !>(state)
 ++  on-load
-  |=  =old=vase
+  |=  old=vase
   ^-  (quip card _this)
-  ::  one-update-only manual reset of state type
-  ::  =+  0xabcd.abcd
-  ::  :-  approve-origin-poke^~
-  ::  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
-  `this(state !<(versioned-state old-vase))
+  =/  old-state
+    ::  if the old versioned state does not match what we expect, just
+    ::  bunt for a fresh new state.
+    ?~  new=((soft state-0) q.old)
+      [%0 [our.bowl 0x0 [0xabcd.abcd 0x0]] ~ ~ ~]
+    u.new
+  `this(state old-state)
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -262,12 +261,15 @@
     state(tables (~(del by tables.state) id.u.table))
   ::
       %game-starting
-    ::  remove table by other host from our lobby
+    ::  remove table from lobby if tournament, leave it there otherwise
     ?:  =(src.bowl our.bowl)  `state
     ?~  table=(~(get by tables.state) id.action)
       `state
     ?>  =(src.bowl ship.host-info.u.table)
-    `state(tables (~(del by tables.state) id.u.table))
+    =?    tables.state
+        ?=(%sng -.game-type.u.table)
+      (~(del by tables.state) id.u.table)
+    `state
   ::
       %turn-timers
     :_  state
@@ -376,6 +378,7 @@
     ?>  (lte max-players.action 10)
     =/  =table
       :*  id.action
+          is-active=%.n
           ::  insert our host info
           our-info.state
           tokenized.action
@@ -520,7 +523,11 @@
           placements=~
           game
       ==
-    =.  tables.state  (~(del by tables.state) id.action)
+    ::  remove table from lobby if tournament, leave it there otherwise
+    =?    tables.state
+        ?=(%sng -.game-type.u.table)
+      (~(del by tables.state) id.action)
+    ::
     :_  state(games (~(put by games.state) id.action host-game-state))
     %+  welp
       :~  (game-starting-card id.u.table)
