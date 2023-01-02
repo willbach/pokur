@@ -207,7 +207,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                       </>
                     )}
                   </Row>
-                  <div className={cn('player-info', curTurn && 'current-turn', folded && 'folded')}>
+                  <div className={cn('player-info', curTurn && !gameEndMessage && 'current-turn', folded && 'folded')}>
                     <Player hideSigil ship={p.ship} lastAction={lastAction} />
                     <Text className='stack' bold>{p.left ? 'Left' : `$${p.stack}`}</Text>
                   </div>
