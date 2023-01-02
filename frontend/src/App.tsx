@@ -11,7 +11,7 @@ import GameView from './views/GameView';
 import './App.scss'
 
 function App() {
-  const { init, setOurAddress, getHosts, loadingText } = useExplorerStore()
+  const { init, setOurAddress, getHosts, loadingText, secondaryLoadingText, setSecondaryLoading } = useExplorerStore()
   const { initWallet, selectedAccount } = useWalletStore()
   const [redirectPath, setRedirectPath] = useState('')
 
@@ -46,6 +46,7 @@ function App() {
         />
       </Routes>
       <LoadingOverlay loading={Boolean(loadingText)} text={loadingText || ''} />
+      <LoadingOverlay loading={Boolean(secondaryLoadingText)} text={secondaryLoadingText || ''} dismiss={() => setSecondaryLoading(null)} />
     </BrowserRouter>
   );
 }
