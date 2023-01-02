@@ -636,7 +636,6 @@
     ?.  game-is-over.game.host-game
       ?.  hand-is-over.host-game
         (send-game-updates host-game ~)^state
-      ~&  >>>  "host: the hand is over"
       ::  a hand has ended, send last board in next updates
       ::  and initialized new hand
       =/  last-board=pokur-deck  board.game.host-game
@@ -644,7 +643,6 @@
       :-  (send-game-updates host-game last-board)
       =-  state(games (~(put by games.state) id.game.host-game -))
       host-game(revealed-hands.game ~)
-    ~&  >>>  "host: the game is over"
     ::  host handles paying winner(s) here
     (end-game-pay-winners host-game)
   :_  state

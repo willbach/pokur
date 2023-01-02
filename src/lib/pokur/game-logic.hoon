@@ -355,6 +355,7 @@
       =(0 stack)
     %=  state
       hand-is-over       %.y
+      deck               generate-deck  ::  need a fresh 52-card one
       hands-played.game  +(hands-played.game.state)
       pots.game  [0 (turn active-with-chips head)]~
     ::

@@ -147,9 +147,9 @@
     =/  upd  !<(host-update q.cage.sign)
     ?+    -.upd  (on-agent:def wire sign)
         %game
-      ~&  "new game state:"
-      ~&  >>  "last board: {<last-board.upd>}"
-      ~&  >  game.upd
+      ::  ~&  "new game state:"
+      ::  ~&  >>  "last board: {<last-board.upd>}"
+      ::  ~&  >  game.upd
       =/  my-hand-rank=@t
         %-  hierarchy-to-rank
         =/  full-hand  (weld my-hand.game.upd board.game.upd)
@@ -165,7 +165,7 @@
       [%pokur-update !>(`update`[%game game.upd my-hand-rank last-board.upd])]
     ::
         %game-over
-      ~&  >>  upd
+      ::  ~&  >>  upd
       ::  player must %leave-game to clear state and messages
       :_  this
       :~  :^  %give  %fact  ~[/game-updates]
@@ -258,7 +258,6 @@
         ?>  ?=(%new-table -.u.pending-poke.state)
         ?~  tokenized.u.pending-poke.state  !!
         =/  height=@ud  !<(@ud q.cage.sign)
-        ~&  >  "eth-block-height: {<height>}"
         ?~  host-info=(~(get by known-hosts.state) host.u.pending-poke.state)
           !!
         ?~  our-address.state  !!
@@ -328,7 +327,6 @@
   ^-  (quip card _this)
   ?+    wire  (on-arvo:def wire sign-arvo)
       [%link-handler ~]
-    ~&  >>  sign-arvo
     `this
   ==
 
