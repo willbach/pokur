@@ -99,7 +99,7 @@
     ?~  game.state  `this
     :_  this  :_  ~
     :^  %give  %fact  ~[/game-updates]
-    [%pokur-update !>(`update`[%game u.game.state '-'])]
+    [%pokur-update !>(`update`[%game u.game.state '-' ~])]
   ::
       [%messages ~]
     ::  don't send all messages, rather scry for those and
@@ -147,8 +147,9 @@
     =/  upd  !<(host-update q.cage.sign)
     ?+    -.upd  (on-agent:def wire sign)
         %game
-      ~&  >  "new game state:"
-      ~&  >  game.upd
+      ::  ~&  "new game state:"
+      ::  ~&  >>  "last board: {<last-board.upd>}"
+      ::  ~&  >  game.upd
       =/  my-hand-rank=@t
         %-  hierarchy-to-rank
         =/  full-hand  (weld my-hand.game.upd board.game.upd)
@@ -159,34 +160,12 @@
         ==
       :_  this(game.state `game.upd)
       ^-  (list card)
-      :-  :^  %give  %fact  ~[/game-updates]
-          [%pokur-update !>(`update`[%game game.upd my-hand-rank])]
-      ::  if we are all-in, or if we are last remaining player in hand
-      ::  who is not, and no action to us, auto-check
-      ?.  ?&  =(our.bowl whose-turn.game.upd)
-              ?|  ::  we're all-in
-                  =-  =(0 stack:(need -))
-                  (get-player-info our.bowl players.game.upd)
-                  ::  everyone else is
-                  =-  (lte (lent -) 1)
-                  %+  murn  players.game.upd
-                  |=  [=ship player-info]
-                  ?.  &(!folded (gth stack 0))  ~
-                  `ship
-          ==  ==
-        ::  neither, let player choose action
-        ~
-      ::  wait 2 seconds, then auto-check
       :_  ~
-      :*  %pass  /timer/autocheck
-          %arvo  %b  %wait
-          (add now.bowl ~s2)
-      ==
+      :^  %give  %fact  ~[/game-updates]
+      [%pokur-update !>(`update`[%game game.upd my-hand-rank last-board.upd])]
     ::
         %game-over
-      ~&  >  "new game state:"
-      ~&  >  game.upd
-      ~&  >>  "host says: game is over."
+      ::  ~&  >>  upd
       ::  player must %leave-game to clear state and messages
       :_  this
       :~  :^  %give  %fact  ~[/game-updates]
@@ -279,7 +258,6 @@
         ?>  ?=(%new-table -.u.pending-poke.state)
         ?~  tokenized.u.pending-poke.state  !!
         =/  height=@ud  !<(@ud q.cage.sign)
-        ~&  >  "eth-block-height: {<height>}"
         ?~  host-info=(~(get by known-hosts.state) host.u.pending-poke.state)
           !!
         ?~  our-address.state  !!
@@ -348,18 +326,7 @@
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
   ?+    wire  (on-arvo:def wire sign-arvo)
-      [%timer %autocheck ~]
-    ?~  game.state  !!
-    ?~  game-host.state  !!
-    :_  this  :_  ~
-    :*  %pass  /poke-wire
-        %agent  [u.game-host.state %pokur-host]
-        %poke  %pokur-game-action
-        !>(`game-action`[%check id.u.game.state ~])
-    ==
-  ::
       [%link-handler ~]
-    ~&  >>  sign-arvo
     `this
   ==
 
@@ -744,8 +711,6 @@
 ::
 ++  lobby-update-card
   ^-  card
-  ~&  >>  "tables available:"
-  ~&  >>  lobby.state
   :^  %give  %fact  ~[/lobby-updates]
   [%pokur-update !>(`update`[%lobby lobby.state])]
 ::

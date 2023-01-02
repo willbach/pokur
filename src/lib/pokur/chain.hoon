@@ -8,7 +8,6 @@
   ++  bond-state
     |=  bond-id=id:smart
     ^-  (unit bond:escrow)
-    ~&  >>  "%pokur-host: fetching bond {<bond-id>}"
     ::  scry the indexer
     =/  =update:indexer
       .^  update:indexer  %gx

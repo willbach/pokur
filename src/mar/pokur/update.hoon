@@ -15,6 +15,7 @@
       %-  pairs
       :~  ['game' (enjs-game game.upd)]
           ['hand_rank' s+my-hand-rank.upd]
+          ['last_board' (enjs-cards last-board.upd)]
       ==
     ::
         %table-closed
@@ -26,6 +27,7 @@
         %game-over
       %-  pairs
       :~  ['game' (enjs-game game.upd)]
+          ['last_board' (enjs-cards last-board.upd)]
           ['tokenized' ?~(tokenized.upd ~ (enjs-tokenized u.tokenized.upd))]
           :+  'placements'  %a
           %+  turn  placements.upd
