@@ -466,11 +466,8 @@
       [p (add stack split) 0 %.n %.n left]
     ==
   ::
-  ::  set player to folded+acted+left
-  ::  if it was their turn, go to next player's turn
-  ::
-  ::  if the game type is %cash, players can join at any time.
-  ::  players enter as folded, and will be set to active at the
+  ::  if the host allows, players can join at any time.
+  ::  players enter as acted+folded, and will be set to active at the
   ::  beginning of next hand. new players will be seated behind
   ::  current dealer.
   ::
@@ -479,13 +476,17 @@
     ^-  host-game-state
     %=    state
         players.game
-      =+  pos=(need (find ~[dealer.game.state] (turn players.game.state head)))
-      %^  into  players.game.state  pos
-      [who `player-info`[starting-stack 0 %.n %.y %.n]]
+      =+  pos=(find ~[dealer.game.state] (turn players.game.state head))
+      %^  into  players.game.state
+        ?~(pos 0 u.pos)
+      [who `player-info`[starting-stack 0 %.y %.y %.n]]
     ::
         update-message.game
-      '{<who>} joined the game. '
+      (crip "{<who>} joined the game. ")
     ==
+  ::
+  ::  set player to folded+acted+left
+  ::  if it was their turn, go to next player's turn
   ::
   ++  remove-player
     |=  who=ship

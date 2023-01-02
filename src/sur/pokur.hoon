@@ -6,13 +6,17 @@
 +$  host-info
   [=ship address=@ux contract=[id=@ux town=@ux]]
 ::
++$  tokenized
+  (unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+::
 +$  game-type
   $%  [%cash cash-spec]
       [%sng sng-spec]
   ==
 +$  cash-spec
-  $:  min-buy-in=@ud  ::  in chips
-      max-buy-in=@ud  ::  in chips
+  $:  min-buy-in=@ud  ::  all values in chips, other than tokens.equivalence
+      max-buy-in=@ud
+      buy-ins=(map ship @ud)
       equivalence=[tokens=@ud chips=@ud]  ::  ?>  =(0 q:(dvr tokens chips))
       small-blind=@ud
       big-blind=@ud
@@ -41,7 +45,7 @@
       deck=pokur-deck
       hand-is-over=?
       turn-timer=@da
-      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+      =tokenized
       ::  keep an ordered list of player stacks
       ::  1st is winner, 2nd is second, etc
       placements=(list ship)
@@ -79,7 +83,7 @@
 +$  table
   $:  id=@da
       =host-info
-      tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+      =tokenized
       leader=ship  ::  created lobby, decides when to start
       players=(set ship)
       min-players=@ud
@@ -106,7 +110,7 @@
           =game
           last-board=pokur-deck
           placements=(list [ship @ud])
-          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+          =tokenized
       ==
   ==
 +$  host-update  ::  from host to player app
@@ -119,7 +123,7 @@
           =game
           last-board=pokur-deck
           placements=(list [ship @ud])
-          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+          =tokenized
       ==
   ==
 ::
@@ -129,7 +133,7 @@
   $%  $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship
-          tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
+          =tokenized
           min-players=@ud
           max-players=@ud
           =game-type
@@ -140,7 +144,7 @@
       [%join-table id=@da buy-in=@ud public=?]  ::  buy-in is in tokens
       [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
-      [%join-game id=@da buy-in=@ud public=?]  ::  only for cash games
+      [%join-game id=@da buy-in=@ud public=?]  ::  enter an active game
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  only for leader of private tables
       ::  choose which wallet address we wish to use to pay escrow
@@ -153,8 +157,10 @@
   ==
 ::
 +$  txn-player-action
+  ::  these player actions trigger on-chain escrow transactions
   $%  [%new-table-txn batch-id=@ux =player-action]
       [%join-table-txn batch-id=@ux =player-action]
+      [%join-game-txn batch-id=@ux =player-action]
   ==
 ::
 +$  message-action

@@ -483,6 +483,10 @@
     :_  state(messages ~)
     (poke-pass-through ship.host-info.table action)^~
   ::
+      %join-game
+    ::  join an ongoing game -- generally only allowed by hosts in cash games
+    !!
+  ::
       %leave-game
     ?~  game.state
       ~|("%pokur: error: can't leave game, not in one" !!)
@@ -700,12 +704,8 @@
         http-response-header+!>(response-header)
     ::
         [%give %kick [/http-response/[p.load]]~ ~]
-    ::  prompt ourselves to join game
-        :*  %pass   /self-poke
-            %agent  [our.bowl %pokur]
-            %poke   %pokur-player-action
-            !>(`player-action`[%join-table table-id public])
-        ==
+    ::  don't join right away, but select somehow on FE
+    ::  if table is private, sub to its path on host??
     ==
   ==
 ::

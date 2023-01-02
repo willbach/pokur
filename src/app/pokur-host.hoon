@@ -28,7 +28,7 @@
   ^-  (quip card _this)
   ::  ID of escrow contract
   =+  0xabcd.abcd
-  :_  this(state [%0 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
+  :_  this(state [%1 [our.bowl 0x0 [- 0x0]] ~ ~ ~])
   :~  approve-origin-poke
   ::  always be watching for new batch, to handle any pending tables
       =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
@@ -356,6 +356,9 @@
       :_  state
       ~[[%give %poke-ack `~[leaf+"error: request sent to host was rejected"]]]
     (handle-player-action player-action.action tokenized=%.y)
+  ::
+      %join-game-txn
+    !!
   ==
 ::
 ++  handle-player-action
@@ -477,9 +480,17 @@
           game-type.u.table
           turn-time-limit.u.table
           turn-start=(add now.bowl ~s5)
-          %+  turn  player-order
-          |=  =ship
-          [ship starting-stack.game-type.u.table 0 %.n %.n %.n]
+          ?-    -.game-type.u.table
+              %sng
+            %+  turn  player-order
+            |=  =ship
+            [ship starting-stack.game-type.u.table 0 %.n %.n %.n]
+          ::
+              %cash
+            %+  turn  ~(tap by buy-ins.game-type.u.table)
+            |=  [=ship buy-in=@ud]
+            [ship buy-in 0 %.n %.n %.n]
+          ==
           pots=~[[0 player-order]]
           current-bet=0
           last-bet=0
@@ -526,6 +537,9 @@
             %arvo  %b  %wait
             (add now.bowl round-duration.game-type.u.table)
     ==  ==
+  ::
+      %join-game
+    !!
   ::
       %leave-game
     ::  player leaves game
