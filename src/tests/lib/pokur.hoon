@@ -232,13 +232,12 @@
         hands-played.game  11
         current-bet.game  0
         last-bet.game  0
-        board.game  ~
+        board.game  ~[[%2 %clubs] [%2 %diamonds] [%3 %clubs] [%7 %spades] [%queen %hearts]]
         last-action.game  `%check
         update-message.game
       '~tes wins pot of 300 with hand Full House.  ~bus wins pot of 200 with hand Two Pair.  '
         revealed-hands.game
       ~[[~bus ~[[%king %spades] [%king %clubs]]] [~tes ~[[%2 %spades] [%3 %spades]]]]
-        board.game  ~
     ::
         players.game
       :~  [~tes 300 0 %.n %.n %.n]
@@ -317,25 +316,22 @@
         current-bet.game  0
         last-bet.game  0
         last-action.game  `%raise
-        update-message.game  ''
+        hands-played.game  11
+        update-message.game  '~dev, ~bus, ~tes, split pot of 300 with hand Flush.  ~dev, ~bus, split pot of 200 with hand Flush.  ~dev wins pot of 200 with hand Flush.  '
         board.game
-      :~  [%king %diamonds]
-          [%queen %diamonds]
-          [%jack %diamonds]
-      ==
+      ~[[%king %diamonds] [%queen %diamonds] [%jack %diamonds] [%9 %diamonds] [%7 %diamonds]]
         revealed-hands.game
       :~  [~dev ~[[%king %spades] [%jack %spades]]]
           [~tes ~[[%2 %spades] [%3 %spades]]]
           [~bus ~[[%5 %spades] [%ace %spades]]]
       ==
         players.game
-      :~  [~tes 0 0 %.n %.n %.n]
-          [~bus 0 0 %.n %.n %.n]
-          [~dev 1.600 0 %.n %.n %.n]
+      :~  [~tes 100 0 %.n %.n %.n]
+          [~bus 200 0 %.n %.n %.n]
+          [~dev 2.000 0 %.n %.n %.n]
       ==
-    ::  RELEVANT
         pots.game
-      ~[[300 ~[~tes ~bus ~dev]] [200 ~[~bus ~dev]] [200 ~[~dev]]]
+      ~[[0 ~[~tes ~bus ~dev]]]
     ==
   %+  expect-eq
     !>(game.expected-state)
@@ -345,8 +341,7 @@
 ::
 ++  test-winner-1  ^-  tang
   ::  this should have ~bus and ~dev both win with straight on board
-  =/  state  *host-game-state
-  =.  board.game.state
+  =/  board
     :~  [%ace %clubs]
         [%2 %clubs]
         [%3 %hearts]
@@ -362,12 +357,11 @@
     :~  [~bus 4 ~[[%5 %spades] [%ace %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts]]]
         [~dev 4 ~[[%ace %clubs] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
     ==
-  !>((~(determine-winner guts state) hands))
+  !>((determine-winner board hands))
 ::
 ++  test-winner-2  ^-  tang
   ::  this should have ~bus win
-  =/  state  *host-game-state
-  =.  board.game.state
+  =/  board
     :~  [%ace %clubs]
         [%2 %clubs]
         [%3 %hearts]
@@ -382,7 +376,7 @@
     !>
     :~  [~bus 5 ~[[%6 %spades] [%2 %clubs] [%3 %hearts] [%4 %hearts] [%5 %hearts]]]
     ==
-  !>((~(determine-winner guts state) hands))
+  !>((determine-winner board hands))
 ::
 ::  tie breaking tests
 ::

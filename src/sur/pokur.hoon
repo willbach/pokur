@@ -122,7 +122,7 @@
 ::  gall actions, pokes
 ::
 +$  update  ::  from app to frontend
-  $%  [%game =game my-hand-rank=@t]
+  $%  [%game =game my-hand-rank=@t last-board=pokur-deck]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       [%lobby tables=(map @da table)]
@@ -131,18 +131,20 @@
       [%new-invite from=ship =table]
       $:  %game-over
           =game
+          last-board=pokur-deck
           placements=(list [ship @ud])
           tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       ==
   ==
 +$  host-update  ::  from host to player app
-  $%  [%game =game]
+  $%  [%game =game last-board=pokur-deck]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
       [%new-table =table]
       [%lobby tables=(map @da table)]
       $:  %game-over
           =game
+          last-board=pokur-deck
           placements=(list [ship @ud])
           tokenized=(unit [metadata=@ux symbol=@t amount=@ud bond-id=@ux])
       ==
