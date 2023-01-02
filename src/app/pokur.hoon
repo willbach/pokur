@@ -123,7 +123,17 @@
       [%join-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
     ?^  p.sign  !!  ::  TODO join table poke failed!
-    `this(our-table.state `(slav %da i.t.wire))
+    ::  join table was successful -- if table is active, we must now
+    ::  subscribe to the game updates path
+    =/  table-id=@da  (slav %da i.t.wire)
+    =/  =table  (~(got by lobby.state) table-id)
+    :_  this(our-table.state `table-id)
+    ?.  is-active.table  ~
+    :_  ~
+    :*  %pass  /game-updates/(scot %da id.table)/(scot %p our.bowl)
+        %agent  [ship.host-info.table %pokur-host]
+        %watch  /game-updates/(scot %da id.table)/(scot %p our.bowl)
+    ==
   ::
       [%game-updates @ @ ~]
     ?.  ?=(%fact -.sign)
@@ -423,9 +433,9 @@
     ::  table if tokenized until transaction is received
     ?~  tokenized.table
       :_  state(our-table `id.action)
-      =+  (poke-pass-through ship.host-info.table action)^join-host-card
-      ?:  public.action  -
-      %+  snoc  -
+      =+  cards=(poke-pass-through ship.host-info.table action)^join-host-card
+      ?:  public.action  cards
+      %+  snoc  cards
       :*  %pass  /lobby-updates/(scot %da id.action)
           %agent  [ship.host-info.table %pokur-host]
           %watch  /lobby-updates/(scot %da id.action)
@@ -482,10 +492,6 @@
     =/  =table  (~(got by lobby.state) u.our-table.state)
     :_  state(messages ~)
     (poke-pass-through ship.host-info.table action)^~
-  ::
-      %join-game
-    ::  join an ongoing game -- generally only allowed by hosts in cash games
-    !!
   ::
       %leave-game
     ?~  game.state
@@ -717,6 +723,11 @@
 ++  poke-pass-through
   |=  [host=ship action=player-action]
   ^-  card
+  =/  =wire
+    ?+  -.action  /table-poke
+      %join-table  /join-table-poke/(scot %da id.action)
+      %new-table  /start-table-poke/(scot %da id.action)
+    ==
   ::  give a poke from frontend to host
   :*  %pass   /table-poke
       %agent  [host %pokur-host]

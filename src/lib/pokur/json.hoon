@@ -132,13 +132,9 @@
   %-  pairs
   ?:  ?=(%cash -.g)
     :~  ['type' s+'cash']
-        ['min_buy_in' s+(scot %ud min-buy-in.g)]
-        ['max_buy_in' s+(scot %ud max-buy-in.g)]
-        :-  'equivalence'
-        %-  pairs
-        :~  ['tokens' s+(scot %ud tokens.equivalence.g)]
-            ['chips' s+(scot %ud chips.equivalence.g)]
-        ==
+        ['min_buy' s+(scot %ud min-buy.g)]
+        ['max_buy' s+(scot %ud max-buy.g)]
+        ['chips_per_token' s+(scot %ud chips-per-token.g)]
         ['small_blind' s+(scot %ud small-blind.g)]
         ['big_blind' s+(scot %ud big-blind.g)]
     ==

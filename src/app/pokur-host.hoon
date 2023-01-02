@@ -347,9 +347,15 @@
     ?~  table=(~(get by tables.state) id.player-action.action)  !!
     ?~  tokenized.u.table  !!
     ::  game is tokenized, check against bond to see if player has paid in
+    =/  buy-in=@ud
+      ?-  -.game-type.u.table
+        %sng   amount.u.tokenized.u.table
+        %cash  buy-in.player-action.action
+      ==
+    ::  assert that player has bought in for their amount
     =/  valid
       %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
-      [src.bowl on-batch [bond-id amount]:u.tokenized.u.table]
+      [src.bowl on-batch bond-id.u.tokenized.u.table buy-in]
     ?~  valid
       ::  can't find player info yet... kick over to pending
       =-  `state(pending-player-txns -)
@@ -358,9 +364,6 @@
       :_  state
       ~[[%give %poke-ack `~[leaf+"error: request sent to host was rejected"]]]
     (handle-player-action player-action.action tokenized=%.y)
-  ::
-      %join-game-txn
-    !!
   ==
 ::
 ++  handle-player-action
@@ -393,8 +396,8 @@
       ==
     ::  validate spec
     ?>  ?-  -.game-type.action
-          %cash  %.y  ::  TODO
-          %sng  (valid-sng-spec action)
+          %cash  (valid-cash-spec action)
+          %sng   (valid-sng-spec action)
         ==
     =+  (~(put by tables.state) id.action table)
     :_  state(tables -)
@@ -410,10 +413,42 @@
             ?=(~ tokenized.u.table)
         ==
     ::  table must not be full
+    ~|  "table is full!"
     ?<  =(max-players.u.table ~(wyt in players.u.table))
     =.  players.u.table  (~(put in players.u.table) src.bowl)
+    ::  if cash game, set player chip stack based on their token
+    ::  buy-in and assert stack is between min and max
+    =?  game-type.u.table  ?=(%cash -.game-type.u.table)
+      =/  chips-bought=@ud
+        ::  TODO handle tokens with nonstandard decimal amounts
+        %+  div
+          (mul buy-in.action chips-per-token.game-type.u.table)
+        1.000.000.000.000.000.000
+      ?>  ?&  (gte chips-bought min-buy.game-type.u.table)
+              (lte chips-bought max-buy.game-type.u.table)
+          ==
+      %=    game-type.u.table
+          buy-ins
+        (~(put by buy-ins.game-type.u.table) src.bowl chips-bought)
+      ==
+    ::  if table is active, add the player directly to the ongoing game
+    ::  otherwise just update table and share with subscribers
+    =^  game-update-cards  games.state
+      ?.  is-active.u.table
+        `games.state
+      =/  =host-game-state  (~(got by games.state) id.action)
+      ::  for now, we just say that sit-n-go tables are closed,
+      ::  and cash tables are open to new players
+      ?>  ?=(%cash -.game-type.game.host-game-state)
+      ?>  ?=(%cash -.game-type.u.table)
+      =+  %+  ~(add-player guts host-game-state)
+            src.bowl
+          (~(got by buy-ins.game-type.u.table) src.bowl)
+      :-  (send-game-updates - ~)
+      (~(put by games.state) id.action -)
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
+    %+  weld  game-update-cards
     ?.  public.u.table  (private-table-card u.table)^~
     :~  (new-table-card u.table)
         (table-gossip-card [%open u.table])
@@ -438,8 +473,8 @@
           :*  %transaction
               origin=`[%pokur-host /awards]
               from=address.our-info.state
-              contract=id.contract.host-info.u.table
-              town=town.contract.host-info.u.table
+              contract=id.contract.our-info.state
+              town=town.contract.our-info.state
               :-  %noun
               ^-  action:escrow
               :*  %award
@@ -523,10 +558,12 @@
           placements=~
           game
       ==
-    ::  remove table from lobby if tournament, leave it there otherwise
-    =?    tables.state
-        ?=(%sng -.game-type.u.table)
-      (~(del by tables.state) id.action)
+    ::  remove table from lobby if tournament, set to active if not
+    =.  tables.state
+      ?-  -.game-type.u.table
+        %sng   (~(del by tables.state) id.action)
+        %cash  (~(put by tables.state) id.action u.table(is-active %.y))
+      ==
     ::
     :_  state(games (~(put by games.state) id.action host-game-state))
     %+  welp
@@ -563,16 +600,50 @@
     :: remove spectator if they were one
     =.  spectators.game.u.host-game
       (~(del in spectators.game.u.host-game) src.bowl)
-    ::  check if player left on their turn
-    ?.  =(src.bowl whose-turn.game.u.host-game)
-      ::  player left out of turn, check for game over
-      ?:  game-is-over.game.u.host-game
-        ::  leaving resulted in game ending, handle
-        (end-game-pay-winners u.host-game)
-      ::  game not over, just send update showing they left
-      :-  (send-game-updates u.host-game ~)
-      state(games (~(put by games.state) id.action u.host-game))
-    (resolve-player-turn u.host-game)
+    ::  if player is leaving a cash game, award them tokens
+    ::  in proportion to their stack when leaving the table.
+    =/  award-card=(list card)
+      ?~  tokenized.u.host-game  ~
+      ?.  ?=(%cash -.game-type.game.u.host-game)  ~
+      :_  ~
+      :*  %pass  /pokur-wallet-poke
+          %agent  [our.bowl %uqbar]
+          %poke  %wallet-poke
+          !>
+          :*  %transaction
+              origin=`[%pokur-host /awards]
+              from=address.our-info.state
+              contract=id.contract.our-info.state
+              town=town.contract.our-info.state
+              :-  %noun
+              ^-  action:escrow
+              :*  %award
+                  bond-id.u.tokenized.u.host-game
+                  src.bowl
+                  ::  find token amount by multiplying stack by 10^18
+                  ::  then dividing stack by chips-per-token.
+                  ::  TODO handle nonstandard
+                  =/  their-stack=@ud
+                    =-  ?~(- 0 stack.u.-)
+                    (get-player-info:~(gang guts u.host-game) src.bowl)
+                  %+  div
+                    (mul their-stack 1.000.000.000.000.000.000)
+                  chips-per-token.game-type.game.u.host-game
+      ==  ==  ==
+    =^  cards  state
+      ::  check if player left on their turn
+      ?.  =(src.bowl whose-turn.game.u.host-game)
+        ::  player left out of turn, check for game over
+        ?:  game-is-over.game.u.host-game
+          ::  leaving resulted in game ending, handle
+          ::  this will handle cash games in case of last player at table
+          (end-game-pay-winners u.host-game)
+        ::  game not over, just send update showing they left
+        :-  (weld (send-game-updates u.host-game ~) award-card)
+        state(games (~(put by games.state) id.action u.host-game))
+      ::  left on their turn, play it out
+      (resolve-player-turn u.host-game)
+    [(weld cards award-card) state]
   ::
       %kick-player
     ?~  table=(~(get by tables.state) id.action)  !!
@@ -595,8 +666,8 @@
           :*  %transaction
               origin=`[%pokur-host /awards]
               from=address.our-info.state
-              contract=id.contract.host-info.u.table
-              town=town.contract.host-info.u.table
+              contract=id.contract.our-info.state
+              town=town.contract.our-info.state
               :-  %noun
               ^-  action:escrow
               :*  %award
@@ -758,10 +829,18 @@
           amount
   ==  ==
 ::
+++  valid-cash-spec
+  |=  act=player-action
+  ^-  ?
+  ?.  ?=(%new-table -.act)       %.n
+  ?.  ?=(%cash -.game-type.act)  %.n
+  ?.  (gte max-buy.game-type.act min-buy.game-type.act)  %.n
+  %.y
+::
 ++  valid-sng-spec
   |=  act=player-action
   ^-  ?
-  ?.  ?=(%new-table -.act)  %.n
+  ?.  ?=(%new-table -.act)      %.n
   ?.  ?=(%sng -.game-type.act)  %.n
   ?.  (gte min-players.act (lent payouts.game-type.act))  %.n
   =(100 (roll payouts.game-type.act add))

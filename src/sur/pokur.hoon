@@ -14,10 +14,10 @@
       [%sng sng-spec]
   ==
 +$  cash-spec
-  $:  min-buy-in=@ud  ::  all values in chips, other than tokens.equivalence
-      max-buy-in=@ud
+  $:  min-buy=@ud  ::  all values in chips
+      max-buy=@ud
       buy-ins=(map ship @ud)
-      equivalence=[tokens=@ud chips=@ud]  ::  ?>  =(0 q:(dvr tokens chips))
+      chips-per-token=@ud  ::  how many chips you get for each token. assumes 18 decimal-precision.
       small-blind=@ud
       big-blind=@ud
   ==
@@ -142,10 +142,9 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da buy-in=@ud public=?]  ::  buy-in is in tokens
+      [%join-table id=@da buy-in=@ud public=?]  ::  buy-in is in tokens, for %cash games
       [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
-      [%join-game id=@da buy-in=@ud public=?]  ::  enter an active game
       [%leave-game id=@da]
       [%kick-player id=@da who=ship]  ::  only for leader of private tables
       ::  choose which wallet address we wish to use to pay escrow
@@ -161,7 +160,6 @@
   ::  these player actions trigger on-chain escrow transactions
   $%  [%new-table-txn batch-id=@ux =player-action]
       [%join-table-txn batch-id=@ux =player-action]
-      [%join-game-txn batch-id=@ux =player-action]
   ==
 ::
 +$  message-action
