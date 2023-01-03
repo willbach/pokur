@@ -71,10 +71,10 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
   function showLastBoard() {
     if (curGame && last_board?.length) {
       const len = Math.max(curGame.board.length, 3)
-      set({ game: { ...curGame, board: last_board.slice(0, len), hide_actions: true, revealed_hands: game.revealed_hands } })
+      set({ game: { ...game, board: last_board.slice(0, len), hide_actions: true, hand: curGame?.hand || game.hand } })
       for (let i = 1; i <= 5 - len; i++) {
         setTimeout(() =>
-          set({ game: { ...curGame, board: last_board.slice(0, len + i), hide_actions: true, revealed_hands: game.revealed_hands } }),
+          set({ game: { ...game, board: last_board.slice(0, len + i), hide_actions: true, hand: curGame?.hand || game.hand } }),
           ONE_SECOND / 2 * i
         )
       }
@@ -87,14 +87,13 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
   showLastAction(game, set, curGame)
 
   if (game.game_is_over && placements) {
-    const gameEndMessage =
-      `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
-    
-    set({ messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
-
     showLastBoard()
 
-    setTimeout(() => set({ gameEndMessage }), 8 * ONE_SECOND)
+    setTimeout(() => {
+      const gameEndMessage =
+      `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
+      set({ gameEndMessage, game: { ...game, hand: curGame?.hand || [] }, messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
+    }, 8 * ONE_SECOND)
 
   // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds, but update current_player immediately
   } else if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
@@ -106,6 +105,11 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
         current_turn: game.current_turn
       }
     })
+
+    if (last_board?.length) {
+      showLastBoard()
+    }
+
     setTimeout(() => {
       if (curGame?.hands_played !== game.hands_played) {
         newHandSound.play()
@@ -113,18 +117,12 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
       set({ game: { ...game, hand_rank, revealed_hands: {} } })
     }, 5 * ONE_SECOND)
   } else {
-    if (curGame?.hands_played !== game.hands_played) {
+    // Set the game
+    if (curGame && curGame?.hands_played !== game.hands_played) {
       newHandSound.play()
     }
 
-    // Set the game
-    if (curGame && last_board?.length) {
-      showLastBoard()
-
-      setTimeout(() => set({ game: { ...game, hand_rank } }), 5 * ONE_SECOND)
-    } else {
-      set({ game: { ...game, hand_rank } })
-    }
+    set({ game: { ...game, hand_rank } })
   }
 
   // Messages Start
