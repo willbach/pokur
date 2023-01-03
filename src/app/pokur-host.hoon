@@ -480,7 +480,10 @@
               :*  %award
                   bond-id.u.tokenized.u.table
                   src.bowl
-                  amount.u.tokenized.u.table
+                  ?-  -.game-type.u.table
+                    %sng   amount.u.tokenized.u.table
+                    %cash  (~(got by buy-ins.game-type.u.table) src.bowl)
+                  ==
               ==
           ==
       ==
@@ -673,7 +676,10 @@
               :*  %award
                   bond-id.u.tokenized.u.table
                   who.action
-                  amount.u.tokenized.u.table
+                  ?-  -.game-type.u.table
+                    %sng   amount.u.tokenized.u.table
+                    %cash  (~(got by buy-ins.game-type.u.table) src.bowl)
+                  ==
               ==
           ==
       ==
