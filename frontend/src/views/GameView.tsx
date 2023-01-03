@@ -179,7 +179,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               const hand = game.revealed_hands[`~${p.ship}`]
               const folded = p.folded
               
-              const buttonIndicator = playersRemaining === 2 && game?.dealer.includes(p.ship) ? 'D' :
+              const buttonIndicator = game?.game_is_over ? '' :
+                playersRemaining === 2 && game?.dealer.includes(p.ship) ? 'D' :
                 playersRemaining === 2 ? '' :
                 game?.big_blind.includes(p.ship) ? 'BB' :
                 game?.small_blind.includes(p.ship) ? 'SB' :
