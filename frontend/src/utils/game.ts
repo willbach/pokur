@@ -28,7 +28,8 @@ export const getPayoutAmounts = (numPlayers: number) => {
   return [100]
 }
 
-export const isSelf = (ship?: string) => ship && (window as any).ship.replace('~', '') === ship.replace('~', '')
+export const isShip = (ship1?: string, ship2?: string) => ship1 && ship2 && ship1.replace('~', '') === ship2.replace('~', '')
+export const isSelf = (ship?: string) => isShip((window as any).ship, ship)
 
 export const abbreviateCard = ({ val, suit }: Card) => (val === '10' ? val : val.slice(0, 1).toUpperCase()) + suit.slice(0,1)
 
@@ -60,4 +61,14 @@ export const showLastAction = (game: Game, set: SetState<PokurStore>, curGame?: 
     set({ lastAction: { [curGame.current_turn.replace('~', '')]: capitalize(game.last_action.replace(/~/g, '')) || '' } })
     setTimeout(() => set({ lastAction: {} }), 3 * ONE_SECOND)
   }
+}
+
+export const getWinnerInfo = (game: Game, curGame?: Game) => {
+  let winner: string | undefined, winning_hand: string | undefined
+  if (game.update_message && game.update_message !== curGame?.update_message && game.update_message.includes('wins pot of')) {
+    winner = game.update_message.split(' wins pot of')[0]?.slice(-4)
+    winning_hand = game.update_message.split('with hand ').pop()?.replace('. ', '')
+  }
+
+  return { winner, winning_hand }
 }

@@ -94,7 +94,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
         getMutedPlayers(),
       ])
 
-      set({ loadingText: null, game, table })
+      set({ loadingText: null, game, table, gameEndMessage: game.game_is_over ? 'The game has ended.' : undefined })
 
       if (game) {
         return '/game'

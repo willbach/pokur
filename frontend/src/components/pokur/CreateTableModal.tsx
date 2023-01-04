@@ -92,7 +92,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
 
     try {
       const decimals = metadata[tableForm.tokenized.metadata]?.data.decimals
-      const amount = tableForm.tokenized.amount * (decimals ? Math.pow(10, decimals) : 1)
+      const amount = (tableForm.tokenized?.amount || 1) * (decimals ? Math.pow(10, decimals) : 1)
       const newHost = `~${tableForm['custom-host'].replace('~', '')}`
 
       const formatedValues = {

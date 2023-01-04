@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo } from 'react'
 import cn from 'classnames'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
+import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { AccountSelector, HardwareWallet, HotWallet, useWalletStore } from '@uqbar/wallet-ui'
+
 import api from '../api'
 import Button from '../components/form/Button'
 import Col from '../components/spacing/Col'
@@ -17,10 +19,9 @@ import { PLAYER_POSITIONS, REMATCH_PARAMS_KEY, REMATCH_LEADER_KEY } from '../uti
 import logo from '../assets/img/logo192.png'
 import { renderSigil } from '../utils/player'
 import { fromUd } from '../utils/number'
-import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { getSecondsFromNow } from '../utils/time'
 import TableBackground from '../components/pokur/TableBackground'
-import { isSelf } from '../utils/game'
+import { isSelf, isShip } from '../utils/game'
 
 import './GameView.scss'
 
@@ -67,8 +68,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
 
   const computedPots = useMemo(() =>
     (game?.pots || []).map(
-      (p, i, a) => i !== a.length - 1 ? { ...p, amount: fromUd(p.amount) } :
-        { ...p, amount: fromUd(p.amount) + (game?.players || []).reduce((acc, pl) => acc + fromUd(pl.committed), 0) }
+      (p, i, a) => i !== a.length - 1 ? { ...p, amount: fromUd(p?.amount) } :
+        { ...p, amount: fromUd(p?.amount) + (game?.players || []).reduce((acc, pl) => acc + fromUd(pl.committed), 0) }
     )
   , [game])
 
@@ -153,14 +154,14 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                 <Text mono>POKUR</Text>
               </Row>
               <Col className='pots'>
-                {Boolean(computedPots[0]?.amount) && String(computedPots[0].amount) !== '0' && (
+                {Boolean(computedPots[0]?.amount) && String(computedPots[0]?.amount) !== '0' && (
                   <Text className='pot'>{game.pots.length > 1 ? 'Main ' : ''}Pot: {computedPots[0]?.amount || '0'}</Text>
                 )}
 
                 {computedPots.length > 1 && (
                   computedPots.map((p, i) => (
                     i === 0 ? null :
-                    <Text className='pot' key={String(p.amount) + i}>Side Pot #{i}: {p.amount}</Text>
+                    <Text className='pot' key={String(p?.amount) + i}>Side Pot #{i}: {p.amount}</Text>
                   ))
                 )}
               </Col>
@@ -175,9 +176,9 @@ const GameView = ({ redirectPath }: GameViewProps) => {
 
             {playerOrder.map((p, ind, arr) => {
               const curTurn = game.current_turn.includes(p.ship)
-              const isSelf = (window as any).ship === p.ship
               const hand = game.revealed_hands[`~${p.ship}`]
               const folded = p.folded
+              const winner = isShip(game?.winner, p.ship) ? 'Winner' : undefined
               
               const buttonIndicator = game?.game_is_over ? '' :
                 playersRemaining === 2 && game?.dealer.includes(p.ship) ? 'D' :
@@ -189,7 +190,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
               return (
                 <Col className={`player-display ${PLAYER_POSITIONS[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
                   <Row className='cards'>
-                    {isSelf && !folded ? (
+                    {isSelf(p.ship) && !folded ? (
                       <>
                         {game?.hand.map(c => <CardDisplay key={c.suit + c.val} card={c} size="small" />)}
                       </>
@@ -208,8 +209,14 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                       </>
                     )}
                   </Row>
-                  <div className={cn('player-info', curTurn && !gameEndMessage && 'current-turn', folded && 'folded')}>
-                    <Player hideSigil ship={p.ship} lastAction={lastAction} />
+                  <div className={cn(
+                    'player-info',
+                    game?.winner ?
+                      Boolean(winner) && !gameEndMessage && 'winner' :
+                      curTurn && !gameEndMessage && 'current-turn',
+                    folded && 'folded'
+                  )}>
+                    <Player hideSigil ship={p.ship} altDisplay={lastAction[p.ship] || winner} />
                     <Text className='stack' bold>{p.left ? 'Left' : `$${p.stack}`}</Text>
                   </div>
                   <Row className='bet'>
@@ -230,8 +237,11 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                       />
                     </div>
                   )}
-                  {game?.hand_rank && game.hand_rank.length > 1 && isSelf && (
+                  {game?.hand_rank && game.hand_rank.length > 1 && isSelf(p.ship) && (
                     <Text className='hand-rank'>{game?.hand_rank}</Text>
+                  )}
+                  {Boolean(winner) && Boolean(game?.winning_hand) && (
+                    <Text className='hand-rank'>{game?.winning_hand}</Text>
                   )}
                 </Col>
               )

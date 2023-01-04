@@ -7,7 +7,7 @@ import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
 import { Table, Tokenized } from "../types/Table";
 import { ONE_SECOND, REMATCH_LEADER_KEY, REMATCH_PARAMS_KEY } from "../utils/constants";
-import { abbreviateCard, isSelf, playSounds, showLastAction } from '../utils/game';
+import { abbreviateCard, getWinnerInfo, isSelf, playSounds, showLastAction } from '../utils/game';
 import { tokenAmount } from '../utils/number'
 import { PokurStore } from "./pokurStore";
 
@@ -71,10 +71,32 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
   function showLastBoard() {
     if (curGame && last_board?.length) {
       const len = Math.max(curGame.board.length, 3)
-      set({ game: { ...game, board: last_board.slice(0, len), hide_actions: true, hand: curGame?.hand || game.hand } })
+
+      const { winner, winning_hand } = getWinnerInfo(game, curGame)
+
+      set({
+        game: {
+          ...game,
+          board: last_board.slice(0, len),
+          hide_actions: true,
+          hand: curGame?.hand || game.hand,
+          winner, winning_hand,
+          hand_rank: curGame.hand_rank,
+        }
+      })
+
       for (let i = 1; i <= 5 - len; i++) {
         setTimeout(() =>
-          set({ game: { ...game, board: last_board.slice(0, len + i), hide_actions: true, hand: curGame?.hand || game.hand } }),
+          set({
+            game: {
+              ...game,
+              board: last_board.slice(0, len + i),
+              hide_actions: true,
+              hand: curGame?.hand || game.hand,
+              winner, winning_hand,
+              hand_rank: curGame.hand_rank,
+            }
+          }),
           ONE_SECOND / 2 * i
         )
       }
@@ -91,20 +113,19 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
 
     setTimeout(() => {
       const gameEndMessage =
-      `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
-      set({ gameEndMessage, game: { ...game, hand: curGame?.hand || [] }, messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages) })
+        `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
+
+      set({
+        gameEndMessage,
+        game: { ...game, hand: curGame?.hand || [] },
+        messages: [{ from: 'game-update', msg: gameEndMessage }].concat(get().messages),
+      })
     }, 8 * ONE_SECOND)
 
   // if hands should be revealed at hand end, reveal the hands and then update the game in 5 seconds, but update current_player immediately
   } else if (Object.keys(game.revealed_hands || {}).length && !game.players.find(p => !p.folded && !p.left && p.stack === '0')) {
-    set({
-      game: {
-        ...curGame!,
-        revealed_hands: game.revealed_hands,
-        hand_rank,
-        current_turn: game.current_turn
-      }
-    })
+    const { winner, winning_hand } = getWinnerInfo(game, curGame)
+    set({ game: { ...curGame!, revealed_hands: game.revealed_hands, current_turn: game.current_turn, winner, winning_hand } })
 
     if (last_board?.length) {
       showLastBoard()

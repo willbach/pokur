@@ -46,6 +46,8 @@ export interface Game {
   turn_start: string // hoon date
   last_action: null | 'fold' | 'check' | 'call' | 'raise'
   hide_actions: boolean
+  winner?: string
+  winning_hand?: string
   // update_message: {
   //   text: string
   //   winning_hand: Card[]
