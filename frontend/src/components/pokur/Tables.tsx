@@ -55,7 +55,7 @@ const Tables = ({ tables }: TablesProps) => {
   const hasAsset = useMemo(() => Object.keys(assets).reduce((hasAccount, account) => {
     return hasAccount || Object.values(assets[account]).reduce((acc, asset) => {
       return acc || (asset?.data.metadata === selected?.tokenized?.metadata
-        && fromUd(asset?.data.balance) >= fromUd(selected?.tokenized.amount) ? 
+        && fromUd(asset?.data.balance) >= fromUd(selected?.tokenized?.amount) ? 
         account : '')
     }, '')
   }, ''), [assets, selected])
@@ -99,7 +99,7 @@ const Tables = ({ tables }: TablesProps) => {
             </Row>
             <Row className='table-info'>
               <h4>Buy-in:</h4>
-              <Text>{selected.tokenized ? `${tokenAmount(selected.tokenized.amount)} ${selected.tokenized.symbol}` : 'none'}</Text>
+              <Text>{selected?.tokenized ? `${tokenAmount(selected?.tokenized?.amount)} ${selected.tokenized.symbol}` : 'none'}</Text>
             </Row>
             {!hasAsset && <Text style={{ color: 'red' }}>You do not have enough assets</Text>}
             {hasAsset && hasAsset !== selectedAccount?.rawAddress &&
