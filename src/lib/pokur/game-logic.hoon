@@ -79,7 +79,16 @@
       =/  bet-plus-committed
         (add amount.action committed.player-info)
       =/  current-min-bet
-        big:(get-current-blinds game-type.game.state)
+        %+  min
+          big:(get-current-blinds game-type.game.state)
+        ::  largest stack of still-in player, excluding active one
+        %+  roll
+          %+  murn  players.game.state
+          |=  [=ship ^player-info]
+          ?:  |(=(0 stack) =(ship who))
+            ~
+          `stack
+        max
       ?:  (gte amount.action stack.player-info)
         ::  ALL-IN logic here
         =.  game.state

@@ -2,7 +2,80 @@
 /+  *test, *pokur-game-logic
 |%
 ::
-::  side pot handling tests
+::  random tests
+::
+++  test-send-all-in  ^-  tang
+  ::  ~tes has 80 chips left
+  ::  ~bus wants to send ~tes all-in
+  ::  big blind is 100
+  ::  ~bus should be able to bet 80
+  =/  state=host-game-state
+    :*  %-  ~(gas by *(map ship pokur-deck))
+        :~  [~bus ~[[%5 %spades] [%ace %spades]]]
+            [~tes ~[[%2 %spades] [%3 %spades]]]
+        ==
+        generate-deck
+        hand-is-over=%.n
+        turn-timer=*@da
+        tokenized=~
+        placements=~[~tes ~bus]
+        :*  id=*@da
+            game-is-over=%.n
+            :*  %sng
+                1.000
+                *@dr
+                ~[[50 100]]
+                0
+                %.n
+                ~[100]
+            ==
+            turn-time-limit=*@dr
+            turn-start=*@da
+            ::  RELEVANT
+            :~  [~tes 80 0 %.n %.n %.n]
+                [~bus 800 0 %.n %.n %.n]
+            ==
+            ::  RELEVANT
+            pots=~[[200 ~[~tes ~bus]]]
+            current-bet=0
+            last-bet=0
+            last-action=`%call
+            last-aggressor=~
+            :~  [%king %diamonds]
+                [%queen %diamonds]
+                [%jack %diamonds]
+            ==
+            my-hand=~
+            whose-turn=~bus
+            dealer=~tes
+            small-blind=~tes
+            big-blind=~bus
+            spectators-allowed=%.y
+            spectators=~
+            hands-played=10
+            update-message=''
+            revealed-hands=~
+        ==
+    ==
+  =/  new-state
+    (need (~(process-player-action guts state) ~bus [%bet *@da 80]))
+  =/  expected-state
+    %=    state
+        whose-turn.game  ~tes
+        last-aggressor.game  `~bus
+        current-bet.game  80
+        last-bet.game  80
+        last-action.game  `%raise
+        update-message.game  ''
+    ::
+        players.game
+      :~  [~tes 80 0 %.n %.n %.n]
+          [~bus 720 80 %.y %.n %.n]
+      ==
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
 ::
 ++  test-folded-pot  ^-  tang
   ::  ~tes bet 100
