@@ -1,7 +1,7 @@
 /=  escrow  /con/lib/escrow
 |%
-::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
-++  fixed-lobby-source  ~zod
+::  HARDCODED to ~bacrys IRL, ~nec in FAKESHIP TESTING
+++  fixed-lobby-source  ~nec
 ::
 +$  host-info
   [=ship address=@ux contract=[id=@ux town=@ux]]
