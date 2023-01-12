@@ -77,6 +77,7 @@
     (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
   =/  expected-state
     %=    state
+        pots.game        ~[[0 ~[~tes ~dev]]]
         whose-turn.game  ~dev
         last-action.game  `%fold
         update-message.game  '~bus folded. '
@@ -191,6 +192,7 @@
     (need (~(process-player-action guts last-state) ~tes [%check *@da ~]))
   =/  expected-state
     %=    last-state
+        pots.game        ~[[4 ~[~tes ~dev]]]
         whose-turn.game  ~dev
         last-action.game  `%check
         current-bet.game  0
@@ -202,9 +204,6 @@
           [~bus 1.000 0 %.n %.y %.n]
           [~dev 998 0 %.n %.n %.n]
       ==
-    ::
-        pots.game
-      ~[[4 ~[~tes ~bus ~dev]]]
     ==
   %+  expect-eq
     !>(game.expected-state)
@@ -248,10 +247,10 @@
     ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
   =/  expected-state
     %=    last-state
+        pots.game        ~
         whose-turn.game  ~tes
         hands-played.game  1
         update-message.game  '~tes left the game. ~dev wins pot of 4. '
-        pots.game  ~[[amount=0 in=~[~bus ~dev]]]
     ::
         players.game
       :~  [~tes 998 0 %.n %.n %.y]
@@ -305,10 +304,10 @@
     ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
   =/  expected-state
     %=    last-state
+        pots.game        ~
         whose-turn.game  ~tes
         hands-played.game  1
         update-message.game  '~dev left the game. ~tes wins pot of 4. '
-        pots.game  ~[[amount=0 in=~[~tes ~bus]]]
     ::
         players.game
       :~  [~tes 1.002 0 %.n %.n %.n]
@@ -461,7 +460,7 @@
       ==
     ::
         pots.game
-      ~[[20 ~[~tes ~bus ~dev]]]
+      ~[[20 ~[~tes ~dev]]]
     ==
   %+  expect-eq
     !>(game.expected-state)

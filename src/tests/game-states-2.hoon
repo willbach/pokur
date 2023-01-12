@@ -68,6 +68,7 @@
     ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
   =/  expected-state
     %=    state
+        pots.game         ~
         current-bet.game  0
         last-bet.game  0
         whose-turn.game  ~zod
@@ -99,6 +100,7 @@
   =/  expected-state
     %=    state
         game-is-over.game  %.y
+        pots.game          ~
         current-bet.game  0
         last-bet.game  0
         whose-turn.game  ~zod
@@ -114,8 +116,6 @@
       :~  [~zod 3.000 0 %.n %.n %.n]
           [~bus 0 0 %.y %.y %.n]
       ==
-        pots.game
-      ~[[0 ~[~zod]]]
     ==
   %+  expect-eq
     !>(game.expected-state)
@@ -130,6 +130,7 @@
   =/  expected-state
     %=    state
         game-is-over.game  %.y
+        pots.game          ~
         current-bet.game  0
         last-bet.game  0
         whose-turn.game  ~zod
@@ -142,8 +143,6 @@
       :~  [~zod 2.680 0 %.n %.n %.y]
           [~bus 320 0 %.n %.n %.n]
       ==
-        pots.game
-      ~[[0 ~[~bus]]]
     ==
   %+  expect-eq
     !>(game.expected-state)

@@ -140,6 +140,7 @@
       ::
           %kick
         ::  resub on kick
+        ~&  >>>  "%pokur: kicked from game-path, resubbing"
         :_  this  :_  ~
         [%pass wire %agent [src.bowl %pokur-host] %watch wire]
       ==
