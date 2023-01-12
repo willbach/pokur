@@ -2,6 +2,8 @@
 /+  *test, *pokur-game-logic
 |%
 ::
+::  Tests for a sit-n-go tournament table.
+::
 ::  a big game of pokur, played all the way through
 ::  players leave, run out of chips, etc, etc.
 ::
@@ -217,7 +219,7 @@
         players.game
       :~  [~zod 980 0 %.n %.n %.n]
           [~nec 980 0 %.n %.n %.n]
-          [~bud 0 0 %.y %.y %.n]
+          [~bud 0 0 %.n %.y %.n]
           [~wes 980 0 %.n %.n %.n]
           [~sev 970 10 %.n %.n %.n]
           [~per 960 20 %.n %.n %.n]
@@ -336,9 +338,9 @@
     %=    -
         players.game
       :~  [~zod 980 0 %.n %.n %.n]
-          [~nec 0 0 %.y %.y %.n]
-          [~bud 0 0 %.y %.y %.n]
-          [~wes 0 0 %.y %.y %.n]
+          [~nec 0 0 %.n %.y %.n]
+          [~bud 0 0 %.n %.y %.n]
+          [~wes 0 0 %.n %.y %.n]
           [~sev 970 0 %.n %.n %.n]
           [~per 950 10 %.n %.n %.n]
           [~sut 960 20 %.n %.n %.n]
@@ -552,7 +554,7 @@
 ::
 ++  state-l
   =+  state-m
-  =+  ~(initialize-hand guts -(deck (shuffle deck:state-m 3)))
+  =+  ~(initialize-hand guts -(deck (shuffle deck:state-m 2)))
   =+  (need (~(process-player-action guts -) ~ful [%fold *@da ~]))
   =+  (need (~(process-player-action guts -) ~sev [%fold *@da ~]))
   =+  (need (~(process-player-action guts -) ~per [%bet *@da 900]))
@@ -575,7 +577,7 @@
       ~[[2.700 ~[~per ~sut ~let]]]
         current-bet.game     0
         last-bet.game        0
-        board.game           ~[[%9 %diamonds] [%2 %spades] [%5 %hearts]]
+        board.game           ~[[%4 %diamonds] [%3 %spades] [%jack %diamonds]]
         last-action.game     `%call
         last-aggressor.game  `~per
         whose-turn.game      ~sut
@@ -603,20 +605,20 @@
           [~wes 0 0 %.y %.y %.n]
           [~sev 950 0 %.n %.n %.n]
           [~per 2.700 0 %.n %.n %.n]
-          [~sut 120 0 %.n %.n %.n]
-          [~let 3.270 0 %.n %.n %.n]
+          [~sut 0 0 %.y %.y %.n]
+          [~let 3.390 0 %.n %.n %.n]
           [~ful 980 0 %.n %.n %.n]
       ==
         pots.game            ~
         current-bet.game     0
         last-bet.game        0
-        board.game           ~[[%9 %diamonds] [%2 %spades] [%5 %hearts] [%7 %diamonds] [%7 %clubs]]
+        board.game           ~[[%4 %diamonds] [%3 %spades] [%jack %diamonds] [%king %clubs] [%2 %clubs]]
         last-action.game     `%call
         last-aggressor.game  `~sut
         whose-turn.game      ~let
         hands-played.game    4
-        update-message.game  '~per wins pot of 2.700 with hand Full House.  ~sut wins pot of 120 with hand Two Pair.  '
-        revealed-hands.game  ~[[~let ~[[%8 %clubs] [%10 %spades]]] [~per ~[[%5 %clubs] [%5 %spades]]] [~sut ~[[%2 %hearts] [%ace %clubs]]]]
+        update-message.game  '~per wins pot of 2.700 with hand Two Pair.  ~let wins pot of 120 with hand High Card.  '
+        revealed-hands.game  ~[[~let ~[[%8 %clubs] [%10 %diamonds]]] [~per ~[[%2 %spades] [%king %spades]]] [~sut ~[[%8 %spades] [%6 %hearts]]]]
     ==
   %+  expect-eq
     !>(game.expected-state)

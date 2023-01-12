@@ -1,5 +1,8 @@
 /-  *pokur
 /+  *test, *pokur-game-logic
+::
+::  A few specific tests for a sit-n-go tournament table.
+::
 |%
 ++  game-state-1
   ^-  host-game-state
@@ -172,7 +175,7 @@
         players.game
       :~  [~tes 1.999 1 %.n %.n %.n]
           [~bus 998 2 %.n %.n %.n]
-          [~dev 0 0 %.y %.y %.n]
+          [~dev 0 0 %.n %.y %.n]
       ==
     ::
         pots.game  ~[[0 ~[~tes ~bus]]]
@@ -535,7 +538,7 @@
         players.game
       :~  [~tes 1.999 1 %.n %.n %.n]
           [~bus 998 2 %.n %.n %.n]
-          [~dev 0 0 %.y %.y %.n]
+          [~dev 0 0 %.n %.y %.n]
       ==
     ::
         pots.game  ~[[0 ~[~tes ~bus]]]

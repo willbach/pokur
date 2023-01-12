@@ -23,21 +23,63 @@
         last-bet.game.state        0
         hand-is-over.state         %.n
     ==
+    ::  remove any players who have left the table
+    =.  players.game.state
+      %+  murn  players.game.state
+      |=  [p=@p player-info]
+      ?:  left  ~
+      `[p stack committed %.n ?:(=(0 stack) %.y %.n) %.n]
     =.  dealer.game.state
       (next-active-player:gang dealer.game.state)
     =.  state  deal-hands
     =.  state  assign-blinds
     =.  whose-turn.game.state
       (next-active-player:gang big-blind.game.state)
-    =.  players.game.state
-      %+  skip  players.game.state
-      |=([ship player-info] left)
     =.  pots.game.state
-      :_  ~
-      :-  0
+      :_  ~  :-  0
       %+  murn  players.game.state
       |=([p=@p player-info] ?:(folded ~ `p))
     state
+  ::
+  ::  deals 2 cards from deck to each player in game
+  ::  only deal to players who are not "out": stack=0
+  ::
+  ++  deal-hands
+    ^-  host-game-state
+    =/  players  players.game.state
+    |-
+    ?~  players  state
+    ?:  =(0 stack.i.players)
+      $(players t.players)
+    =/  drawn  (draw 2 deck.state)
+    %=  $
+      players      t.players
+      deck.state   rest.drawn
+      hands.state  (~(put by hands.state) ship.i.players hand.drawn)
+    ==
+  ::
+  ::  takes blinds from the two active players left of dealer
+  ::  (in heads up, dealer is small blind)
+  ::
+  ++  assign-blinds
+    ^-  host-game-state
+    =.  small-blind.game.state
+      ?:  =(~(wyt by hands.state) 2)
+        dealer.game.state
+      (next-active-player:gang dealer.game.state)
+    ::
+    =.  big-blind.game.state
+      (next-active-player:gang small-blind.game.state)
+    ::  if game type is %cash, use set blinds
+    ::  if %tournament, set blinds based on round we're on
+    =/  blinds  (get-current-blinds game-type.game.state)
+    =.  players.game.state
+      (commit-chips:gang small-blind.game.state small.blinds)
+    %=  state
+      current-bet.game  big.blinds
+      last-bet.game     big.blinds
+      players.game  (commit-chips:gang big-blind.game.state big.blinds)
+    ==
   ::
   ::  other entry point for host
   ::  given a player and a pokur-action, handles the action.
@@ -225,23 +267,6 @@
       next-player-turn
     --
   ::
-  ::  deals 2 cards from deck to each player in game
-  ::  only deal to players who are not "out": stack=0
-  ::
-  ++  deal-hands
-    ^-  host-game-state
-    =/  players  players.game.state
-    |-
-    ?~  players  state
-    ?:  =(0 stack.i.players)
-      $(players t.players)
-    =/  drawn  (draw 2 deck.state)
-    %=  $
-      players      t.players
-      deck.state   rest.drawn
-      hands.state  (~(put by hands.state) ship.i.players hand.drawn)
-    ==
-  ::
   ::  put all committed chips from a single betting round into pot.
   ::  a player can only be involved in a pot that they contribute to:
   ::  we look at the smallest committed value, then add the matching values
@@ -311,29 +336,6 @@
       [0 (turn (tail sorted-commitments) head)]
     ==
   ::
-  ::  takes blinds from the two active players left of dealer
-  ::  (in heads up, dealer is small blind)
-  ::
-  ++  assign-blinds
-    ^-  host-game-state
-    =.  small-blind.game.state
-      ?:  =(~(wyt by hands.state) 2)
-        dealer.game.state
-      (next-active-player:gang dealer.game.state)
-    ::
-    =.  big-blind.game.state
-      (next-active-player:gang small-blind.game.state)
-    ::  if game type is %cash, use set blinds
-    ::  if %tournament, set blinds based on round we're on
-    =/  blinds  (get-current-blinds game-type.game.state)
-    =.  players.game.state
-      (commit-chips:gang small-blind.game.state small.blinds)
-    %=  state
-      current-bet.game  big.blinds
-      last-bet.game     big.blinds
-      players.game  (commit-chips:gang big-blind.game.state big.blinds)
-    ==
-  ::
   ::  this gets called when a tournament round timer runs out
   ::  it tells us to increment when current hand is over
   ::  and sets an update message in the game state
@@ -379,11 +381,6 @@
           round-is-over.game-type.game
         %.n
       ==
-    ::  remove players who have left the game since last hand
-    ::  =.  players.game.state
-    ::    %+  skip  players.game.state
-    ::    |=  [p=ship player-info]
-    ::    left
     =/  active-with-chips
       %+  skip  players.game.state
       |=  [p=ship player-info]

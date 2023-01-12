@@ -1,5 +1,9 @@
 /-  *pokur
 /+  *test, *pokur-game-logic
+::
+::  A few specific tests for a sit-n-go tournament table.
+::  Covers some end-of-game scenarios for a heads-up game.
+::
 |%
 ++  game-state-2
   ^-  host-game-state
