@@ -40,21 +40,22 @@ interface TablesProps {
 }
 
 const Tables = ({ tables }: TablesProps) => {
-  const { setJoinTableId, joinTable } = usePokurStore()
+  const { setJoinTableId, joinTable, setSecondaryLoading } = usePokurStore()
   const { assets, selectedAccount, setMostRecentTransaction, setInsetView } = useWalletStore()
   const [selected, setSelected] = useState<Table | undefined>()
 
   const join = useCallback((t: Table) => async () => {
+    setSecondaryLoading('Waiting on transaction confirmation to join table...')
     setMostRecentTransaction(undefined)
     setInsetView('confirm-most-recent')
     setJoinTableId(t.id)
-    joinTable(t.id, t.public)
-  }, [joinTable, setMostRecentTransaction, setInsetView, setJoinTableId])
+    await joinTable(t.id, t.public)
+  }, [joinTable, setMostRecentTransaction, setInsetView, setJoinTableId, setSecondaryLoading])
 
   const hasAsset = useMemo(() => Object.keys(assets).reduce((hasAccount, account) => {
     return hasAccount || Object.values(assets[account]).reduce((acc, asset) => {
       return acc || (asset?.data.metadata === selected?.tokenized?.metadata
-        && fromUd(asset?.data.balance) >= fromUd(selected?.tokenized.amount) ? 
+        && fromUd(asset?.data.balance) >= fromUd(selected?.tokenized?.amount) ? 
         account : '')
     }, '')
   }, ''), [assets, selected])
@@ -98,7 +99,7 @@ const Tables = ({ tables }: TablesProps) => {
             </Row>
             <Row className='table-info'>
               <h4>Buy-in:</h4>
-              <Text>{selected.tokenized ? `${tokenAmount(selected.tokenized.amount)} ${selected.tokenized.symbol}` : 'none'}</Text>
+              <Text>{selected?.tokenized ? `${tokenAmount(selected?.tokenized?.amount)} ${selected.tokenized.symbol}` : 'none'}</Text>
             </Row>
             {!hasAsset && <Text style={{ color: 'red' }}>You do not have enough assets</Text>}
             {hasAsset && hasAsset !== selectedAccount?.rawAddress &&

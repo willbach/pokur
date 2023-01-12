@@ -16,6 +16,7 @@ export interface LastAction {
 
 export interface PokurStore {
   loadingText: string | null
+  secondaryLoadingText: string | null
   
   hosts: string[]
   lobby: Lobby
@@ -40,6 +41,7 @@ export interface PokurStore {
   setJoinTableId: (joinTableId?: string) => void
   subscribeToPath: (path: SubscriptionPath, nav?: NavigateFunction) => Promise<number>
   setLoading: (loadingText: string | null) => void
+  setSecondaryLoading: (secondaryLoadingText: string | null) => void
   zigFaucet: (address: string) => Promise<void>
 
   // pokur-player-action
@@ -69,6 +71,7 @@ export interface PokurStore {
 
 const usePokurStore = create<PokurStore>((set, get) => ({
   loadingText: 'Loading Pokur...',
+  secondaryLoadingText: null,
 
   hosts: [],
   lobby: {},
@@ -91,7 +94,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
         getMutedPlayers(),
       ])
 
-      set({ loadingText: null, game, table })
+      set({ loadingText: null, game, table, gameEndMessage: game.game_is_over ? 'The game has ended.' : undefined })
 
       if (game) {
         return '/game'
@@ -152,6 +155,7 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     }
   },
   setLoading: (loadingText: string | null) => set({ loadingText }),
+  setSecondaryLoading: (secondaryLoadingText: string | null) => set({ secondaryLoadingText }),
   zigFaucet: async (address: string) => {
     try {
       await api.poke({ app: 'uqbar', mark: 'uqbar-action', json: { 'open-faucet': { town: '0x0', 'send-to': address } } })
@@ -170,8 +174,6 @@ const usePokurStore = create<PokurStore>((set, get) => ({
     set({ hosts: get().hosts.filter(h => h !== who) })
   },
   createTable: async (values: CreateTableValues) => {
-    set({ loadingText: 'Creating table...' })
-
     const tokenized = { ...values.tokenized, amount: numToUd(Number(values.tokenized.amount)) }
     const json: any = {
       'new-table': { ...values, tokenized, id: '~2000.1.1' }

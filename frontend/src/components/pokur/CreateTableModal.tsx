@@ -40,7 +40,7 @@ interface CreateTableModalProps {
 }
 
 const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
-  const { hosts, addHost, createTable, setLoading, invites, setInvites } = usePokurStore()
+  const { hosts, addHost, createTable, invites, setInvites, setSecondaryLoading } = usePokurStore()
   const { assets, metadata, setInsetView, selectedAccount, setMostRecentTransaction } = useWalletStore()
 
   const [tableForm, setTableForm] = useState<CreateTableValues>(genBlankTable(hosts))
@@ -65,11 +65,19 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
           symbol: tokenizedKey === 'metadata' ? metadata[e.target.value]?.data.symbol : tableForm.tokenized.symbol,
         }
       })
-    } else if (tableForm['game-type'] === 'sng' && key === 'min-players') {
+    } else if (key === 'min-players') {
+      const min = Number(e.target.value.replace(/[^0-9]/g, ''))
       setTableForm({
         ...tableForm,
-        [key]: Number(e.target.value.replace(/[^0-9]/g, '')),
-        "max-players": Number(e.target.value.replace(/[^0-9]/g, '')),
+        [key]: min,
+        "max-players": tableForm['max-players'] < min ? min : tableForm['max-players'],
+      })
+    } else if (key === 'max-players') {
+      const max = Number(e.target.value.replace(/[^0-9]/g, ''))
+      setTableForm({
+        ...tableForm,
+        [key]: max,
+        "min-players": tableForm['min-players'] > max ? max : tableForm['min-players'],
       })
     } else {
       setTableForm({
@@ -84,7 +92,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
 
     try {
       const decimals = metadata[tableForm.tokenized.metadata]?.data.decimals
-      const amount = tableForm.tokenized.amount * (decimals ? Math.pow(10, decimals) : 1)
+      const amount = (tableForm.tokenized?.amount || 1) * (decimals ? Math.pow(10, decimals) : 1)
       const newHost = `~${tableForm['custom-host'].replace('~', '')}`
 
       const formatedValues = {
@@ -104,6 +112,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
         newHosts.push(newHost)
       }
 
+      setSecondaryLoading('Waiting on transaction confirmation to create table...')
       await createTable(formatedValues)
       localStorage.setItem(REMATCH_PARAMS_KEY, JSON.stringify(formatedValues))
       setTableForm(genBlankTable(newHosts))
@@ -111,9 +120,9 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
       setInsetView('confirm-most-recent')
       hide()
     } catch (err) {
-      setLoading(null)
+      setSecondaryLoading(null)
     }
-  }, [tableForm, metadata, hosts, hide, createTable, setInsetView, setMostRecentTransaction, setLoading, addHost])
+  }, [tableForm, metadata, hosts, hide, createTable, setInsetView, setMostRecentTransaction, addHost, setSecondaryLoading])
 
   return (
     <Modal show={show} hide={hide} className='create-table-modal'>
@@ -142,7 +151,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
               )}
             </Col>
           </Row>
-          {tableForm['game-type'] === 'sng' ? (
+          {/* {tableForm['game-type'] === 'sng' ? (
             <Row>
               <label>Players</label>
               <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
@@ -151,20 +160,21 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
             </Row>
           ) : (
             <>
-              <Row>
-                <label>Min Players</label>
-                <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
-                  {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-                </Select>
-              </Row>
-              <Row>
-                <label>Max Players</label>
-                <Select value={tableForm['max-players']} onChange={changeTableForm('max-players', true)}>
-                  {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-                </Select>
-              </Row>
+              
             </>
-          )}
+          )} */}
+          <Row>
+              <label>Min Players</label>
+              <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
+                {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
+              </Select>
+            </Row>
+            <Row>
+              <label>Max Players</label>
+              <Select value={tableForm['max-players']} onChange={changeTableForm('max-players', true)}>
+                {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
+              </Select>
+            </Row>
           <Row>
             <label>Turn Time</label>
             <Select value={tableForm['turn-time-limit']} onChange={changeTableForm('turn-time-limit')}>

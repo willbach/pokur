@@ -8,20 +8,20 @@ import './Player.scss'
 
 interface PlayerProps extends React.HTMLAttributes<HTMLDivElement> {
   ship: string;
-  lastAction?: LastAction
-  className?: string;
+  altDisplay?: string
+  className?: string
   alt?: boolean
   hideSigil?: boolean
 }
 
-const Player = ({ ship, className, lastAction = {}, alt = false, hideSigil = false, children }: PlayerProps) => {
+const Player = ({ ship, className, altDisplay, alt = false, hideSigil = false, children }: PlayerProps) => {
   return (
     <Row key={ship} className={`player ${className || ''}`}>
       {!hideSigil && <div className='sigil-container'>
         {renderSigil({ ship, alt })}
       </div>}
       <Text key={ship} className={`ship ${alt ? 'alt' : ''}`}>
-        {lastAction[ship] || renderShip(ship.replace(/~/, ''))}
+        {altDisplay || renderShip(ship.replace(/~/, ''))}
       </Text>
     </Row>
   )

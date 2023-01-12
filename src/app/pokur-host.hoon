@@ -155,10 +155,11 @@
         (add now.bowl round-duration.game-type.game)
     ==
   ::
-      [%timer @ ~]
+      [%timer @ @ ~]  ::  what game and who timed out
     :: TURN TIMER wire
     :: the timer ran out.. a player didn't make a move in time
     =/  game-id  (slav %da i.t.wire)
+    =/  who  (slav %p i.t.t.wire)
     ::  find whose turn it is
     ?~  host-game=(~(get by games.state) game-id)
       `this
@@ -169,6 +170,10 @@
       =^  cards  state
         (end-game-pay-winners u.host-game)
       [cards this]
+    ?.  =(who whose-turn.game)
+      ::  erroneous turn timer, simply ignore
+      `this
+    ::  player whose turn it was indeed timed out
     ::  reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
     :_  this(games.state (~(put by games.state) game-id u.host-game))
@@ -272,15 +277,17 @@
     `state
   ::
       %turn-timers
+    ?>  =(src.bowl our.bowl)
+    ::  ~&  >>  "setting timer for {<who.action>}, cancelling timer for {<pre.action>}"
     :_  state
     ^-  (list card)
-    :-  :*  %pass  /timer/(scot %da id.action)
+    :-  :*  %pass  /timer/(scot %da id.action)/(scot %p who.action)
             %arvo  %b  %wait
             wake.action
         ==
     ?:  =(*@da rest.action)  ~
     :_  ~
-    :*  %pass  /timer/(scot %da id.action)
+    :*  %pass  /timer/(scot %da id.action)/(scot %p pre.action)
         %arvo  %b  %rest
         rest.action
     ==
@@ -310,6 +317,7 @@
       :: automatic fold from timeout!
       whose-turn.game
     src.bowl
+  =/  whose-turn-pre=@p  whose-turn.game.u.host-game
   ?.  =(whose-turn.game from)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
@@ -318,7 +326,7 @@
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: invalid action received!"]]]
   ::
-  (resolve-player-turn u.-)
+  (resolve-player-turn u.- whose-turn-pre)
 ::
 ++  handle-player-txn
   |=  [action=txn-player-action on-batch=?]
@@ -576,7 +584,13 @@
               %agent  [our.bowl %pokur-host]
               %poke  %pokur-host-action
               !>  ^-  host-action
-              [%turn-timers id.game turn-timer.host-game-state *@da]
+              :*  %turn-timers
+                  id.game
+                  whose-turn.game.host-game-state
+                  *@p
+                  turn-timer.host-game-state
+                  *@da
+              ==
       ==  ==
     ::  initialize first round timer, if tournament style game
     ?.  ?=(%sng -.game-type.u.table)  ~
@@ -596,6 +610,7 @@
             (~(has in spectators.game.u.host-game) src.bowl)
         ==
       `state
+    =/  whose-turn-pre=@p  whose-turn.game.u.host-game
     :: remove sender from their game
     =?    u.host-game
         (~(has by hands.u.host-game) src.bowl)
@@ -639,13 +654,11 @@
         ::  player left out of turn, check for game over
         ?:  game-is-over.game.u.host-game
           ::  leaving resulted in game ending, handle
-          ::  this will handle cash games in case of last player at table
           (end-game-pay-winners u.host-game)
         ::  game not over, just send update showing they left
-        :-  (weld (send-game-updates u.host-game ~) award-card)
+        :-  (send-game-updates u.host-game ~)
         state(games (~(put by games.state) id.action u.host-game))
-      ::  left on their turn, play it out
-      (resolve-player-turn u.host-game)
+      (resolve-player-turn u.host-game whose-turn-pre)
     [(weld cards award-card) state]
   ::
       %kick-player
@@ -707,7 +720,7 @@
 ::  handle ending hands and games
 ::
 ++  resolve-player-turn
-  |=  host-game=host-game-state
+  |=  [host-game=host-game-state whose-turn-pre=@p]
   ^-  (quip card _state)
   =/  old-timer=@da  turn-timer.host-game
   ::  poke ourself to set a turn timer
@@ -737,12 +750,19 @@
     (end-game-pay-winners host-game)
   :_  state
   ::  set new turn timer and cancel old one, if any
+  ?:  game-is-over.game.host-game  cards
   %+  snoc  cards
   :*  %pass  /self-poke
       %agent  [our.bowl %pokur-host]
       %poke  %pokur-host-action
       !>  ^-  host-action
-      [%turn-timers id.game.host-game turn-timer.host-game old-timer]
+      :*  %turn-timers
+          id.game.host-game
+          whose-turn.game:(~(got by games.state) id.game.host-game)
+          whose-turn-pre
+          turn-timer.host-game
+          old-timer
+      ==
   ==
 ::
 ::  +send-game-updates: make update cards for players and spectators

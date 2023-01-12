@@ -339,6 +339,10 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
             animation: blinkingBackground 2s infinite;
           }
 
+          &.winner {
+            animation: blinkingBackground 1s infinite;
+          }
+
           &.folded {
             color: lightgray;
 

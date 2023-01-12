@@ -100,7 +100,7 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
 
   return (
     <Col className='game-actions'>
-      {isTurn && !lock && (
+      {isTurn && !lock && !game?.hide_actions && (
         <>
           <Row className='quick-bet'>
             <Row className='bet-buttons'>

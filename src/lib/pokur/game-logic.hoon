@@ -32,6 +32,11 @@
     =.  players.game.state
       %+  skip  players.game.state
       |=([ship player-info] left)
+    =.  pots.game.state
+      :_  ~
+      :-  0
+      %+  murn  players.game.state
+      |=([p=@p player-info] ?:(folded ~ `p))
     state
   ::
   ::  other entry point for host
@@ -64,6 +69,12 @@
       =.  players.game.state  (set-player-as-acted:gang who)
       =.  players.game.state  (set-player-as-folded:gang who)
       =.  update-message.game.state  (crip "{<who>} folded. ")
+      ::  remove folding player from current pot
+      =.  pots.game.state
+        %+  snoc
+          (snip pots.game.state)
+        =+  (rear pots.game.state)
+        [-.- (skip `(list @p)`+.- |=(p=@p =(p who)))]
       ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state
@@ -79,7 +90,16 @@
       =/  bet-plus-committed
         (add amount.action committed.player-info)
       =/  current-min-bet
-        big:(get-current-blinds game-type.game.state)
+        %+  min
+          big:(get-current-blinds game-type.game.state)
+        ::  largest stack of still-in player, excluding active one
+        %+  roll
+          %+  murn  players.game.state
+          |=  [=ship ^player-info]
+          ?:  |(=(0 stack) =(ship who))
+            ~
+          `stack
+        max
       ?:  (gte amount.action stack.player-info)
         ::  ALL-IN logic here
         =.  game.state
@@ -163,8 +183,8 @@
     ::  mode and reveal hands if so.
     =/  all-ins  all-in-players:gang
     =/  showdown-mode  ?=(^ all-ins)
-    =?    revealed-hands.game.state
-        showdown-mode
+    =.  revealed-hands.game.state
+      ?.  showdown-mode  ~
       %+  turn  all-ins
       |=(=ship [ship (~(got by hands.state) ship)])
     |^
@@ -232,14 +252,22 @@
   ++  committed-chips-to-pot
     ^-  host-game-state
     =/  sorted-commitments=players
-      %+  sort  players.game.state
+      %+  sort
+        %+  skip  players.game.state
+        |=  [p=@p player-info]
+        =(0 committed)
       |=  [a=[ship player-info] b=[ship player-info]]
       (lth committed.a committed.b)
+    ::  ~&  >  sorted-commitments
     =/  this-pot  (rear pots.game.state)
-    =/  new-pot=?  %.n
+    =/  new-pot=?
+      ::  if last pot had more players than current commitments,
+      ::  start out making a new pot
+      (lth (lent sorted-commitments) (lent in.this-pot))
     |-
     ?:  =(~ sorted-commitments)
       ::  all pots built, finished
+      ::  ~&  >>  pots.game.state
       %=  state
         current-bet.game  0
         last-bet.game     0
@@ -253,7 +281,7 @@
     =/  lowest=[ship player-info]  (head sorted-commitments)
     ::  grab the current active pot from list to modify first
     =/  [less=players added-chips=@ud]
-      %^  spin  sorted-commitments  -.this-pot
+      %^  spin  sorted-commitments  ?:(new-pot 0 -.this-pot)
       |=  [[p=ship i=player-info] pot=@ud]
       :-  [p i(committed (sub committed.i committed.lowest))]
       (add pot committed.lowest)
@@ -267,12 +295,12 @@
         pots.game.state
       ::  if this is a new side pot, stack on top
       ::  if not, replace current rear pot with this one
-      ::  ?:  |(folded.lowest =(0 committed.lowest))
-      ?:  new-pot  (snoc pots.game.state this-pot(amount added-chips))
-        %+  snoc
-          (snip pots.game.state)
-        this-pot(amount added-chips)
-      ::  (snoc pots.game.state this-pot(amount added-chips))
+      ?:  new-pot
+        %+  snoc  pots.game.state
+        [added-chips (turn less head)]
+      %+  snoc
+        (snip pots.game.state)
+      this-pot(amount added-chips)
     ::
         new-pot
       ?:  |(folded.lowest =(0 committed.lowest))  %.n  %.y
@@ -364,7 +392,6 @@
       hand-is-over       %.y
       deck               generate-deck  ::  need a fresh 52-card one
       hands-played.game  +(hands-played.game.state)
-      pots.game  [0 (turn active-with-chips head)]~
     ::
         game-is-over.game
       =-  |(=(1 -) =(0 -))
@@ -496,6 +523,13 @@
       |=  [p=ship i=player-info]
       ?.  =(p who)  [p i]
       [p i(acted %.y, folded %.y, left %.y)]
+    ::  remove folding player from current pot
+    =.  pots.game.state
+      ?:  =(~ pots.game.state)  ~
+      %+  snoc
+        (snip pots.game.state)
+      =+  (rear pots.game.state)
+      [-.- (skip `(list @p)`+.- |=(p=@p =(p who)))]
     =.  update-message.game.state
       (crip "{<who>} left the game. ")
     =/  players-left
