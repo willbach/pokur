@@ -288,7 +288,7 @@
   ::
       %turn-timers
     ?>  =(src.bowl our.bowl)
-    ~&  >>  "setting timer for {<who.action>}, cancelling timer for {<pre.action>}"
+    ::  ~&  >>  "setting timer for {<who.action>}, cancelling timer for {<pre.action>}"
     :_  state
     ^-  (list card)
     :-  :*  %pass  /timer/(scot %da id.action)/(scot %p who.action)
@@ -666,6 +666,7 @@
     (end-game-pay-winners host-game)
   :_  state
   ::  set new turn timer and cancel old one, if any
+  ?:  game-is-over.game.host-game  cards
   %+  snoc  cards
   :*  %pass  /self-poke
       %agent  [our.bowl %pokur-host]
