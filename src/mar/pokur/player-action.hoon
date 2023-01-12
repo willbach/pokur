@@ -49,7 +49,10 @@
       ==
     ++  parse-cash-type
       %-  ot
-      :~  [%starting-stack ni]
+      :~  [%min-buy ni]
+          [%max-buy ni]
+          [%buy-ins ul]
+          [%chips-per-token ni]
           [%small-blind ni]
           [%big-blind ni]
       ==
