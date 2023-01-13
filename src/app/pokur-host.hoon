@@ -67,6 +67,9 @@
     ==
   [cards this]
 ++  on-watch
+  ::
+  ::  on-watch arm cannot crash ever or it ruins your whole life
+  ::
   |=  =path
   ^-  (quip card _this)
   ?+    path  (on-watch:def path)
@@ -88,10 +91,12 @@
   ::
       [%lobby-updates @ ~]
     ::  watcher seeks updates about a private table
-    =/  table-id=@da  (slav %da i.t.path)
-    ~&  >  "player {<src.bowl>} watching private table {<table-id>}"
     :_  this
-    ?~  table=(~(get by tables.state) table-id)  ~
+    ?~  table-id=(slaw %da i.t.path)
+      =/  err  "invalid table id {<i.t.path>}"
+      [%give %watch-ack `~[leaf+err]]~
+    ~&  >  "player {<src.bowl>} watching private table {<u.table-id>}"
+    ?~  table=(~(get by tables.state) u.table-id)  ~
     :_  ~
     :^  %give  %fact  ~
     :-  %pokur-host-update
@@ -99,30 +104,32 @@
   ::
       [%game-updates @ @ ~]
     ::  assert the player is in game and on their path
-    =/  game-id    (slav %da i.t.path)
-    =/  player=@p  (slav %p i.t.t.path)
-    ?>  =(player src.bowl)
-    ?~  host-game=(~(get by games.state) game-id)
-      :_  this
+    ?~  game-id=(slaw %da i.t.path)
+      =/  err  "invalid game id {<i.t.path>}"
+      [[%give %watch-ack `~[leaf+err]]~ this]
+    ?~  player=(slaw %p i.t.t.path)
+      =/  err  "invalid @p {<i.t.t.path>}"
+      [[%give %watch-ack `~[leaf+err]]~ this]
+    ?.  =(u.player src.bowl)
+      =/  err  "path must match source {<i.t.t.path>}"
+      [[%give %watch-ack `~[leaf+err]]~ this]
+    ?~  host-game=(~(get by games.state) u.game-id)
       =/  err  "invalid game id {<game-id>}"
-      :~  [%give %watch-ack `~[leaf+err]]
-      ==
-    ?~  (find [player]~ (turn players.game.u.host-game head))
+      [[%give %watch-ack `~[leaf+err]]~ this]
+    ?~  (find [u.player]~ (turn players.game.u.host-game head))
       ?.  spectators-allowed.game.u.host-game
-        :_  this
         =/  err  "player not in this game"
-        :~  [%give %watch-ack `~[leaf+err]]
-        ==
+        [[%give %watch-ack `~[leaf+err]]~ this]
       ::  give game state to a spectator
       =.  spectators.game.u.host-game
-        (~(put in spectators.game.u.host-game) player)
-      :_  this(games.state (~(put by games.state) game-id u.host-game))
+        (~(put in spectators.game.u.host-game) u.player)
+      :_  this(games.state (~(put by games.state) u.game-id u.host-game))
       :_  ~
       :^  %give  %fact  ~
       [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
     ::  give game state to a player
     =.  my-hand.game.u.host-game
-      (fall (~(get by hands.u.host-game) player) ~)
+      (fall (~(get by hands.u.host-game) u.player) ~)
     :_  this  :_  ~
     :^  %give  %fact  ~
     [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
@@ -177,15 +184,14 @@
     ::  reset that game's turn timer
     =.  turn-timer.u.host-game  *@da
     :_  this(games.state (~(put by games.state) game-id u.host-game))
+    ?~  inf=(get-player-info:~(gang guts u.host-game) whose-turn.game)
+      ~
     :_  ~
     :*  %pass  /self-poke-wire
         %agent  [our.bowl %pokur-host]
         %poke  %pokur-game-action
         !>  ^-  game-action
-        ::  if there is a required bet, auto-fold
-        ::  otherwise, auto-check
-        ?:  =-  =(current-bet.game committed:(need -))
-            (get-player-info:~(gang guts u.host-game) whose-turn.game)
+        ?:  =(current-bet.game committed.u.inf)
           [%check game-id ~]
         [%fold game-id ~]
     ==
@@ -300,6 +306,11 @@
     :~  (table-closed-card id.action)
         (table-gossip-card [%closed id.action])
     ==
+  ::
+      %kick-game
+    ::  debugging tool for hosts
+    ::  **DOES NOT REFUND PLAYERS**
+    `state(games (~(del by games.state) id.action))
   ==
 ::
 ++  handle-game-action
@@ -358,7 +369,7 @@
     =/  buy-in=@ud
       ?-  -.game-type.u.table
         %sng   amount.u.tokenized.u.table
-        %cash  buy-in.player-action.action
+        %cash  1.000  ::  buy-in.player-action.action
       ==
     ::  assert that player has bought in for their amount
     =/  valid
@@ -430,7 +441,8 @@
       =/  chips-bought=@ud
         ::  TODO handle tokens with nonstandard decimal amounts
         %+  div
-          (mul buy-in.action chips-per-token.game-type.u.table)
+          (mul 1.000.000.000.000.000.000 chips-per-token.game-type.u.table)
+          ::  (mul buy-in.action chips-per-token.game-type.u.table)
         1.000.000.000.000.000.000
       ?>  ?&  (gte chips-bought min-buy.game-type.u.table)
               (lte chips-bought max-buy.game-type.u.table)
@@ -614,12 +626,14 @@
     :: remove sender from their game
     =?    u.host-game
         (~(has by hands.u.host-game) src.bowl)
+      ~&  >>>  "removing player {<src.bowl>} from game."
       (~(remove-player guts u.host-game) src.bowl)
     :: remove spectator if they were one
     =.  spectators.game.u.host-game
       (~(del in spectators.game.u.host-game) src.bowl)
     ::  if player is leaving a cash game, award them tokens
     ::  in proportion to their stack when leaving the table.
+    ::  TODO factor into arm
     =/  award-card=(list card)
       ?~  tokenized.u.host-game  ~
       ?.  ?=(%cash -.game-type.game.u.host-game)  ~
@@ -650,7 +664,7 @@
       ==  ==  ==
     =^  cards  state
       ::  check if player left on their turn
-      ?.  =(src.bowl whose-turn.game.u.host-game)
+      ?.  =(src.bowl whose-turn-pre)
         ::  player left out of turn, check for game over
         ?:  game-is-over.game.u.host-game
           ::  leaving resulted in game ending, handle
@@ -658,6 +672,7 @@
         ::  game not over, just send update showing they left
         :-  (send-game-updates u.host-game ~)
         state(games (~(put by games.state) id.action u.host-game))
+      ::  player left on their turn.
       (resolve-player-turn u.host-game whose-turn-pre)
     [(weld cards award-card) state]
   ::
@@ -821,6 +836,7 @@
     %-  ~(total-payout fetch [our now]:bowl our-info.state)
     bond-id.u.tokenized.host-game
   ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
+  ~&  >>  "placements: {<placements.host-game>}"
   =/  winnings=(list [ship @ud])
     =<  p
     %^  spin  payouts.game-type.game.host-game  0

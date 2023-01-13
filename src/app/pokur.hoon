@@ -147,9 +147,10 @@
       ::
           %kick
         ::  resub on kick
-        ~&  >>>  "%pokur: kicked from game-path, resubbing"
-        :_  this  :_  ~
-        [%pass wire %agent [src.bowl %pokur-host] %watch wire]
+        ~&  >>>  "%pokur: kicked from game-path, NOT resubbing"
+        ::  :_  this  :_  ~
+        ::  [%pass wire %agent [src.bowl %pokur-host] %watch wire]
+        `this
       ==
     ?>  ?=(%pokur-host-update p.cage.sign)
     =/  upd  !<(host-update q.cage.sign)

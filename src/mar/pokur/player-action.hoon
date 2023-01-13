@@ -17,10 +17,9 @@
     ++  player-action
       %-  of
       :~  [%new-table parse-table]
-          [%join-table (ot ~[[%id (se %da)] [%buy-in (se %ud)] [%public bo]])]
+          [%join-table (ot ~[[%id (se %da)] [%public bo]])]  ::  [%buy-in (se %ud)] [%public bo]])]
           [%leave-table parse-id]
           [%start-game parse-id]
-          [%join-game (ot ~[[%id (se %da)] [%buy-in (se %ud)] [%public bo]])]
           [%leave-game parse-id]
           [%kick-player (ot ~[[%id (se %da)] [%who (se %p)]])]
           [%set-our-address (ot ~[[%address (se %ux)]])]
