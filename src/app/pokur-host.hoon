@@ -369,7 +369,7 @@
     =/  buy-in=@ud
       ?-  -.game-type.u.table
         %sng   amount.u.tokenized.u.table
-        %cash  1.000  ::  buy-in.player-action.action
+        %cash  buy-in.player-action.action
       ==
     ::  assert that player has bought in for their amount
     =/  valid
@@ -441,8 +441,7 @@
       =/  chips-bought=@ud
         ::  TODO handle tokens with nonstandard decimal amounts
         %+  div
-          (mul 1.000.000.000.000.000.000 chips-per-token.game-type.u.table)
-          ::  (mul buy-in.action chips-per-token.game-type.u.table)
+          (mul buy-in.action chips-per-token.game-type.u.table)
         1.000.000.000.000.000.000
       ?>  ?&  (gte chips-bought min-buy.game-type.u.table)
               (lte chips-bought max-buy.game-type.u.table)

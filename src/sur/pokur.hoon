@@ -142,7 +142,7 @@
           spectators-allowed=?
           turn-time-limit=@dr
       ==
-      [%join-table id=@da public=?]  ::  buy-in=@ud public=?]  ::  buy-in is in tokens, for %cash games
+      [%join-table id=@da buy-in=@ud public=?]  ::  buy-in is in tokens, for %cash games
       [%leave-table id=@da]
       [%start-game id=@da]  ::  from FE to player app
       [%leave-game id=@da]
