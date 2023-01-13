@@ -1,5 +1,7 @@
 /=  zig  /sur/zig/ziggurat
 ::
+/=  mip  /lib/mip
+::
 |%
 ++  make-config
   ^-  config:zig
@@ -73,8 +75,8 @@
 ++  get-address
   |=  who=@p
   ^-  @ux
-  %.  [who %address]
-  ~(got by (~(got by configs:test-globals) ''))
+  %.  ['global' [who %address]]
+  ~(got bi:mip configs:test-globals)
 ::
 ++  service-host
   ^-  @p
