@@ -120,7 +120,9 @@
         depositors.noun.bond
       %+  ~(jab py depositors.noun.bond)  to.act
       |=  [=address amount=@ud]
-      [address (sub amount amount.act)]
+      :-  address
+      ?:  (gth amount.act amount)  0
+      (sub amount amount.act)
     ==
     (result [%&^bond ~] ~ ~ ~)
   ::
