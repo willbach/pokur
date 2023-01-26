@@ -1,7 +1,7 @@
 /=  escrow  /con/lib/escrow
 |%
-::  HARDCODED to ~bacrys IRL, ~zod in FAKESHIP TESTING
-++  fixed-lobby-source  ~zod
+::  HARDCODED to ~bacrys IRL, ~nec in FAKESHIP TESTING
+++  fixed-lobby-source  ~nec
 ::
 +$  host-info
   [=ship address=@ux contract=[id=@ux town=@ux]]
@@ -53,6 +53,7 @@
   ==
 ::
 ::  the data a pokur player holds for a given table
+::  "That's one Big Beautiful Buc-col" – ~rovnys
 ::
 +$  game
   $:  id=@da
@@ -99,7 +100,10 @@
 ::
 ::  updates
 ::
-+$  update  ::  from app to frontend
+::  from app to frontend, sent via subscription on paths:
+::  /lobby-updates, /game-updates, /messages
+::
++$  update
   $%  [%game =game my-hand-rank=@t last-board=pokur-deck]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
@@ -114,7 +118,10 @@
           =tokenized
       ==
   ==
-+$  host-update  ::  from host to player app
+::
+::  from %pokur-host to %pokur. sent via solid-state pokes.
+::
++$  host-update
   $%  [%game =game last-board=pokur-deck]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
@@ -131,7 +138,10 @@
 ::  pokes
 ::
 +$  player-action
-  $%  $:  %new-table
+  $%  [%watch-lobby ~]  ::  ask host to poke us with lobby-updates
+      [%stop-watching-lobby ~]
+      [%watch-private-table id=@da]
+      $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship
           =tokenized

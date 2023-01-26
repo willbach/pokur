@@ -28,6 +28,7 @@
   :_  this(state [%0 [our.bowl 0x0 [0xabcd.abcd 0x0]] ~ ~ ~])
   :~  approve-origin-poke
   ::  always be watching for new batch, to handle any pending tables
+  ::  can't remove this subscription yet unfortunately
       =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
       [%pass /new-batch %agent [our.bowl %uqbar] %watch -]
   ==
@@ -62,78 +63,78 @@
         %pokur-host-action
       ::  internal pokes and host management
       (handle-host-action:hc !<(host-action vase))
+      ::
         %wallet-update
       (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
-++  on-watch
-  ::
-  ::  on-watch arm cannot crash ever or it ruins your whole life
-  ::
-  |=  =path
-  ^-  (quip card _this)
-  ?+    path  (on-watch:def path)
-      [%lobby-updates ~]
-    ::  new player using us as lobby; poke them with our escrow info
-    ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
-    :_  this
-    :-  :^  %give  %fact  ~
-        :-  %pokur-host-update
-        !>(`host-update`[%lobby (public-tables tables.state)])
-    ::
-    ?:  =(0x0 address.our-info.state)  ~
-    :_  ~
-    :*  %pass  /share-escrow-poke
-        %agent  [src.bowl %pokur]
-        %poke  %pokur-host-action
-        !>(`host-action`[%host-info our-info.state])
-    ==
-  ::
-      [%lobby-updates @ ~]
-    ::  watcher seeks updates about a private table
-    :_  this
-    ?~  table-id=(slaw %da i.t.path)
-      =/  err  "invalid table id {<i.t.path>}"
-      [%give %watch-ack `~[leaf+err]]~
-    ~&  >  "player {<src.bowl>} watching private table {<u.table-id>}"
-    ?~  table=(~(get by tables.state) u.table-id)  ~
-    :_  ~
-    :^  %give  %fact  ~
-    :-  %pokur-host-update
-    !>(`host-update`[%new-table u.table])
-  ::
-      [%game-updates @ @ ~]
-    ::  assert the player is in game and on their path
-    ?~  game-id=(slaw %da i.t.path)
-      =/  err  "invalid game id {<i.t.path>}"
-      [[%give %watch-ack `~[leaf+err]]~ this]
-    ?~  player=(slaw %p i.t.t.path)
-      =/  err  "invalid @p {<i.t.t.path>}"
-      [[%give %watch-ack `~[leaf+err]]~ this]
-    ?.  =(u.player src.bowl)
-      =/  err  "path must match source {<i.t.t.path>}"
-      [[%give %watch-ack `~[leaf+err]]~ this]
-    ?~  host-game=(~(get by games.state) u.game-id)
-      =/  err  "invalid game id {<game-id>}"
-      [[%give %watch-ack `~[leaf+err]]~ this]
-    ?~  (find [u.player]~ (turn players.game.u.host-game head))
-      ?.  spectators-allowed.game.u.host-game
-        =/  err  "player not in this game"
-        [[%give %watch-ack `~[leaf+err]]~ this]
-      ::  give game state to a spectator
-      =.  spectators.game.u.host-game
-        (~(put in spectators.game.u.host-game) u.player)
-      :_  this(games.state (~(put by games.state) u.game-id u.host-game))
-      :_  ~
-      :^  %give  %fact  ~
-      [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
-    ::  give game state to a player
-    =.  my-hand.game.u.host-game
-      (fall (~(get by hands.u.host-game) u.player) ~)
-    :_  this  :_  ~
-    :^  %give  %fact  ~
-    [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
-  ==
+++  on-watch  !!
+  ::  REMOVING
+  ::  |=  =path
+  ::  ^-  (quip card _this)
+  ::  ?+    path  (on-watch:def path)
+  ::      [%lobby-updates ~]
+  ::    ::  new player using us as lobby; poke them with our escrow info
+  ::    ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
+  ::    :_  this
+  ::    :-  :^  %give  %fact  ~
+  ::        :-  %pokur-host-update
+  ::        !>(`host-update`[%lobby (public-tables tables.state)])
+  ::    ::
+  ::    ?:  =(0x0 address.our-info.state)  ~
+  ::    :_  ~
+  ::    :*  %pass  /share-escrow-poke
+  ::        %agent  [src.bowl %pokur]
+  ::        %poke  %pokur-host-action
+  ::        !>(`host-action`[%host-info our-info.state])
+  ::    ==
+  ::  ::
+  ::      [%lobby-updates @ ~]
+  ::    ::  watcher seeks updates about a private table
+  ::    :_  this
+  ::    ?~  table-id=(slaw %da i.t.path)
+  ::      =/  err  "invalid table id {<i.t.path>}"
+  ::      [%give %watch-ack `~[leaf+err]]~
+  ::    ~&  >  "player {<src.bowl>} watching private table {<u.table-id>}"
+  ::    ?~  table=(~(get by tables.state) u.table-id)  ~
+  ::    :_  ~
+  ::    :^  %give  %fact  ~
+  ::    :-  %pokur-host-update
+  ::    !>(`host-update`[%new-table u.table])
+  ::  ::
+  ::      [%game-updates @ @ ~]
+  ::    ::  assert the player is in game and on their path
+  ::    ?~  game-id=(slaw %da i.t.path)
+  ::      =/  err  "invalid game id {<i.t.path>}"
+  ::      [[%give %watch-ack `~[leaf+err]]~ this]
+  ::    ?~  player=(slaw %p i.t.t.path)
+  ::      =/  err  "invalid @p {<i.t.t.path>}"
+  ::      [[%give %watch-ack `~[leaf+err]]~ this]
+  ::    ?.  =(u.player src.bowl)
+  ::      =/  err  "path must match source {<i.t.t.path>}"
+  ::      [[%give %watch-ack `~[leaf+err]]~ this]
+  ::    ?~  host-game=(~(get by games.state) u.game-id)
+  ::      =/  err  "invalid game id {<game-id>}"
+  ::      [[%give %watch-ack `~[leaf+err]]~ this]
+  ::    ?~  (find [u.player]~ (turn players.game.u.host-game head))
+  ::      ?.  spectators-allowed.game.u.host-game
+  ::        =/  err  "player not in this game"
+  ::        [[%give %watch-ack `~[leaf+err]]~ this]
+  ::      ::  give game state to a spectator
+  ::      =.  spectators.game.u.host-game
+  ::        (~(put in spectators.game.u.host-game) u.player)
+  ::      :_  this(games.state (~(put by games.state) u.game-id u.host-game))
+  ::      :_  ~
+  ::      :^  %give  %fact  ~
+  ::      [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
+  ::    ::  give game state to a player
+  ::    =.  my-hand.game.u.host-game
+  ::      (fall (~(get by hands.u.host-game) u.player) ~)
+  ::    :_  this  :_  ~
+  ::    :^  %give  %fact  ~
+  ::    [%pokur-host-update !>(`host-update`[%game game.u.host-game ~])]
+  ::  ==
+::
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
@@ -196,9 +197,11 @@
         [%fold game-id ~]
     ==
   ==
+::
 ++  on-peek
   ::  TODO add scries
   on-peek:def
+::
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
@@ -207,7 +210,7 @@
     ::  new batch notif from indexer: check our pending-tables
     ::  and see if any valid new tables or table joins have occurred
     ?:  ?=(%kick -.sign)
-      :_  this  ::  attempt to re-sub
+      :_  this  ::  attempt to re-sub, can't remove this sub yet
       =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
       /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
     ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
@@ -790,13 +793,13 @@
     ^-  card
     =.  my-hand.game.host-game
       ?~(h=(~(get by hands.host-game) ship) ~ u.h)
-    :^  %give  %fact
+    :^  %give  %fact  ::  XX
       ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
     [%pokur-host-update !>(`host-update`[%game game.host-game last-board])]
   %+  turn  ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
-  :^  %give  %fact
+  :^  %give  %fact  ::  XX
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
   [%pokur-host-update !>(`host-update`[%game game.host-game last-board])]
 ::
@@ -809,7 +812,7 @@
     ~(tap in spectators.game.host-game)
   |=  =ship
   ^-  card
-  :^  %give  %fact
+  :^  %give  %fact  ::  XX
     ~[/game-updates/(scot %da id.game.host-game)/(scot %p ship)]
   :-  %pokur-host-update
   !>  ^-  host-update
@@ -903,28 +906,28 @@
 ++  game-starting-card
   |=  id=@da
   ^-  card
-  :^  %give  %fact  ~[/lobby-updates]
+  :^  %give  %fact  ~[/lobby-updates]  ::  XX
   :-  %pokur-host-update
   !>(`host-update`[%game-starting id])
 ::
 ++  table-closed-card
   |=  id=@da
   ^-  card
-  :^  %give  %fact  ~[/lobby-updates]
+  :^  %give  %fact  ~[/lobby-updates]  ::  XX
   :-  %pokur-host-update
   !>(`host-update`[%table-closed id])
 ::
 ++  new-table-card
   |=  =table
   ^-  card
-  :^  %give  %fact  ~[/lobby-updates]
+  :^  %give  %fact  ~[/lobby-updates]  ::  XX
   :-  %pokur-host-update
   !>(`host-update`[%new-table table])
 ::
 ++  private-table-card
   |=  =table
   ^-  card
-  :^  %give  %fact  ~[/lobby-updates/(scot %da id.table)]
+  :^  %give  %fact  ~[/lobby-updates/(scot %da id.table)]  ::  XX
   :-  %pokur-host-update
   !>(`host-update`[%new-table table])
 ::
@@ -944,4 +947,4 @@
   |=  [key=@da =table]
   ?.  public.table  ~
   `[key table]
---
+--  ::  947 lines
