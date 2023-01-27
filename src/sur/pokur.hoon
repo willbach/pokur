@@ -122,12 +122,12 @@
 ::  from %pokur-host to %pokur. sent via solid-state pokes.
 ::
 +$  host-update
-  $%  [%game =game last-board=pokur-deck]
-      [%table-closed table-id=@da]
-      [%game-starting game-id=@da]
-      [%new-table =table]
-      [%lobby tables=(map @da table)]
-      $:  %game-over
+  $%  [%lobby tables=(map @da table)]      ::  received upon ask
+      [%new-table =table]                  ::  for lobby watchers
+      [%table-closed table-id=@da]         ::  for lobby watchers
+      [%game-starting game-id=@da]         ::  for lobby watchers
+      [%game =game last-board=pokur-deck]  ::  for game watchers
+      $:  %game-over                       ::  for game watchers
           =game
           last-board=pokur-deck
           placements=(list [ship @ud])
@@ -140,7 +140,6 @@
 +$  player-action
   $%  [%watch-lobby ~]  ::  ask host to poke us with lobby-updates
       [%stop-watching-lobby ~]
-      [%watch-private-table id=@da]
       $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship

@@ -13,7 +13,7 @@ Copy `gen/sequencer/init.hoon` from here into `uqbar-core`, replacing the file a
 
 Install the %zig desk on both ships.
 
-Run the normal startup commands in `uqbar-core` README to set up **~zod** as the rollup host and sequencer:
+Run the normal startup commands in `uqbar-core` README to set up **~nec** as the rollup host and sequencer:
 ```hoon
 :rollup|activate
 :indexer &set-sequencer [our %sequencer]
@@ -24,11 +24,11 @@ Run the normal startup commands in `uqbar-core` README to set up **~zod** as the
 
 Many of these instructions can be better done through the wallet frontend.
 
-Run the following commands on **~bus**:
+Run the following commands on **~rus**:
 ```hoon
-:indexer &set-sequencer [~zod %sequencer]
-:indexer &set-rollup [~zod %rollup]
-:indexer &indexer-bootstrap [~zod %indexer]
+:indexer &set-sequencer [~nec %sequencer]
+:indexer &set-rollup [~nec %rollup]
+:indexer &indexer-bootstrap [~nec %indexer]
 :uqbar &wallet-poke [%import-seed 'post fitness extend exit crack question answer fruit donkey quality emotion draw section width emotion leg settle bulb zero learn solution dutch target kidney' 'squid' 'nickname']
 ```
 
@@ -37,13 +37,13 @@ We'll use zigs tokens for a sit n go.
 
 *NOTE: %pokur-host sends a poke to %wallet upon install, allowing it to automatically sign and submit transactions.*
 
-On **~zod**:
+On **~nec**:
 
 Make a table. This is a sit'n'go table that awards 100% of winnings to 1st place:
 ```hoon
 :pokur-host &pokur-host-action [%host-info our 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 [0xabcd.abcd 0x0]]
 :pokur &pokur-player-action [%set-our-address 0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70]
-:pokur &pokur-player-action [%new-table *@da ~zod `[`@ux`'zigs-metadata' 'ZIG' 1.000.000.000.000.000.000 0x0] 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
+:pokur &pokur-player-action [%new-table *@da ~nec `[`@ux`'zigs-metadata' 'ZIG' 1.000.000.000.000.000.000 0x0] 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
 ```
 Fill in tx hash, submit and sequence:
 ```hoon
@@ -51,21 +51,21 @@ Fill in tx hash, submit and sequence:
 :sequencer|batch
 ```
 
-Now the table will be created and available from host. ~bus should see the update -- now we can join with **~bus**.
+Now the table will be created and available from host. ~rus should see the update -- now we can join with **~rus**.
 
 Make the join transaction:
 ```hoon
 :pokur &pokur-player-action [%set-our-address 0xd6dc.c8ff.7ec5.4416.6d4e.b701.d1a6.8e97.b464.76de]
-:pokur &pokur-player-action [%join-table public=%.y]
+:pokur &pokur-player-action [%join-table id=[table-id] buy-in=0 public=%.y]
 :uqbar &wallet-poke [%submit from=0xd6dc.c8ff.7ec5.4416.6d4e.b701.d1a6.8e97.b464.76de hash=[yourhash] gas=[rate=1 bud=1.000.000]]
 ```
 
-Then, run a batch on **~zod** so this txn goes through:
+Then, run a batch on **~nec** so this txn goes through:
 ```hoon
 :sequencer|batch
 ```
 
-You can now start the game on **~zod**. At the end, the winning ship should be awarded 2.000 zigs!
+You can now start the game on **~nec**. At the end, the winning ship should be awarded 2.000 zigs!
 ```hoon
 :pokur &pokur-player-action [%start-game <table-id>]
 ```
@@ -74,24 +74,24 @@ You can now start the game on **~zod**. At the end, the winning ship should be a
 
 **fake monies game:**
 
-On ship ~zod:
+On ship ~nec:
 ```
-:pokur &pokur-player-action [%new-table *@da ~zod ~ 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
+:pokur &pokur-player-action [%new-table *@da ~nec ~ 2 2 [%sng 1.000 ~m60 ~[[1 2] [2 4] [4 8]] 0 %.n ~[100]] %.y %.y ~m10]
 ```
 
 (look at "lobbies available" print to find table id -- this prints twice, is ok)
 
-On ship ~bus:
+On ship ~rus:
 ```
 :pokur &pokur-player-action [%join-table <id> public=%.y]
 ```
 
-On ~zod:
+On ~nec:
 ```
 :pokur &pokur-player-action [%start-game <id>]
 ```
 
-On ~bus:
+On ~rus:
 ```
 :pokur|bet 1  ::  call big blind
 ```
