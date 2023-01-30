@@ -328,6 +328,8 @@
     ``json+!>((enjs-messages:pokur-json messages.state))
       [%muted-players ~]
     ``json+!>(a+(turn ~(tap in muted-players.state) ship:enjs:format))
+      [%lobby ~]
+    ``pokur-update+!>(`update`[%lobby lobby.state])
   ::
       [%table @ ~]
     :^  ~  ~  %json
