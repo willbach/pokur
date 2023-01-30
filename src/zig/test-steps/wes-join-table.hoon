@@ -53,7 +53,7 @@
   ::
     :+  %scry
       :-  who
-      :^  '@t'  %gx  %subscriber
+      :^  '[@t boat:gall bitt:gall]'  %gx  %subscriber
       /agent-state/pokur/noun
     ''
   ==

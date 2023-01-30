@@ -1,3 +1,4 @@
+/=  indexer  /sur/zig/ziggurat
 /=  zig      /sur/zig/ziggurat
 ::
 /=  mip      /lib/mip
