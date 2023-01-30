@@ -35,8 +35,15 @@
       [%refund bond-id=id]
       ::  anyone can submit -- returns all funds to depositors
       ::  if the bond's timelock has passed and not all tokens
-      ::  have been awarded.
-      [%release bond-id=id]
+      ::  have been awarded. if tokens have been *partially*
+      ::  awarded such that any depositor has been given more
+      ::  than they deposited, outstanding claims will exceed
+      ::  tokens in bond. in this case, tokens are only awarded
+      ::  to caller in accordance with their claim. other
+      ::  depositors may perform a %release call afterwards
+      ::  to claim their funds -- later callers are less likely
+      ::  to get full/any refund -- try to be first
+      [%release =ship bond-id=id]
       ::  handle token standard %push action
       ::  the actions this handles: %deposit, %new-bond-with-deposit
       [%on-push from=id amount=@ud calldata=*]

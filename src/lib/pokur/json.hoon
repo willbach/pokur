@@ -9,6 +9,7 @@
   |=  [who=@p =host-info]
   :-  (scot %p who)
   (enjs-host-info host-info)
+::
 ++  enjs-messages
   |=  m=(list [@p @t])
   ^-  json
@@ -19,6 +20,7 @@
   :~  ['from' (ship shi)]
       ['msg' s+msg]
   ==
+::
 ++  enjs-game
   |=  t=game
   ^-  json

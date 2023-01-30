@@ -2,6 +2,8 @@
 ::  token escrow contract for managing pokur games
 ::  (but general enough to be used for anything?)
 ::
+::  COMPLETELY UNAUDITED -- USE AT OWN RISK ;)
+::
 /+  *zig-sys-smart
 /=  lib  /con/lib/escrow
 |_  =context
@@ -156,7 +158,43 @@
     ?>  (gth eth-block.context timelock.noun.bond)
     ::  tokens must remain in contract
     ?>  (gth amount.escrow-asset.noun.bond 0)
-    ::  all tokens returned to depositors
+    ::  determine total claims
+    =/  outstanding-claims=@ud
+      %-  ~(rep py depositors.noun.bond)
+      |=  [p=[=ship =address amt=@ud] q=@ud]
+      (add amt.p q)
+    ::
+    ?:  (gth outstanding-claims amount.escrow-asset.noun.bond)
+      ::  refund caller only
+      =/  caller-claim  (~(got py depositors.noun.bond) ship.act)
+      ?:  (gte amount.caller-claim amount.escrow-asset.noun.bond)
+        ::  only enough to partially/exactly refund caller
+        ::  bond is destroyed
+        =/  remaining-tokens=@ud  amount.escrow-asset.noun.bond
+        =:  amount.escrow-asset.noun.bond  0
+            depositors.noun.bond           ~
+        ==
+        :_  (result ~ ~ [%&^bond ~] ~)
+        :_  ~  ^-  call
+        :+  contract.escrow-asset.noun.bond
+          town.context
+        :^  %give  address.caller-claim
+          remaining-tokens
+        account.escrow-asset.noun.bond
+      ::  caller is refunded and bond survives to refund other callers
+      =:  amount.escrow-asset.noun.bond
+        (sub amount.escrow-asset.noun.bond amount.caller-claim)
+          depositors.noun.bond
+        (~(del by depositors.noun.bond) ship.act)
+      ==
+      :_  (result [%&^bond ~] ~ ~ ~)
+        :_  ~  ^-  call
+        :+  contract.escrow-asset.noun.bond
+          town.context
+        :^  %give  address.caller-claim
+          amount.caller-claim
+        account.escrow-asset.noun.bond
+    ::  enough left to refund everyone
     ::  zero out and destroy the bond item
     =:  amount.escrow-asset.noun.bond  0
         depositors.noun.bond           ~

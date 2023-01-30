@@ -53,6 +53,7 @@
   ==
 ::
 ::  the data a pokur player holds for a given table
+::  "That's one Big Beautiful Buc-col" – ~rovnys
 ::
 +$  game
   $:  id=@da
@@ -99,7 +100,10 @@
 ::
 ::  updates
 ::
-+$  update  ::  from app to frontend
+::  from app to frontend, sent via subscription on paths:
+::  /lobby-updates, /game-updates, /messages
+::
++$  update
   $%  [%game =game my-hand-rank=@t last-board=pokur-deck]
       [%table-closed table-id=@da]
       [%game-starting game-id=@da]
@@ -114,13 +118,16 @@
           =tokenized
       ==
   ==
-+$  host-update  ::  from host to player app
-  $%  [%game =game last-board=pokur-deck]
-      [%table-closed table-id=@da]
-      [%game-starting game-id=@da]
-      [%new-table =table]
-      [%lobby tables=(map @da table)]
-      $:  %game-over
+::
+::  from %pokur-host to %pokur. sent via solid-state pokes.
+::
++$  host-update
+  $%  [%lobby tables=(map @da table)]      ::  received upon ask
+      [%new-table =table]                  ::  for lobby watchers
+      [%table-closed table-id=@da]         ::  for lobby watchers
+      [%game-starting game-id=@da]         ::  for lobby watchers
+      [%game =game last-board=pokur-deck]  ::  for game watchers
+      $:  %game-over                       ::  for game watchers
           =game
           last-board=pokur-deck
           placements=(list [ship @ud])
@@ -131,7 +138,9 @@
 ::  pokes
 ::
 +$  player-action
-  $%  $:  %new-table
+  $%  [%watch-lobby ~]  ::  ask host to poke us with lobby-updates
+      [%stop-watching-lobby ~]
+      $:  %new-table
           id=@da  ::  FE can bunt -- populated with now.bowl
           host=ship
           =tokenized
