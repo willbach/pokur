@@ -1,5 +1,5 @@
 /-  *pokur, wallet=zig-wallet, ui=zig-indexer
-/+  default-agent, dbug, verb, io=agentio,
+/+  default-agent, dbug, io=agentio,
     *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
@@ -18,7 +18,6 @@
 --
 ^-  agent:gall
 %-  agent:dbug
-%+  verb  &
 =|  state=state-0
 =<
 |_  =bowl:gall
