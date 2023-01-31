@@ -522,8 +522,8 @@
     pokur-update+!>(`update`upd)
   ::
       %game
-    ~&  >  "new game state:"
-    ~&  >  game.upd
+    ::  ~&  >  "new game state:"
+    ::  ~&  >  game.upd
     =/  my-hand-rank=@t
       %-  hierarchy-to-rank
       =/  full-hand  (weld my-hand.game.upd board.game.upd)
@@ -538,8 +538,8 @@
     pokur-update+!>(`update`[%game game.upd my-hand-rank last-board.upd])
   ::
       %game-over
-    ~&  >>  "game is over:"
-    ~&  >>  upd
+    ::  ~&  >>  "game is over:"
+    ::  ~&  >>  upd
     ::  player must now %leave-game to clear state and messages
     :_  state(game `game.upd)
     :_  ~

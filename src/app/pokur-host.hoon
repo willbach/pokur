@@ -763,9 +763,37 @@
   ?~  tokenized.host-game
     :-  (game-over-updates host-game (turn placements.host-game |=(p=@p [p 0])))
     state(games (~(del by games.state) id.game.host-game))
-  ::  pay tokens based on game type (only handling %sng now)
-  ::  TODO handle cash
-  ?>  ?=(%sng -.game-type.game.host-game)
+  ::  pay tokens based on game type
+  ?:  ?=(%cash -.game-type.game.host-game)
+    ::  handle cash payout
+    ::  game over means one player left at table. pay them their stack.
+    =/  total-payout=@ud
+      %-  ~(total-payout fetch [our now]:bowl our-info.state)
+      bond-id.u.tokenized.host-game
+    =/  winner  (head placements.host-game)
+    ~&  >  "winnings: {<total-payout>} to {<winner>}"
+    ::
+    :_  state(games (~(del by games.state) id.game.host-game))
+    %+  snoc  (game-over-updates host-game ~[winner^total-payout])
+    ::  automatically sign+submit these by poking %wallet
+    ::  in advance to automate txns from this origin
+    :*  %pass  /pokur-wallet-poke
+        %agent  [our.bowl %uqbar]
+        %poke  %wallet-poke
+        !>
+        :*  %transaction
+            origin=`[%pokur-host /awards]
+            from=address.our-info.state
+            contract=id.contract.our-info.state
+            town=town.contract.our-info.state
+            :-  %noun
+            ^-  action:escrow
+            :^    %award
+                bond-id.u.tokenized.host-game
+              winner
+            total-payout
+    ==  ==
+  ::  handle tournament payout
   =/  total-payout=@ud
     %-  ~(total-payout fetch [our now]:bowl our-info.state)
     bond-id.u.tokenized.host-game
