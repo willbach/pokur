@@ -30,11 +30,23 @@
   ++  make-setup-nec
     ^-  test-steps:zig
     =/  who=@p  ~nec
-    :+  :+  %poke
+    :^    :^  %custom-write  %send-wallet-transaction
+            %-  crip
+            %-  noah
+            !>  ^-  [@p @p test-write-step:zig]
+            :+  who  service-host
+            :+  %poke
+              :-  who
+              :^  who  %uqbar  %wallet-poke
+              %-  crip
+              "[%transaction ~ from={<(get-address service-host)>} {<publish-contract-hash>} {<town-id>} action=[%noun [%deploy mutable=%.n cont={<get-escrow-contract>} interface=~ types=~]]]"
+            ~
+          ~
+        :+  %poke
           :-  who
           :^  who  %pokur-host  %pokur-host-action
           %-  crip
-          "[%host-info {<who>} {<(get-address who)>} [0xabcd.abcd 0x0]]"
+          "[%host-info {<who>} {<(get-address who)>} [{<compute-escrow-contract-hash>} 0x0]]"
         ~
       (make-set-our-address who)
     ~
@@ -81,4 +93,32 @@
 ++  service-host
   ^-  @p
   ~nec
+::
+++  town-id
+  ^-  @ux
+  0x0
+::
+++  publish-contract-hash
+  ^-  @ux
+  0x1111.1111
+::
+++  get-escrow-contract
+  |^
+  =/  escrow-jam-path=path
+    %+  weld  /(scot %p our:test-globals)/pokur
+    /(scot %da now:test-globals)/con/compiled/escrow/jam
+  (get-contract escrow-jam-path)
+  ::
+  ++  get-contract
+    |=  contract-jam-path=path
+    [- +]:(cue .^(@ %cx contract-jam-path))
+  --
+::
+++  compute-contract-hash
+  hash-pact:smart:zig
+::
+++  compute-escrow-contract-hash
+  %-  compute-contract-hash
+  :^  0x0  (get-address service-host)  town-id  ::  substitute publish-contract-hash with 0x0 if mutable=%.y
+  get-escrow-contract
 --
