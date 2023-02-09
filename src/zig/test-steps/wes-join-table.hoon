@@ -50,11 +50,5 @@
         """
       ~
     ~
-  ::
-    :+  %scry
-      :-  who
-      :^  '[@t boat:gall bitt:gall]'  %gx  %subscriber
-      /agent-state/pokur/''/noun/noun
-    ''
   ==
 --
