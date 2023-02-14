@@ -388,6 +388,8 @@
       %=    game-type.u.table
           buy-ins
         (~(put by buy-ins.game-type.u.table) src.bowl chips-bought)
+          tokens-in-bond
+        (add tokens-in-bond.game-type.u.table buy-in.action)
       ==
     ::  if table is active, add the player directly to the ongoing game
     ::  otherwise just update table and share with subscribers
@@ -471,6 +473,16 @@
     ::  shuffle player list to get random starting order
     =/  player-order=(list @p)
       (shuffle ~(tap in players.u.table) eny.bowl)
+    ::  if tokenized, calculate total number of tokens paid into game
+    ::  so that at end of game we can pay winners
+    =?    tokenized.u.table
+        ?=(^ tokenized.u.table)
+      =/  total
+        ?-  -.game-type.u.table
+          %sng  (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
+          %cash  !!  ::  TODO handle with tokens-in-bond
+        ==
+      tokenized.u.table(amount.u total)
     =/  =game
       :*  id.u.table
           game-is-over=%.n
@@ -766,9 +778,7 @@
   ?:  ?=(%cash -.game-type.game.host-game)
     ::  handle cash payout
     ::  game over means one player left at table. pay them their stack.
-    =/  total-payout=@ud
-      %-  ~(total-payout fetch [our now]:bowl our-info.state)
-      bond-id.u.tokenized.host-game
+    =*  total-payout  tokens-in-bond.game-type.game.host-game
     =/  winner  (head placements.host-game)
     ~&  >  "winnings: {<total-payout>} to {<winner>}"
     ::
@@ -793,9 +803,7 @@
             total-payout
     ==  ==
   ::  handle tournament payout
-  =/  total-payout=@ud
-    %-  ~(total-payout fetch [our now]:bowl our-info.state)
-    bond-id.u.tokenized.host-game
+  =*  total-payout  amount.u.tokenized.host-game
   ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
   ~&  >>  "placements: {<placements.host-game>}"
   =/  winnings=(list [ship @ud])

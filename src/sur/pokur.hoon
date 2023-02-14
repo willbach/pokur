@@ -21,6 +21,7 @@
       chips-per-token=@ud  ::  how many chips you get for each token. assumes 18 decimal-precision.
       small-blind=@ud
       big-blind=@ud
+      tokens-in-bond=@ud
   ==
 +$  sng-spec
   $:  starting-stack=@ud
