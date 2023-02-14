@@ -3,8 +3,8 @@
     *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
-+$  state-0
-  $:  %0
++$  state-1
+  $:  %1
       our-info=host-info
       lobby-watchers=(set @p)
       ::  host holds its own tables as well as gossipped ones from main host
@@ -13,12 +13,11 @@
       tables=(map @da table)
       ::  host holds all active games they are running
       games=(map @da host-game-state)
-      pending-player-txns=(jar batch=@ux [src=@p =txn-player-action])
   ==
 --
 ^-  agent:gall
 %-  agent:dbug
-=|  state=state-0
+=|  state=state-1
 =<
 |_  =bowl:gall
 +*  this  .
@@ -27,7 +26,7 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  :_  this(state *state-0)
+  :_  this(state *state-1)
   :~  (approve-origin-poke:hc /awards)
   ::  always be watching for new batch, to handle any pending tables
   ::  can't remove this subscription yet unfortunately
@@ -43,8 +42,8 @@
   =/  old-state
     ::  if the old versioned state does not match what we expect, just
     ::  bunt for a fresh new state.
-    ?~  new=((soft state-0) q.old)
-      *state-0
+    ?~  new=((soft state-1) q.old)
+      *state-1
     u.new
   :_  this(state old-state)
   (approve-origin-poke:hc /awards)^~
@@ -151,24 +150,25 @@
       =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
       /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
     ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =/  upd  !<(update:ui q.cage.sign)
-    ?.  ?=(%batch-order -.upd)  `this
-    ?~  batch-order.upd         `this
-    =/  batch-hash=@ux  (rear batch-order.upd)
-    ::  there's a new batch, check all pending table actions
-    =|  cards=(list card)
-    ::  need to make new list so as not to handle any pending actions
-    ::  created during this loop
-    =^  pending=(list [src=@p =txn-player-action])  pending-player-txns.state
-      :-  (~(get ja pending-player-txns.state) batch-hash)
-      (~(del by pending-player-txns.state) batch-hash)
-    |-
-    ?~  pending  [cards this]
-    =*  action  txn-player-action.i.pending
-    =.  src.bowl  src.i.pending
-    =^  new-cards  state
-      (handle-player-txn:hc action on-batch=%.y)
-    $(pending t.pending, cards (weld new-cards cards))
+    `this
+    ::  =/  upd  !<(update:ui q.cage.sign)
+    ::  ?.  ?=(%batch-order -.upd)  `this
+    ::  ?~  batch-order.upd         `this
+    ::  =/  batch-hash=@ux  (rear batch-order.upd)
+    ::  ::  there's a new batch, check all pending table actions
+    ::  =|  cards=(list card)
+    ::  ::  need to make new list so as not to handle any pending actions
+    ::  ::  created during this loop
+    ::  =^  pending=(list [src=@p =txn-player-action])  pending-player-txns.state
+    ::    :-  (~(get ja pending-player-txns.state) batch-hash)
+    ::    (~(del by pending-player-txns.state) batch-hash)
+    ::  |-
+    ::  ?~  pending  [cards this]
+    ::  =*  action  txn-player-action.i.pending
+    ::  =.  src.bowl  src.i.pending
+    ::  =^  new-cards  state
+    ::    (handle-player-txn:hc action on-batch=%.y)
+    ::  $(pending t.pending, cards (weld new-cards cards))
   ==
 ::
 ++  on-watch  on-watch:def
@@ -284,18 +284,18 @@
     ?>  ?=(%new-table -.player-action.action)
     ?~  tokenized.player-action.action  !!
     ::  game is tokenized, check the chain and get escrow stuff
-    =/  valid
-      %-  ~(valid-new-table fetch [our now]:bowl our-info.state)
-      [src.bowl on-batch [bond-id amount]:u.tokenized.player-action.action]
-    ?~  valid
-      ::  can't find bond yet... kick over to pending
-      =-  `state(pending-player-txns -)
-      (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
-    ?.  u.valid
-      :_  state
-      ~[[%give %poke-ack `~[leaf+"error: bond sent to host was rejected"]]]
-    ::  only handling tokenized %sng tables for now
-    ?>  ?=(%sng -.game-type.player-action.action)
+    ::  =/  valid
+    ::    %-  ~(valid-new-table fetch [our now]:bowl our-info.state)
+    ::    [src.bowl on-batch [bond-id amount]:u.tokenized.player-action.action]
+    ::  ?~  valid
+    ::    ::  can't find bond yet... kick over to pending
+    ::    =-  `state(pending-player-txns -)
+    ::    (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
+    ::  ?.  u.valid
+    ::    :_  state
+    ::    ~[[%give %poke-ack `~[leaf+"error: bond sent to host was rejected"]]]
+    ::  ::  only handling tokenized %sng tables for now
+    ::  ?>  ?=(%sng -.game-type.player-action.action)
     (handle-player-action player-action.action tokenized=%.y)
   ::
       %join-table-txn
@@ -303,22 +303,22 @@
     ?~  table=(~(get by tables.state) id.player-action.action)  !!
     ?~  tokenized.u.table  !!
     ::  game is tokenized, check against bond to see if player has paid in
-    =/  buy-in=@ud
-      ?-  -.game-type.u.table
-        %sng   amount.u.tokenized.u.table
-        %cash  buy-in.player-action.action
-      ==
-    ::  assert that player has bought in for their amount
-    =/  valid
-      %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
-      [src.bowl on-batch bond-id.u.tokenized.u.table buy-in]
-    ?~  valid
-      ::  can't find player info yet... kick over to pending
-      =-  `state(pending-player-txns -)
-      (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
-    ?.  u.valid
-      :_  state
-      ~[[%give %poke-ack `~[leaf+"error: request sent to host was rejected"]]]
+    ::  =/  buy-in=@ud
+    ::    ?-  -.game-type.u.table
+    ::      %sng   amount.u.tokenized.u.table
+    ::      %cash  buy-in.player-action.action
+    ::    ==
+    ::  ::  assert that player has bought in for their amount
+    ::  =/  valid
+    ::    %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
+    ::    [src.bowl on-batch bond-id.u.tokenized.u.table buy-in]
+    ::  ?~  valid
+    ::    ::  can't find player info yet... kick over to pending
+    ::    =-  `state(pending-player-txns -)
+    ::    (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
+    ::  ?.  u.valid
+    ::    :_  state
+    ::    ~[[%give %poke-ack `~[leaf+"error: request sent to host was rejected"]]]
     (handle-player-action player-action.action tokenized=%.y)
   ==
 ::

@@ -1,3 +1,4 @@
+/-  uqbar=zig-uqbar
 /=  escrow  /con/lib/escrow
 |%
 ::  HARDCODED to ~bacrys IRL, ~nec in FAKESHIP TESTING
@@ -167,8 +168,8 @@
 ::
 +$  txn-player-action
   ::  these player actions trigger on-chain escrow transactions
-  $%  [%new-table-txn batch-id=@ux =player-action]
-      [%join-table-txn batch-id=@ux =player-action]
+  $%  [%new-table-txn =sequencer-receipt:uqbar =player-action]
+      [%join-table-txn =sequencer-receipt:uqbar =player-action]
   ==
 ::
 +$  message-action

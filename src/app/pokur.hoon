@@ -550,15 +550,15 @@
 ++  handle-wallet-update
   |=  update=wallet-update:wallet
   ^-  (quip card _state)
-  ?+    -.update  !!
-  ::  only ever expecting a %finished-transaction notification
-      %finished-transaction
+  ?+    -.update  `state  ::  ignore other notifs from wallet
+  ::  handling optimistic receipts only
+      %sequencer-receipt
     ::  wallet announcing that either our %new-bond has been started,
     ::  meaning we've successfully created a tokenized table, or that
     ::  our %deposit has gone through, meaning we've joined a tokenized table
     ?>  ?=(^ origin.update)
-    ?~  pending-poke.state  !!
-    ?+    q.u.origin.update  !!
+    ?~  pending-poke.state  ~|("got receipt for missing txn" !!)
+    ?+    q.u.origin.update  ~|("got receipt from weird origin" !!)
         [%new-bond-confirmation ~]
       ::  send bond info to host with a %new-table poke, finally
       ?>  ?=(%new-table -.u.pending-poke.state)
@@ -570,16 +570,16 @@
       ::  should be in events.output.update
       =/  event=contract-event:eng:wallet
         (head events.output.update)
-      ?>  =(%new-bond label.event)
-      =.  bond-id.u.tokenized.u.pending-poke.state
-        ((se:dejs:format %ux) json.event)
+      ?>  ?=(@ux noun.event)
       :_  state(pending-poke ~)
       :_  ~
       :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
           %agent  [host.u.pending-poke.state %pokur-host]
           %poke   %pokur-txn-player-action
           !>  ^-  txn-player-action
-          [%new-table-txn batch.update u.pending-poke.state]
+          :+  %new-table-txn
+            +.+.update  ::  receipt
+          u.pending-poke.state(bond-id.u.tokenized noun.event)
       ==
     ::
         [%deposit-confirmation @ ~]
@@ -595,7 +595,7 @@
           %agent  [host %pokur-host]
           %poke   %pokur-txn-player-action
           !>  ^-  txn-player-action
-          [%join-table-txn batch.update u.pending-poke.state]
+          [%join-table-txn +.+.update u.pending-poke.state]
       ==
     ==
   ==
