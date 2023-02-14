@@ -565,7 +565,7 @@
       ?~  tokenized.u.pending-poke.state  !!
       ::  make sure txn succeeded
       ~|  "%pokur: transaction failed!!"
-      ?>  =(%200 status.transaction.update)
+      ?>  =(%0 errorcode.output.update)
       ::  modify bond-id with txn output
       ::  should be in events.output.update
       =/  event=contract-event:eng:wallet
@@ -587,7 +587,7 @@
       ::  request to %join-table on host
       ::  don't need any data other than the fact that the txn succeeded
       ~|  "%pokur: transaction failed!!"
-      ?>  =(%200 status.transaction.update)
+      ?>  =(%0 errorcode.output.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
       :_  state(pending-poke ~)
       :_  ~
