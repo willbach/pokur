@@ -245,21 +245,44 @@
   (resolve-player-turn u.- whose-turn-pre)
 ::
 ++  handle-player-txn
-  |=  [action=txn-player-action on-batch=?]
+  |=  [act=txn-player-action on-batch=?]
   ^-  (quip card _state)
-  ?-    -.action
+  ::  for all txn-actions:
+  ::  - check that sequencer matches our known sequencer for the town
+  ::  - validate their uqbar-sig
+  ?>  (~(valid receipt sequencer-receipt.act) [our now]:bowl)
+  ?-    -.act
       %new-table-txn
-    ?>  ?=(%new-table -.player-action.action)
-    ?~  tokenized.player-action.action  !!
-    ::  TODO check receipt and assert validity
-    (handle-player-action player-action.action tokenized=%.y)
+    ?>  ?=(%new-table -.player-action.act)
+    ?~  tokenized.player-action.act  !!
+    =/  =bond:escrow
+      %-  need
+      %-  ~(get-bond receipt sequencer-receipt.act)
+      bond-id.u.tokenized.player-action.act
+    ::  - assert output includes a bond item from our escrow contract,
+    ::    and that the bond contains the amount specified by table,
+    ::    from the poke sender
+    ?>  =(custodian.bond address.our-info.state)
+    ?>  .=  amount.u.tokenized.player-action.act
+        amount:(~(got py:smart depositors.bond) src.bowl)
+    (handle-player-action player-action.act tokenized=%.y)
   ::
       %join-table-txn
-    ?>  ?=(%join-table -.player-action.action)
-    ?~  table=(~(get by tables.state) id.player-action.action)  !!
+    ?>  ?=(%join-table -.player-action.act)
+    ?~  table=(~(get by tables.state) id.player-action.act)  !!
     ?~  tokenized.u.table  !!
-    ::  TODO check receipt and assert validity
-    (handle-player-action player-action.action tokenized=%.y)
+    =/  =bond:escrow
+      %-  need
+      %-  ~(get-bond receipt sequencer-receipt.act)
+      bond-id.u.tokenized.u.table
+    ::  - assert output includes a bond item from our escrow contract,
+    ::    and that the bond contains the amount specified by table,
+    ::    from the poke sender
+    ?>  =(custodian.bond address.our-info.state)
+    ?>  %+  gte  ::  gte in case they double-deposit
+          amount.u.tokenized.u.table
+        amount:(~(got py:smart depositors.bond) src.bowl)
+    (handle-player-action player-action.act tokenized=%.y)
   ==
 ::
 ++  handle-player-action
@@ -479,7 +502,7 @@
       ==
     ::
     :_  state(games (~(put by games.state) id.action host-game-state))
-    %+  weld  (game-starting-cards id.u.table)
+    %+  weld  (game-starting-cards players.u.table id.u.table)
     %+  weld  (send-game-updates host-game-state ~)
     :+  (table-gossip-card [%starting id.u.table])
       :*  %pass  /self-poke
@@ -809,9 +832,9 @@
   ==
 ::
 ++  game-starting-cards
-  |=  id=@da
+  |=  [players=(set @p) id=@da]
   ^-  (list card)
-  %+  turn  ~(tap in lobby-watchers.state)
+  %+  turn  ~(tap in (~(uni in players) lobby-watchers.state))
   |=  =ship
   %+  ~(poke pass:io /lobby-updates)
     [ship %pokur]
