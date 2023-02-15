@@ -120,7 +120,7 @@
   ?+    wire  (on-agent:def wire sign)
       [%start-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
-    ?^  p.sign  !!  ::  TODO new table poke failed!
+    ?^  p.sign  ~|(p.sign !!)  ::  TODO new table poke failed!
     `this(our-table.state `(slav %da i.t.wire))
   ::
       [%join-table-poke @ ~]
