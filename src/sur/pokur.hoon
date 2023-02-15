@@ -192,7 +192,8 @@
       [%closed-table id=@da]
       [%game-starting id=@da]
       [%turn-timers id=@da who=@p pre=@p wake=@da rest=@da]
-      ::  debugging tool for hosts, remove a table from our lobby
+      ::  debugging/cli tools for hosts
+      [%clear-lobby-watchers ~]
       [%kick-table id=@da]
       [%kick-game id=@da]
   ==

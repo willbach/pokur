@@ -31,12 +31,8 @@
 ++  on-init
   ^-  (quip card _this)
   =/  host=@p  fixed-lobby-source
-  ~&  >>  host
   :_  this(state [%0 ~ ~ host ~ ~ ~ ~ ~ ~ ~])
-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)  [host %pokur-host]
-      pokur-player-action+!>(`player-action`[%watch-lobby ~])
-  ==
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::
 ++  on-save  ^-  vase  !>(state)
 ::
@@ -87,7 +83,13 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ::  forward available tables from host here
-    [lobby-update-card^~ this]
+    ::  start watching host lobby
+    :_  this
+    :~  lobby-update-card
+        %+  ~(poke pass:io /lobby-updates)
+          [fixed-lobby-source %pokur-host]
+        pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    ==
   ::
       [%game-updates ~]
     ?~  game.state  `this
@@ -221,7 +223,18 @@
     `this
   ==
 ::
-++  on-leave  on-leave:def
+++  on-leave
+  |=  =path
+  ^-  (quip card _this)
+  ?+    path  (on-leave:def path)
+      [%lobby-updates ~]
+    ::  stop watching host lobby
+    :_  this  :_  ~
+    %+  ~(poke pass:io /lobby-updates)
+      [fixed-lobby-source %pokur-host]
+    pokur-player-action+!>(`player-action`[%stop-watching-lobby ~])
+  ==
+::
 ++  on-fail  on-fail:def
 --
 ::
@@ -679,4 +692,4 @@
       town
       salt.found
   ==
---  ::  758 lines
+--
