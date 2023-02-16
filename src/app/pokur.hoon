@@ -369,8 +369,10 @@
       %leave-game
     ?~  game.state
       ~|("%pokur: error: can't leave game, not in one" !!)
+    ?~  game-host.state
+      `state(game ~, messages ~)
     :_  state(game ~, game-host ~, messages ~)
-    (poke-pass-through (need game-host.state) action)^~
+    (poke-pass-through u.game-host.state action)^~
   ::
       %kick-player
     ?~  our-table.state
@@ -483,17 +485,20 @@
   ::  incoroporate update poke from host into our state
   ?-    -.upd
       %lobby
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(uni by lobby.state) tables.upd)
     [lobby-update-card^~ state]
   ::
       %new-table
     ::  add table to our lobby state
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(put by lobby.state) id.table.upd table.upd)
     [lobby-update-card^~ state]
   ::
       %table-closed
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(del by lobby.state) table-id.upd)
     ?~  our-table.state
@@ -508,6 +513,7 @@
     ==
   ::
       %game-starting
+    ?>  =(src.bowl lobby-source.state)
     ::  check if it's our game, if so, sub to path and notify FE
     ?~  table=(~(get by lobby.state) game-id.upd)
       `state
@@ -528,6 +534,9 @@
     pokur-update+!>(`update`upd)
   ::
       %game
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  ~&  >  "new game state:"
     ::  ~&  >  game.upd
     =/  my-hand-rank=@t
@@ -544,8 +553,9 @@
     pokur-update+!>(`update`[%game game.upd my-hand-rank last-board.upd])
   ::
       %game-over
-    ::  ~&  >>  "game is over:"
-    ::  ~&  >>  upd
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  player must now %leave-game to clear state and messages
     :_  state(game `game.upd)
     :_  ~

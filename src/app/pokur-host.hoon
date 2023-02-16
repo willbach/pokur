@@ -245,8 +245,6 @@
     ::  - assert output includes a bond item from our escrow contract,
     ::    and that the bond contains the amount specified by table,
     ::    from the poke sender
-    ~&  >>  bond
-    ~&  >  act
     ?>  =(custodian.bond address.our-info.state)
     ?>  .=  amount.u.tokenized.player-action.act
         amount:(~(got py:smart depositors.bond) src.bowl)
