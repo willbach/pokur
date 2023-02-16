@@ -1,10 +1,10 @@
 :~  title+'Pokur'
     info+'Play Texas Holdem on Urbit'
     color+0xab.abab
-    glob-http+['https://poker-app-distro.s3.us-east-2.amazonaws.com/glob-0v2.cumnp.f17fp.nligj.1u3b3.sca10.glob' 0v2.cumnp.f17fp.nligj.1u3b3.sca10]
+    glob-http+['https://poker-app-distro.s3.us-east-2.amazonaws.com/glob-0v6.k8tdf.bd7bj.6afqp.bp5a2.379gp.glob' 0v6.k8tdf.bd7bj.6afqp.bp5a2.379gp]
     image+'https://poker-app-distro.s3.us-east-2.amazonaws.com/pokur-logo-2.png'
     base+'pokur'
-    version+[0 1 7]
+    version+[0 1 9]
     website+'https://bacrys.org/pokur'
     license+'MIT'
 ==

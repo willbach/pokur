@@ -54,6 +54,7 @@
           [%chips-per-token ni]
           [%small-blind ni]
           [%big-blind ni]
+          [%tokens-in-bond ni]  ::  put 0 here
       ==
     ++  parse-sng-type
       %-  ot

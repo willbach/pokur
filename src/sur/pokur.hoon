@@ -1,3 +1,4 @@
+/-  uqbar=zig-uqbar
 /=  escrow  /con/lib/escrow
 |%
 ::  HARDCODED to ~bacrys IRL, ~nec in FAKESHIP TESTING
@@ -20,6 +21,7 @@
       chips-per-token=@ud  ::  how many chips you get for each token. assumes 18 decimal-precision.
       small-blind=@ud
       big-blind=@ud
+      tokens-in-bond=@ud
   ==
 +$  sng-spec
   $:  starting-stack=@ud
@@ -167,8 +169,8 @@
 ::
 +$  txn-player-action
   ::  these player actions trigger on-chain escrow transactions
-  $%  [%new-table-txn batch-id=@ux =player-action]
-      [%join-table-txn batch-id=@ux =player-action]
+  $%  [%new-table-txn =sequencer-receipt:uqbar =player-action]
+      [%join-table-txn =sequencer-receipt:uqbar =player-action]
   ==
 ::
 +$  message-action
@@ -190,7 +192,8 @@
       [%closed-table id=@da]
       [%game-starting id=@da]
       [%turn-timers id=@da who=@p pre=@p wake=@da rest=@da]
-      ::  debugging tool for hosts, remove a table from our lobby
+      ::  debugging/cli tools for hosts
+      [%clear-lobby-watchers ~]
       [%kick-table id=@da]
       [%kick-game id=@da]
   ==

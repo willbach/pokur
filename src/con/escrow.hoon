@@ -19,7 +19,7 @@
       (hash-data source.p.meta this.context town.context salt.p.meta)
     =/  bond-salt
       (cat 3 id.caller.context nonce.caller.context)
-    =-  `(result ~ [%&^- ~] ~ [[%new-bond s+(scot %ux id.-)]]^~)
+    =-  `(result ~ [%&^- ~] ~ [[%new-bond id.-]]^~)
     :*  id=(hash-data this.context this.context town.context bond-salt)
         this.context
         this.context
@@ -48,7 +48,7 @@
             this.context
           amount.act
         account.act
-    =-  (result ~ [- ~] ~ `(list event)`[%new-bond s+(scot %ux -.+.-)]^~)
+    =-  (result ~ [- ~] ~ `(list event)`[%new-bond id=-.+.-]^~)
     :*  %&
         (hash-data this.context this.context town.context bond-salt)
         this.context
@@ -225,10 +225,6 @@
     ==
   ==
 ++  read
-  |_  =pith
-  ++  json
-    ~
-  ++  noun
-    ~
-  --
+  |=  =pith
+  ~
 --

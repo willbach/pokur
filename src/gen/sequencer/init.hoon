@@ -1,6 +1,5 @@
 /-  *zig-sequencer
 /+  ethereum, merk, smart=zig-sys-smart
-/=  zigs  /con/lib/zigs-interface-types
 /*  zigs-contract      %jam  /con/compiled/zigs/jam
 /*  escrow-contract    %jam  /con/compiled/escrow/jam
 :-  %say
@@ -76,8 +75,7 @@
       zigs-contract-id:smart  ::  holder
       town-id                ::  town-id
       [- +]:(cue zigs-contract)
-      interface=interface-json:zigs
-      types=types-json:zigs
+      ~
   ==
 ::  escrow.hoon contract
 =/  escrow-pact
@@ -87,8 +85,7 @@
       0x0          ::  holder
       town-id      ::  town-id
       [- +]:(cue escrow-contract)
-      interface=~
-      types=~
+      ~
   ==
 ::
 =/  fake-state

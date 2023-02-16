@@ -1,25 +1,25 @@
 /-  *pokur, wallet=zig-wallet, ui=zig-indexer
-/+  default-agent, dbug, verb, io=agentio,
+/+  default-agent, dbug, io=agentio,
     *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
-+$  state-0
-  $:  %0
++$  state-1
+  $:  %1
       our-info=host-info
-      lobby-watchers=(set @p)
+      ::  keep a last-poked time to drop offline watchers
+      ::  if null, they're all caught up -- can send freely
+      lobby-watchers=(map @p (unit @da))
       ::  host holds its own tables as well as gossipped ones from main host
       ::  tables can either be tournaments that have *not* started, or cash
       ::  tables that have or have not started (shown by is-active).
       tables=(map @da table)
       ::  host holds all active games they are running
       games=(map @da host-game-state)
-      pending-player-txns=(jar batch=@ux [src=@p =txn-player-action])
   ==
 --
 ^-  agent:gall
 %-  agent:dbug
-%+  verb  &
-=|  state=state-0
+=|  state=state-1
 =<
 |_  =bowl:gall
 +*  this  .
@@ -28,24 +28,21 @@
 ::
 ++  on-init
   ^-  (quip card _this)
-  :_  this(state *state-0)
-  :~  (approve-origin-poke:hc /awards)
-  ::  always be watching for new batch, to handle any pending tables
-  ::  can't remove this subscription yet unfortunately
-      =+  /indexer/pokur-host/batch-order/(scot %ux 0x0)
-      [%pass /new-batch %agent [our.bowl %uqbar] %watch -]
-  ==
+  :_  this(state *state-1)
+  (approve-origin-poke:hc /awards)^~
+::
 ++  on-save
   ^-  vase
   !>(state)
+::
 ++  on-load
   |=  old=vase
   ^-  (quip card _this)
   =/  old-state
     ::  if the old versioned state does not match what we expect, just
     ::  bunt for a fresh new state.
-    ?~  new=((soft state-0) q.old)
-      *state-0
+    ?~  new=((soft state-1) q.old)
+      *state-1
     u.new
   :_  this(state old-state)
   (approve-origin-poke:hc /awards)^~
@@ -67,8 +64,8 @@
         %pokur-host-action
       ::  internal pokes and host management
       (handle-host-action:hc !<(host-action vase))
-      ::
         %wallet-update
+      ::  handle pokebacks from wallet
       (handle-wallet-update:hc !<(wallet-update:wallet vase))
     ==
   [cards this]
@@ -78,17 +75,17 @@
   ^-  (quip card _this)
   ?+    wire  (on-arvo:def wire sign-arvo)
       [%timer @ %round-timer ~]
-    :: ROUND TIMER wire (for tournaments)
+    ::  ROUND TIMER wire (for tournaments)
     =/  game-id  (slav %da i.t.wire)
-    ?~  host-game=(~(get by games.state) game-id)
-      `this
+    ?~  host-game=(~(get by games.state) game-id)  `this
     =*  game  game.u.host-game
-    :: if no players left in game, end it
+    ::  if no players left in game, end it!
     ?:  %+  levy  players.game
         |=([ship @ud @ud ? ? left=?] left)
       =^  cards  state
         (end-game-pay-winners u.host-game)
       [cards this]
+    ::  otherwise, set game to begin next round and end of hand
     =.  u.host-game
       ~(increment-current-round guts u.host-game)
     :_  this(games.state (~(put by games.state) game-id u.host-game))
@@ -102,13 +99,12 @@
     ==
   ::
       [%timer @ @ ~]  ::  what game and who timed out
-    :: TURN TIMER wire
-    :: the timer ran out.. a player didn't make a move in time
+    ::  TURN TIMER wire
+    ::  the timer ran out: a player didn't make a move in time
     =/  game-id  (slav %da i.t.wire)
-    =/  who  (slav %p i.t.t.wire)
+    =/  who      (slav %p i.t.t.wire)
     ::  find whose turn it is
-    ?~  host-game=(~(get by games.state) game-id)
-      `this
+    ?~  host-game=(~(get by games.state) game-id)  `this
     =*  game  game.u.host-game
     ::  if no players left in game, end it
     ?:  %+  levy  players.game
@@ -144,32 +140,14 @@
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
   ?+    wire  (on-agent:def wire sign)
-      [%new-batch ~]
-    ::  new batch notif from indexer: check our pending-tables
-    ::  and see if any valid new tables or table joins have occurred
-    ?:  ?=(%kick -.sign)
-      :_  this  ::  attempt to re-sub, can't remove this sub yet
-      =-  [%pass /new-batch %agent [our.bowl %uqbar] %watch -]~
-      /indexer/pokur-host/batch-order/(scot %ux town.contract.our-info.state)
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =/  upd  !<(update:ui q.cage.sign)
-    ?.  ?=(%batch-order -.upd)  `this
-    ?~  batch-order.upd         `this
-    =/  batch-hash=@ux  (rear batch-order.upd)
-    ::  there's a new batch, check all pending table actions
-    =|  cards=(list card)
-    ::  need to make new list so as not to handle any pending actions
-    ::  created during this loop
-    =^  pending=(list [src=@p =txn-player-action])  pending-player-txns.state
-      :-  (~(get ja pending-player-txns.state) batch-hash)
-      (~(del by pending-player-txns.state) batch-hash)
-    |-
-    ?~  pending  [cards this]
-    =*  action  txn-player-action.i.pending
-    =.  src.bowl  src.i.pending
-    =^  new-cards  state
-      (handle-player-txn:hc action on-batch=%.y)
-    $(pending t.pending, cards (weld new-cards cards))
+    ::  TODO add verification of some receipts on-batch?
+      [%share-escrow-poke ~]
+    ::  record an ack from a lobby-watcher
+    `this(lobby-watchers.state (~(put by lobby-watchers.state) src.bowl ~))
+  ::
+      [%lobby-updates ~]
+    ::  record an ack from a lobby-watcher
+    `this(lobby-watchers.state (~(put by lobby-watchers.state) src.bowl ~))
   ==
 ::
 ++  on-watch  on-watch:def
@@ -181,49 +159,20 @@
 ++  handle-host-action
   |=  action=host-action
   ^-  (quip card _state)
-  ?-    -.action
+  ?>  =(our src):bowl
+  ?+    -.action  !!
       %host-info
-    :_  state(our-info +.action)
-    ::  poke our new info out to all subscribers
+    =/  pruned-watchers
+      (prune-watchers lobby-watchers.state)
+    :_  state(our-info +.action, lobby-watchers pruned-watchers)
+    ::  poke our new info out to all lobby-watchers
     ^-  (list card)
-    %+  turn  ~(tap in lobby-watchers.state)
-    |=  =ship
-    (share-escrow-poke ship +.action)
-  ::
-      %share-table
-    ::  get table from other host, add to our lobby
-    ?>  =(src.bowl ship.host-info.table.action)
-    ?:  =(src.bowl our.bowl)  `state
-    =.  tables.state
-      (~(put by tables.state) id.table.action table.action)
-    [(new-table-cards table.action) state]
-  ::
-      %closed-table
-    ::  remove table by other host from our lobby
-    ?:  =(src.bowl our.bowl)  `state
-    ?~  table=(~(get by tables.state) id.action)
-      `state
-    ?>  =(src.bowl ship.host-info.u.table)
-    :-  (table-closed-cards id.u.table)
-    state(tables (~(del by tables.state) id.u.table))
-  ::
-      %game-starting
-    ::  sent to us from another host
-    ::  remove table from lobby if tournament, leave it there otherwise
-    ?:  =(src.bowl our.bowl)  `state
-    ?~  table=(~(get by tables.state) id.action)
-      `state
-    ?>  =(src.bowl ship.host-info.u.table)
-    =?    tables.state
-        ?=(%sng -.game-type.u.table)
-      (~(del by tables.state) id.u.table)
-    `state
+    %+  turn  ~(tap in ~(key by pruned-watchers))
+    |=(=ship (share-escrow-poke ship +.action))
   ::
       %turn-timers
     ::  super lame & annoying indirection poke because %behn automatically
-    ::  inserts src.bowl into the path of a timer, for no good reason
-    ?>  =(src.bowl our.bowl)
-    ::  ~&  >>  "setting timer for {<who.action>}, cancelling timer for {<pre.action>}"
+    ::  inserts src.bowl into the path of a timer, for no good reason.
     :_  state
     ^-  (list card)
     :-  :*  %pass  /timer/(scot %da id.action)/(scot %p who.action)
@@ -237,13 +186,14 @@
         rest.action
     ==
   ::
+      %clear-lobby-watchers
+    `state(lobby-watchers ~)
+  ::
       %kick-table
     ::  debugging tool for hosts
     ::  **DOES NOT REFUND PLAYERS**
     :_  state(tables (~(del by tables.state) id.action))
-    %+  snoc
-      (table-closed-cards id.action)
-    (table-gossip-card [%closed id.action])
+    (table-closed-cards id.action)
   ::
       %kick-game
     ::  debugging tool for hosts
@@ -258,12 +208,12 @@
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: host could not find game"]]]
   =*  game  game.u.host-game
-  :: validate that move is from right player
+  ::  validate that move is from right player
   =/  from=ship
     ?:  ?&  =(src.bowl our.bowl)
             (gth now.bowl turn-timer.u.host-game)
         ==
-      :: automatic fold from timeout!
+      ::  automatic fold from timeout!
       whose-turn.game
     src.bowl
   =/  whose-turn-pre=@p  whose-turn.game.u.host-game
@@ -278,49 +228,46 @@
   (resolve-player-turn u.- whose-turn-pre)
 ::
 ++  handle-player-txn
-  |=  [action=txn-player-action on-batch=?]
+  |=  [act=txn-player-action on-batch=?]
   ^-  (quip card _state)
-  ?-    -.action
+  ::  for all txn-actions:
+  ::  - check that sequencer matches our known sequencer for the town
+  ::  - validate their uqbar-sig
+  ?>  (~(valid receipt sequencer-receipt.act) [our now]:bowl)
+  ?-    -.act
       %new-table-txn
-    ?>  ?=(%new-table -.player-action.action)
-    ?~  tokenized.player-action.action  !!
-    ::  game is tokenized, check the chain and get escrow stuff
-    =/  valid
-      %-  ~(valid-new-table fetch [our now]:bowl our-info.state)
-      [src.bowl on-batch [bond-id amount]:u.tokenized.player-action.action]
-    ?~  valid
-      ::  can't find bond yet... kick over to pending
-      =-  `state(pending-player-txns -)
-      (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
-    ?.  u.valid
-      :_  state
-      ~[[%give %poke-ack `~[leaf+"error: bond sent to host was rejected"]]]
-    ::  only handling tokenized %sng tables for now
-    ?>  ?=(%sng -.game-type.player-action.action)
-    (handle-player-action player-action.action tokenized=%.y)
+    ?>  ?=(%new-table -.player-action.act)
+    ?~  tokenized.player-action.act  !!
+    =/  =bond:escrow
+      %-  need
+      %-  ~(get-bond receipt sequencer-receipt.act)
+      bond-id.u.tokenized.player-action.act
+    ::  - assert output includes a bond item from our escrow contract,
+    ::    and that the bond contains the amount specified by table,
+    ::    from the poke sender
+    ~&  >>  bond
+    ~&  >  act
+    ?>  =(custodian.bond address.our-info.state)
+    ?>  .=  amount.u.tokenized.player-action.act
+        amount:(~(got py:smart depositors.bond) src.bowl)
+    (handle-player-action player-action.act tokenized=%.y)
   ::
       %join-table-txn
-    ?>  ?=(%join-table -.player-action.action)
-    ?~  table=(~(get by tables.state) id.player-action.action)  !!
+    ?>  ?=(%join-table -.player-action.act)
+    ?~  table=(~(get by tables.state) id.player-action.act)  !!
     ?~  tokenized.u.table  !!
-    ::  game is tokenized, check against bond to see if player has paid in
-    =/  buy-in=@ud
-      ?-  -.game-type.u.table
-        %sng   amount.u.tokenized.u.table
-        %cash  buy-in.player-action.action
-      ==
-    ::  assert that player has bought in for their amount
-    =/  valid
-      %-  ~(valid-new-player fetch [our now]:bowl our-info.state)
-      [src.bowl on-batch bond-id.u.tokenized.u.table buy-in]
-    ?~  valid
-      ::  can't find player info yet... kick over to pending
-      =-  `state(pending-player-txns -)
-      (~(add ja pending-player-txns.state) batch-id.action [src.bowl action])
-    ?.  u.valid
-      :_  state
-      ~[[%give %poke-ack `~[leaf+"error: request sent to host was rejected"]]]
-    (handle-player-action player-action.action tokenized=%.y)
+    =/  =bond:escrow
+      %-  need
+      %-  ~(get-bond receipt sequencer-receipt.act)
+      bond-id.u.tokenized.u.table
+    ::  - assert output includes a bond item from our escrow contract,
+    ::    and that the bond contains the amount specified by table,
+    ::    from the poke sender
+    ?>  =(custodian.bond address.our-info.state)
+    ?>  %+  gte  ::  gte in case they double-deposit
+          amount.u.tokenized.u.table
+        amount:(~(got py:smart depositors.bond) src.bowl)
+    (handle-player-action player-action.act tokenized=%.y)
   ==
 ::
 ++  handle-player-action
@@ -329,14 +276,16 @@
   ?+    -.action  !!
       %watch-lobby
     ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
-    :_  state(lobby-watchers (~(put in lobby-watchers.state) src.bowl))
-    :-  %+  ~(poke pass:io /lobby-updates)  [src.bowl %pokur]
-        pokur-host-update+!>(`host-update`[%lobby (public-tables tables.state)])
+    :_  state(lobby-watchers (~(put by lobby-watchers.state) [src `now]:bowl))
+    :-  %+  ~(poke pass:io /lobby-updates)
+          [src.bowl %pokur]
+        :-  %pokur-host-update
+        !>(`host-update`[%lobby (public-tables tables.state)])
     ?:  =(0x0 address.our-info.state)  ~
     (share-escrow-poke src.bowl our-info.state)^~
   ::
       %stop-watching-lobby
-    `state(lobby-watchers (~(del in lobby-watchers.state) src.bowl))
+    `state(lobby-watchers (~(del by lobby-watchers.state) src.bowl))
   ::
       %new-table
     ?>  |(tokenized ?=(~ tokenized.action))
@@ -362,10 +311,12 @@
       ==
     ::  validate spec
     ?>  (valid-game-spec action)
+    ::  prune lobby watchers for offline ships
+    =.  lobby-watchers.state
+      (prune-watchers lobby-watchers.state)
     :_  state(tables (~(put by tables.state) id.action table))
     ?.  public.action  (private-table-cards table)
-    %+  snoc  (new-table-cards table)
-    (table-gossip-card [%open table])
+    (new-table-cards table)
   ::
       %join-table
     ::  add player to existing table
@@ -389,6 +340,8 @@
       %=    game-type.u.table
           buy-ins
         (~(put by buy-ins.game-type.u.table) src.bowl chips-bought)
+          tokens-in-bond
+        (add tokens-in-bond.game-type.u.table buy-in.action)
       ==
     ::  if table is active, add the player directly to the ongoing game
     ::  otherwise just update table and share with subscribers
@@ -405,12 +358,14 @@
           (~(got by buy-ins.game-type.u.table) src.bowl)
       :-  (send-game-updates - ~)
       (~(put by games.state) id.action -)
+    ::  prune lobby watchers for offline ships
+    =.  lobby-watchers.state
+      (prune-watchers lobby-watchers.state)
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
     %+  weld  game-update-cards
     ?.  public.u.table  (private-table-cards u.table)
-    %+  snoc  (new-table-cards u.table)
-    (table-gossip-card [%open u.table])
+    (new-table-cards u.table)
   ::
       %leave-table
     ::  remove player from existing table
@@ -447,7 +402,6 @@
       =+  (~(del by tables.state) id.action)
       :_  state(tables -)
       %+  weld  (table-closed-cards id.action)
-      :-  (table-gossip-card [%closed id.action])
       award-card
     =+  (~(put by tables.state) id.action u.table)
     :_  state(tables -)
@@ -455,7 +409,6 @@
       %+  weld  (private-table-cards u.table)
       award-card
     %+  weld  (new-table-cards u.table)
-    :-  (table-gossip-card [%open u.table])
     award-card
   ::
       %start-game
@@ -472,6 +425,16 @@
     ::  shuffle player list to get random starting order
     =/  player-order=(list @p)
       (shuffle ~(tap in players.u.table) eny.bowl)
+    ::  if tokenized, calculate total number of tokens paid into game
+    ::  so that at end of game we can pay winners
+    =?    tokenized.u.table
+        ?=(^ tokenized.u.table)
+      =/  total
+        ?-  -.game-type.u.table
+          %sng  (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
+          %cash  !!  ::  TODO handle with tokens-in-bond
+        ==
+      tokenized.u.table(amount.u total)
     =/  =game
       :*  id.u.table
           game-is-over=%.n
@@ -526,21 +489,16 @@
       ==
     ::
     :_  state(games (~(put by games.state) id.action host-game-state))
-    %+  weld  (game-starting-cards id.u.table)
-    %+  weld  (send-game-updates host-game-state ~)
-    :+  (table-gossip-card [%starting id.u.table])
-      :*  %pass  /self-poke
-          %agent  [our.bowl %pokur-host]
-          %poke  %pokur-host-action
-          !>  ^-  host-action
-          :*  %turn-timers
-              id.game
-              whose-turn.game.host-game-state
-              *@p
-              turn-timer.host-game-state
-              *@da
-          ==
-      ==
+    %+  weld  (game-starting-cards players.u.table id.u.table)
+    %+  welp  (send-game-updates host-game-state ~)
+    :-  %+  ~(poke pass:io /self-poke)
+          [our.bowl %pokur-host]
+        :-  %pokur-host-action
+        !>  ^-  host-action
+        :*  %turn-timers  id.game
+            whose-turn.game.host-game-state  *@p
+            turn-timer.host-game-state  *@da
+        ==
     ::  initialize first round timer, if tournament style game
     ?.  ?=(%sng -.game-type.u.table)  ~
     :_  ~
@@ -649,18 +607,16 @@
     :_  =-  state(tables -)
         %+  ~(put by tables.state)  id.action
         u.table(players (~(del in players.u.table) who.action))
+    %+  weld  refund-card
     ?.  public.u.table
-      %+  weld  (private-table-cards u.table)
-      refund-card
-    %+  weld  (new-table-cards u.table)
-    :-  (table-gossip-card [%open u.table])
-    refund-card
+      (private-table-cards u.table)
+    (new-table-cards u.table)
   ==
 ::
 ++  handle-wallet-update
   |=  update=wallet-update:wallet
   ^-  (quip card _state)
-  ?+    -.update  !!
+  ?+    -.update  `state
   ::  only ever expecting a %finished-transaction notification
       %finished-transaction
     ::  can ignore for now, maybe do something in future
@@ -763,12 +719,36 @@
   ?~  tokenized.host-game
     :-  (game-over-updates host-game (turn placements.host-game |=(p=@p [p 0])))
     state(games (~(del by games.state) id.game.host-game))
-  ::  pay tokens based on game type (only handling %sng now)
-  ::  TODO handle cash
-  ?>  ?=(%sng -.game-type.game.host-game)
-  =/  total-payout=@ud
-    %-  ~(total-payout fetch [our now]:bowl our-info.state)
-    bond-id.u.tokenized.host-game
+  ::  pay tokens based on game type
+  ?:  ?=(%cash -.game-type.game.host-game)
+    ::  handle cash payout
+    ::  game over means one player left at table. pay them their stack.
+    =*  total-payout  tokens-in-bond.game-type.game.host-game
+    =/  winner  (head placements.host-game)
+    ~&  >  "winnings: {<total-payout>} to {<winner>}"
+    ::
+    :_  state(games (~(del by games.state) id.game.host-game))
+    %+  snoc  (game-over-updates host-game ~[winner^total-payout])
+    ::  automatically sign+submit these by poking %wallet
+    ::  in advance to automate txns from this origin
+    :*  %pass  /pokur-wallet-poke
+        %agent  [our.bowl %uqbar]
+        %poke  %wallet-poke
+        !>
+        :*  %transaction
+            origin=`[%pokur-host /awards]
+            from=address.our-info.state
+            contract=id.contract.our-info.state
+            town=town.contract.our-info.state
+            :-  %noun
+            ^-  action:escrow
+            :^    %award
+                bond-id.u.tokenized.host-game
+              winner
+            total-payout
+    ==  ==
+  ::  handle tournament payout
+  =*  total-payout  amount.u.tokenized.host-game
   ~&  >  "pokur-host: awarding players in game {<id.game.host-game>}"
   ~&  >>  "placements: {<placements.host-game>}"
   =/  winnings=(list [ship @ud])
@@ -817,24 +797,10 @@
       (gte min-players.act (lent payouts.game-type.act))
   ==
 ::
-++  table-gossip-card
-  |=  info=$%([%open table] [%closed @da] [%starting @da])
-  ^-  card
-  ::  TODO put gossip here, for now just share with central ship
-  :*  %pass   /table-share
-      %agent  [fixed-lobby-source %pokur-host]
-      %poke   %pokur-host-action
-      ?-  -.info
-        %open      !>(`host-action`[%share-table +.info])
-        %closed    !>(`host-action`[%closed-table +.info])
-        %starting  !>(`host-action`[%game-starting +.info])
-      ==
-  ==
-::
 ++  game-starting-cards
-  |=  id=@da
+  |=  [players=(set @p) id=@da]
   ^-  (list card)
-  %+  turn  ~(tap in lobby-watchers.state)
+  %+  turn  ~(tap in (~(uni in players) ~(key by lobby-watchers.state)))
   |=  =ship
   %+  ~(poke pass:io /lobby-updates)
     [ship %pokur]
@@ -843,7 +809,7 @@
 ++  table-closed-cards
   |=  id=@da
   ^-  (list card)
-  %+  turn  ~(tap in lobby-watchers.state)
+  %+  turn  ~(tap in ~(key by lobby-watchers.state))
   |=  =ship
   %+  ~(poke pass:io /lobby-updates)
     [ship %pokur]
@@ -852,7 +818,7 @@
 ++  new-table-cards
   |=  =table
   ^-  (list card)
-  %+  turn  ~(tap in lobby-watchers.state)
+  %+  turn  ~(tap in ~(key by lobby-watchers.state))
   |=  =ship
   %+  ~(poke pass:io /lobby-updates)
     [ship %pokur]
@@ -890,4 +856,19 @@
   |=  [key=@da =table]
   ?.  public.table  ~
   `[key table]
---  ::  947 lines
+::
+++  prune-watchers
+  |=  watchers=(map @p (unit @da))
+  ^+  watchers
+  ::  configurable: remove watchers who have not ack'd a lobby-update
+  ::  in the past 10 minutes. (watchers coming back online will always
+  ::  know to request an update)
+  ::  set their last-poked time to now, as well
+  %-  ~(gas by *(map @p (unit @da)))
+  %+  murn  ~(tap by watchers)
+  |=  [p=@p da=(unit @da)]
+  ?~  da  `[p `now.bowl]
+  ?:  (gth (sub now.bowl u.da) ~m10)
+    ~
+  `[p `now.bowl]
+--
