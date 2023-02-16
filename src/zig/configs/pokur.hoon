@@ -30,17 +30,19 @@
   ++  make-setup-nec
     ^-  test-steps:zig
     =/  who=@p  ~nec
-    :^    :^  %custom-write  %send-wallet-transaction
+    :^    :-  %custom-write
+          :^  %send-wallet-transaction  ~
             %-  crip
             %-  noah
             !>  ^-  [@p @p test-write-step:zig]
             :+  who  service-host
-            :^  %custom-write  %deploy-contract
+            :-  %custom-write
+            :^  %deploy-contract  ~
               %-  crip
               "[{<who>} {<`path`get-escrow-jam-path>} {<`(unit @ux)``publish-contract-hash>}]"
             ~
           ~
-        :+  %poke
+        :^  %poke  ~
           :-  who
           :^  who  %pokur-host  %pokur-host-action
           %-  crip
@@ -53,12 +55,13 @@
     ^-  test-steps:zig
     =/  who=@p  ~bud
     :+  (make-set-our-address who)
-      :^  %custom-write  %send-wallet-transaction
+      :-  %custom-write
+      :^  %send-wallet-transaction  ~
         %-  crip
         %-  noah
         !>  ^-  [@p @p test-write-step:zig]
         :+  who  service-host
-        :+  %poke
+        :^  %poke  ~
           :-  who
           :^  who  %pokur  %pokur-player-action
           %-  crip
@@ -75,7 +78,7 @@
   ++  make-set-our-address
     |=  who=@p
     ^-  test-step:zig
-    :+  %poke
+    :^  %poke  ~
       :-  who
       :^  who  %pokur  %pokur-player-action
       (crip "[%set-our-address {<(get-address who)>}]")

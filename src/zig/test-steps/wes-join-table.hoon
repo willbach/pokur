@@ -16,31 +16,23 @@
 ++  $
   ^-  test-steps:zig
   :~
-    :+  %scry
+    :^  %scry  `%lobby-update
       :-  who
       :^  'update:pokur'  %gx  %pokur
       /lobby/noun/noun
     ''
   ::
-    :^  %custom-write  %send-wallet-transaction
+    :-  %custom-write
+    :^  %send-wallet-transaction  ~
       %-  crip
       %-  noah
       !>  ^-  [@p @p test-write-step:zig]
       :+  who  service-host
-      :+  %poke
+      :^  %poke  ~
         :-  who
         :^  who  %pokur  %pokur-player-action
         %-  crip
         """
-        ::  +snag 1 rather than 0 because a pending-store
-        ::   scry happens in %send-wallet-transaction
-        ::   custom-step between the %pokur scry above
-        ::   and the %pokur %poke here:
-        =/  lobby-result=test-result:zig
-          (snag 1 test-results:test-globals)
-        ?>  ?=([* ~] lobby-result)
-        =/  lobby-update=update:pokur
-          !<(update:pokur result:i:lobby-result)
         ?>  ?=(%lobby -.lobby-update)
         =/  table-ids=(list @da)
           ~(tap in ~(key by tables.lobby-update))

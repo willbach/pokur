@@ -10,10 +10,12 @@
       =projects
       =configs
       =sync-desk-to-vship
-      pyro-ships-ready=(map @p ?)
+      focused-project=@t
+      linked-projects=(jug @t @t)
+      unfocused-project-snaps=(map (set @t) path)
       test-queue=(qeu [project=@t test-id=@ux])
-      test-running=?
-      cis-running=(map @p @t)
+      =status
+      =settings
   ==
 +$  inflated-state-0
   $:  state-0
@@ -23,12 +25,27 @@
   ==
 +$  eng  $_  ~(engine engine:engine-lib !>(0) *(map * @) %.n %.n)  ::  sigs off, hints off
 ::
++$  settings
+  $:  test-result-num-characters=@ud
+      compiler-error-num-lines=@ud
+  ==
+::
++$  status
+  $%  [%running-test-steps ~]
+      [%commit-install-starting cis-running=(map @p [@t ?])]
+      [%changing-project-links project-cis-running=(mip:mip @t @p [@t ?])]
+      [%ready ~]
+      [%uninitialized ~]  ::  last is default
+  ==
+::
 +$  projects  (map @t project)
 +$  project
   $:  dir=(list path)
       user-files=(set path)  ::  not on list -> grayed out in GUI
       to-compile=(set path)
       =tests
+      pyro-ships=(list @p)
+      saved-test-queue=(qeu [project=@t test-id=@ux])
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
@@ -57,16 +74,16 @@
 +$  test-steps  (list test-step)
 +$  test-step  $%(test-read-step test-write-step)
 +$  test-read-step
-  $%  [%scry payload=scry-payload expected=@t]
-      [%read-subscription payload=read-sub-payload expected=@t]
+  $%  [%scry =result-face payload=scry-payload expected=@t]
+      [%read-subscription =result-face payload=read-sub-payload expected=@t]
       [%wait until=@dr]
-      [%custom-read tag=@tas payload=@t expected=@t]
+      [%custom-read tag=@tas =result-face payload=@t expected=@t]
   ==
 +$  test-write-step
-  $%  [%dojo payload=dojo-payload expected=(list test-read-step)]
-      [%poke payload=poke-payload expected=(list test-read-step)]
-      [%subscribe payload=sub-payload expected=(list test-read-step)]
-      [%custom-write tag=@tas payload=@t expected=(list test-read-step)]
+  $%  [%dojo =result-face payload=dojo-payload expected=(list test-read-step)]
+      [%poke =result-face payload=poke-payload expected=(list test-read-step)]
+      [%subscribe =result-face payload=sub-payload expected=(list test-read-step)]
+      [%custom-write tag=@tas =result-face payload=@t expected=(list test-read-step)]
   ==
 +$  scry-payload
   [who=@p mold-name=@t care=@tas app=@tas =path]
@@ -74,6 +91,8 @@
 +$  dojo-payload  [who=@p payload=@t]
 +$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=@t]
 +$  sub-payload  [who=@p to=@p app=@tas =path]
+::
++$  result-face  (unit @tas)
 ::
 +$  custom-step-definitions
   (map @tas (pair path custom-step-compiled))
@@ -86,6 +105,15 @@
 ::
 +$  deploy-location  ?(%local testnet)
 +$  testnet  ship
+::
++$  configuration-file-output
+  $:  =config
+      ships=(list @p)
+      install=?
+      start=(list @tas)
+      setup=(map @p test-steps)
+      imports=(list [@tas path])
+  ==
 ::
 +$  test-globals
   $:  our=@p
@@ -104,8 +132,12 @@
           [%delete-project ~]
           [%save-config-to-file ~]
       ::
-          [%add-sync-desk-vships ships=(list @p)]
+          [%add-sync-desk-vships ships=(list @p) install=? start-apps=(list @tas)]
           [%delete-sync-desk-vships ships=(list @p)]
+      ::
+          [%change-focus ~]
+          [%add-project-link ~]
+          [%delete-project-link ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]
@@ -114,11 +146,12 @@
           [%delete-config who=@p what=@tas]
       ::
           [%register-contract-for-compilation file=path]
+          [%unregister-contract-for-compilation file=path]
           [%deploy-contract town-id=@ux =path]
       ::
-          [%compile-contracts ~]  ::  make-read-desk
-          [%compile-contract =path]  ::  path of form /[desk]/path/to/contract, e.g., /zig/con/fungible/hoon
-          [%read-desk ~]  ::  make-project-update, make-watch-for-file-changes
+          [%compile-contracts ~]
+          [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
+          [%read-desk ~]
       ::
           [%add-test name=(unit @t) =test-imports =test-steps]
           [%add-and-run-test name=(unit @t) =test-imports =test-steps]
@@ -132,7 +165,7 @@
           [%edit-test id=@ux name=(unit @t) =test-imports =test-steps]
           [%delete-test id=@ux]
           [%run-test id=@ux]
-          [%run-queue ~]  ::  can be used as [%$ %run-queue ~]
+          [%run-queue ~]
           [%clear-queue ~]
           [%queue-test id=@ux]
       ::
@@ -143,10 +176,20 @@
           [%start-pyro-ships ships=(list @p)]  ::  ships=~ -> ~[~nec ~bud ~wes]
           [%start-pyro-snap snap=path]
       ::
+          [%take-snapshot update-project-snaps=(unit path)]  ::  ~ -> overwrite project snap
+      ::
           [%publish-app title=@t info=@t color=@ux image=@t version=[@ud @ud @ud] website=@t license=@t]
       ::
           [%add-user-file file=path]
           [%delete-user-file file=path]
+      ::
+          [%send-pyro-dojo who=@p command=tape]
+      ::
+          [%pyro-agent-state who=@p app=@tas grab=@t]
+      ::
+          [%cis-panic ~]
+      ::
+          [%change-settings =settings]
       ==
   ==
 ::
@@ -172,15 +215,26 @@
       %custom-step-compiled
       %test-results
       %dir
-      %pyro-ships-ready
       %poke
       %test-queue
       %pyro-agent-state
+      %sync-desk-to-vship
+      %cis-setup-done
+      %status
+      %focused-linked
+      %save-file
+      %settings
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
 +$  update-info
   [project-name=@t source=@tas request-id=(unit @t)]
+::
++$  focused-linked-data
+  $:  focused-project=@t
+      linked-projects=(jug @t @t)
+      unfocused-project-snaps=(map (set @t) path)
+  ==
 ::
 ++  data  |$(this (each this [level=error-level message=@t]))
 ::
@@ -205,10 +259,16 @@
       [%custom-step-compiled update-info payload=(data ~) test-id=@ux tag=@tas]
       [%test-results update-info payload=(data shown-test-results) test-id=@ux thread-id=@t =test-steps]
       [%dir update-info payload=(data (list path)) ~]
-      [%pyro-ships-ready update-info payload=(data (map @p ?)) ~]
       [%poke update-info payload=(data ~) ~]
       [%test-queue update-info payload=(data (qeu [@t @ux])) ~]
-      [%pyro-agent-state update-info payload=(data @t) ~]
+      [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
+      [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
+      [%sync-desk-to-vship update-info payload=(data sync-desk-to-vship) ~]
+      [%cis-setup-done update-info payload=(data ~) ~]
+      [%status update-info payload=(data status) ~]
+      [%focused-linked update-info payload=(data focused-linked-data) ~]
+      [%save-file update-info payload=(data path) ~]
+      [%settings update-info payload=(data settings) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)
@@ -227,7 +287,14 @@
       =custom-step-definitions
       steps=test-steps
       results=shown-test-results
+      test-id=@ux
   ==
 +$  shown-test-results  (list shown-test-result)
 +$  shown-test-result   (list [success=? expected=@t result=@t])
++$  shown-agent-state
+  $:  %pyro-agent-state
+      update-info
+      payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall])
+      ~
+  ==
 --
