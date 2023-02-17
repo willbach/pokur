@@ -19,7 +19,7 @@
     :^  %scry  `%lobby-update
       :-  who
       :^  'update:pokur'  %gx  %pokur
-      /lobby/noun/noun
+      '/lobby/noun/noun'
     ''
   ::
     :-  %custom-write
