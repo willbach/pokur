@@ -1,6 +1,6 @@
 /-  *pokur, indexer=zig-indexer, wallet=zig-wallet
 /+  default-agent, dbug, io=agentio, verb,
-    smart=zig-sys-smart, *pokur-game-logic, pokur-json
+    engine=zig-sys-engine, *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
 +$  state-0
@@ -689,7 +689,7 @@
   ?>  ?=(%token -.+.found)
   :-  contract.found
   ::  generate ID of our token account
-  %:  hash-data:smart
+  %:  hash-data:engine
       contract.found
       our-addr
       town
