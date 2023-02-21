@@ -1,6 +1,33 @@
 /-  *pokur, indexer=zig-indexer, wallet=zig-wallet
-/+  smart=zig-sys-smart
+/+  smart=zig-sys-smart, sig=zig-sig
 |%
+++  receipt
+  |_  [rec=sequencer-receipt:uqbar]
+  ++  valid
+    |=  [our=@p now=@da]
+    ^-  ?
+    ::  check that sequencer matches our known one for town,
+    ::  and check uqbar-sig on receipt
+    =/  seq
+      ;;  (unit (pair @ux @p))
+      .^  *  %gx
+        %+  weld  /(scot %p our)/uqbar/(scot %da now)
+        /sequencer-on-town/(scot %ux town.transaction.rec)/noun
+      ==
+    ?~  seq  %.n
+    ?.  =(q.u.seq q.ship-sig.rec)  %.n
+    (uqbar-validate:sig p.u.seq (sham [transaction output]:rec) uqbar-sig.rec)
+  ::
+  ++  get-bond
+    |=  =id:smart
+    ^-  (unit bond:escrow)
+    ?~  b=(get:big:smart modified.output.rec id)  ~
+    ?>  ?=(%& -.u.b)
+    ((soft bond:escrow) noun.p.u.b)
+  --
+::
+::  no longer using, retained for posterity
+::
 ++  fetch
   |_  [[our=@p now=@da] host-info]
   ++  i-scry

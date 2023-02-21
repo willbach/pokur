@@ -57,6 +57,8 @@
   ?:  ?=(%cash -.game-type.t)
     big-blind.game-type.t
   =<  big
+  ?:  (gte current-round.game-type.t (lent blinds-schedule.game-type.t))
+    (rear blinds-schedule.game-type.t)
   %-  snag
   [current-round blinds-schedule]:game-type.t
 ::

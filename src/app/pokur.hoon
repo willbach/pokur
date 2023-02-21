@@ -31,10 +31,10 @@
 ++  on-init
   ^-  (quip card _this)
   =/  host=@p  fixed-lobby-source
-  ~&  >>  host
   :_  this(state [%0 ~ ~ host ~ ~ ~ ~ ~ ~ ~])
   :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)  [host %pokur-host]
+      %+  ~(poke pass:io /lobby-updates)
+        [host %pokur-host]
       pokur-player-action+!>(`player-action`[%watch-lobby ~])
   ==
 ::
@@ -87,7 +87,13 @@
   ?+    path  (on-watch:def path)
       [%lobby-updates ~]
     ::  forward available tables from host here
-    [lobby-update-card^~ this]
+    ::  start watching host lobby
+    :_  this
+    :~  lobby-update-card
+        %+  ~(poke pass:io /lobby-updates)
+          [fixed-lobby-source %pokur-host]
+        pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    ==
   ::
       [%game-updates ~]
     ?~  game.state  `this
@@ -114,7 +120,7 @@
   ?+    wire  (on-agent:def wire sign)
       [%start-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
-    ?^  p.sign  !!  ::  TODO new table poke failed!
+    ?^  p.sign  ~|(p.sign !!)  ::  TODO new table poke failed!
     `this(our-table.state `(slav %da i.t.wire))
   ::
       [%join-table-poke @ ~]
@@ -222,7 +228,7 @@
   ==
 ::
 ++  on-leave  on-leave:def
-++  on-fail  on-fail:def
+++  on-fail   on-fail:def
 --
 ::
 ::  start helper cores
@@ -363,8 +369,10 @@
       %leave-game
     ?~  game.state
       ~|("%pokur: error: can't leave game, not in one" !!)
+    ?~  game-host.state
+      `state(game ~, messages ~)
     :_  state(game ~, game-host ~, messages ~)
-    (poke-pass-through (need game-host.state) action)^~
+    (poke-pass-through u.game-host.state action)^~
   ::
       %kick-player
     ?~  our-table.state
@@ -477,17 +485,20 @@
   ::  incoroporate update poke from host into our state
   ?-    -.upd
       %lobby
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(uni by lobby.state) tables.upd)
     [lobby-update-card^~ state]
   ::
       %new-table
     ::  add table to our lobby state
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(put by lobby.state) id.table.upd table.upd)
     [lobby-update-card^~ state]
   ::
       %table-closed
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(del by lobby.state) table-id.upd)
     ?~  our-table.state
@@ -502,6 +513,7 @@
     ==
   ::
       %game-starting
+    ?>  =(src.bowl lobby-source.state)
     ::  check if it's our game, if so, sub to path and notify FE
     ?~  table=(~(get by lobby.state) game-id.upd)
       `state
@@ -522,6 +534,9 @@
     pokur-update+!>(`update`upd)
   ::
       %game
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  ~&  >  "new game state:"
     ::  ~&  >  game.upd
     =/  my-hand-rank=@t
@@ -538,8 +553,9 @@
     pokur-update+!>(`update`[%game game.upd my-hand-rank last-board.upd])
   ::
       %game-over
-    ::  ~&  >>  "game is over:"
-    ::  ~&  >>  upd
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  player must now %leave-game to clear state and messages
     :_  state(game `game.upd)
     :_  ~
@@ -550,36 +566,36 @@
 ++  handle-wallet-update
   |=  update=wallet-update:wallet
   ^-  (quip card _state)
-  ?+    -.update  !!
-  ::  only ever expecting a %finished-transaction notification
-      %finished-transaction
+  ?+    -.update  `state  ::  ignore other notifs from wallet
+  ::  handling optimistic receipts only
+      %sequencer-receipt
     ::  wallet announcing that either our %new-bond has been started,
     ::  meaning we've successfully created a tokenized table, or that
     ::  our %deposit has gone through, meaning we've joined a tokenized table
     ?>  ?=(^ origin.update)
-    ?~  pending-poke.state  !!
-    ?+    q.u.origin.update  !!
+    ?~  pending-poke.state  ~|("got receipt for missing txn" !!)
+    ?+    q.u.origin.update  ~|("got receipt from weird origin" !!)
         [%new-bond-confirmation ~]
       ::  send bond info to host with a %new-table poke, finally
       ?>  ?=(%new-table -.u.pending-poke.state)
       ?~  tokenized.u.pending-poke.state  !!
       ::  make sure txn succeeded
       ~|  "%pokur: transaction failed!!"
-      ?>  =(%200 status.transaction.update)
+      ?>  =(%0 errorcode.output.update)
       ::  modify bond-id with txn output
       ::  should be in events.output.update
       =/  event=contract-event:eng:wallet
         (head events.output.update)
-      ?>  =(%new-bond label.event)
-      =.  bond-id.u.tokenized.u.pending-poke.state
-        ((se:dejs:format %ux) json.event)
+      ?>  ?=(@ux noun.event)
       :_  state(pending-poke ~)
       :_  ~
       :*  %pass   /start-table-poke/(scot %da id.u.pending-poke.state)
           %agent  [host.u.pending-poke.state %pokur-host]
           %poke   %pokur-txn-player-action
           !>  ^-  txn-player-action
-          [%new-table-txn batch.update u.pending-poke.state]
+          :+  %new-table-txn
+            +.+.update  ::  receipt
+          u.pending-poke.state(bond-id.u.tokenized noun.event)
       ==
     ::
         [%deposit-confirmation @ ~]
@@ -587,7 +603,7 @@
       ::  request to %join-table on host
       ::  don't need any data other than the fact that the txn succeeded
       ~|  "%pokur: transaction failed!!"
-      ?>  =(%200 status.transaction.update)
+      ?>  =(%0 errorcode.output.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
       :_  state(pending-poke ~)
       :_  ~
@@ -595,7 +611,7 @@
           %agent  [host %pokur-host]
           %poke   %pokur-txn-player-action
           !>  ^-  txn-player-action
-          [%join-table-txn batch.update u.pending-poke.state]
+          [%join-table-txn +.+.update u.pending-poke.state]
       ==
     ==
   ==
@@ -679,4 +695,4 @@
       town
       salt.found
   ==
---  ::  758 lines
+--

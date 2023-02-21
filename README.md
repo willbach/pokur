@@ -16,8 +16,8 @@ Install the %zig desk on both ships.
 Run the normal startup commands in `uqbar-core` README to set up **~nec** as the rollup host and sequencer:
 ```hoon
 :rollup|activate
-:indexer &set-sequencer [our %sequencer]
-:indexer &set-rollup [our %rollup]
+:indexer &indexer-action [%set-sequencer [our %sequencer]]
+:indexer &indexer-action [%set-rollup [our %rollup]]
 :sequencer|init our 0x0 0xc9f8.722e.78ae.2e83.0dd9.e8b9.db20.f36a.1bc4.c704.4758.6825.c463.1ab6.daee.e608
 :uqbar &wallet-poke [%import-seed 'uphold apology rubber cash parade wonder shuffle blast delay differ help priority bleak ugly fragile flip surge shield shed mistake matrix hold foam shove' 'squid' 'nickname']
 ```
@@ -26,9 +26,9 @@ Many of these instructions can be better done through the wallet frontend.
 
 Run the following commands on **~rus**:
 ```hoon
-:indexer &set-sequencer [~nec %sequencer]
-:indexer &set-rollup [~nec %rollup]
-:indexer &indexer-bootstrap [~nec %indexer]
+:indexer &indexer-action [%set-sequencer ~nec %sequencer]
+:indexer &indexer-action [%set-rollup ~nec %rollup]
+:indexer &indexer-action [%bootstrap ~nec %indexer]
 :uqbar &wallet-poke [%import-seed 'post fitness extend exit crack question answer fruit donkey quality emotion draw section width emotion leg settle bulb zero learn solution dutch target kidney' 'squid' 'nickname']
 ```
 
