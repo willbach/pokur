@@ -32,11 +32,7 @@
   ^-  (quip card _this)
   =/  host=@p  fixed-lobby-source
   :_  this(state [%0 ~ ~ host ~ ~ ~ ~ ~ ~ ~])
-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)
-        [host %pokur-host]
-      pokur-player-action+!>(`player-action`[%watch-lobby ~])
-  ==
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::
 ++  on-save  ^-  vase  !>(state)
 ::
@@ -50,11 +46,7 @@
       [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~]
     u.new
   :_  this(state old-state)
-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)
-        [lobby-source.old-state %pokur-host]
-      pokur-player-action+!>(`player-action`[%watch-lobby ~])
-  ==
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::
 ++  on-poke
   |=  [=mark =vase]
