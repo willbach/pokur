@@ -35,6 +35,7 @@
               chips-per-token=1.000
               small-blind=5
               big-blind=10
+              tokens-in-bond=0
           ==
           turn-time-limit=*@dr
           turn-start=*@da

@@ -683,6 +683,8 @@
     (gth r.a r.b)
   ::  check for ties and return winner(s)
   =/  top-rank  -.+.-.player-ranks
+  ?:  =(1 (lent player-ranks))
+    -.player-ranks^~
   ?.  =(top-rank -.+.+<.player-ranks)
     ::  no ties, proceed
     -.player-ranks^~

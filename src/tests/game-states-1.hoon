@@ -17,7 +17,7 @@
           :*  %sng
               starting-stack=1.000
               *@dr
-              blind-schedule=~[[1 2] [3 4]]
+              blind-schedule=~[[1 2] [400 800]]
               current-round=0
               round-is-over=%.n
               payouts=~[100]
@@ -546,4 +546,200 @@
   %+  expect-eq
     !>(game.expected-state)
   !>(game.next-hand-init)
+::
+++  test-n-increment-round
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 8]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  ~(increment-current-round guts -)
+    (need (~(process-player-action guts -) ~dev [%bet *@da 990]))
+  =/  new-state
+    (need (~(process-player-action guts last-state) ~tes [%bet *@da 990]))
+  =/  next-hand-init
+    ~(initialize-hand guts new-state(deck (shuffle deck.new-state 1)))
+  =/  expected-state
+    ?>  ?=(%sng -.game-type.game.last-state)
+    %=    last-state
+        current-round.game-type.game  1
+        round-is-over.game-type.game  %.n
+        whose-turn.game  ~tes
+        dealer.game  ~tes
+        small-blind.game  ~tes
+        big-blind.game  ~bus
+        last-action.game  ~
+        last-aggressor.game  ~
+        current-bet.game  800
+        last-bet.game  800
+        board.game  ~
+        hands-played.game  1
+        update-message.game
+      '~tes is all-in. ~tes wins pot of 2.000 with hand Full House.  '
+        revealed-hands.game
+      ~[[~tes ~[[%3 %hearts] [%ace %hearts]]] [~dev ~[[%8 %diamonds] [%8 %clubs]]]]
+    ::
+        players.game
+      :~  [~tes 1.600 400 %.n %.n %.n]
+          [~bus 200 800 %.n %.n %.n]
+          [~dev 0 0 %.n %.y %.n]
+      ==
+    ::
+        pots.game  ~[[0 ~[~tes ~bus]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.next-hand-init)
+::
+++  test-m-bet-below-bb
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 8]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  ~(increment-current-round guts -)
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 990]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 990]))
+    =+  ~(initialize-hand guts -(deck (shuffle deck.- 1)))
+    (need (~(process-player-action guts -) ~tes [%bet *@da 400]))
+  =/  new-state
+    (need (~(process-player-action guts last-state) ~bus [%bet *@da 200]))
+  =/  expected-state
+    %=    last-state
+        whose-turn.game  ~tes
+        dealer.game  ~tes
+        small-blind.game  ~tes
+        big-blind.game  ~bus
+        last-action.game  `%raise
+        last-aggressor.game  `~bus
+        current-bet.game  1.000
+        last-bet.game  200
+        board.game  ~
+        hands-played.game  1
+        update-message.game
+      '~bus is all-in. '
+        revealed-hands.game
+      ~[[~tes ~[[%3 %hearts] [%ace %hearts]]] [~dev ~[[%8 %diamonds] [%8 %clubs]]]]
+    ::
+        players.game
+      :~  [~tes 1.200 800 %.y %.n %.n]
+          [~bus 0 1.000 %.y %.n %.n]
+          [~dev 0 0 %.n %.y %.n]
+      ==
+    ::
+        pots.game  ~[[0 ~[~tes ~bus]]]
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+++  test-l-resolve-bet-below-bb
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 8]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  ~(increment-current-round guts -)
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 990]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 990]))
+    =+  ~(initialize-hand guts -(deck (shuffle deck.- 1)))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 400]))
+    (need (~(process-player-action guts -) ~bus [%bet *@da 200]))
+  =/  new-state
+    (need (~(process-player-action guts last-state) ~tes [%bet *@da 200]))
+  =/  expected-state
+    %=    last-state
+        game-is-over.game  %.y
+        whose-turn.game  ~tes
+        dealer.game  ~tes
+        small-blind.game  ~tes
+        big-blind.game  ~bus
+        last-action.game  `%call
+        last-aggressor.game  `~bus
+        current-bet.game  0
+        last-bet.game  0
+        board.game  ~[[%9 %hearts] [%10 %diamonds] [%jack %diamonds] [%jack %hearts] [%jack %spades]]
+        hands-played.game  2
+        update-message.game
+      '~tes wins pot of 2.000 with hand Full House.  '
+        revealed-hands.game
+      ~[[~tes ~[[%9 %diamonds] [%10 %hearts]]] [~bus ~[[%8 %spades] [%5 %spades]]]]
+    ::
+        players.game
+      :~  [~tes 3.000 0 %.n %.n %.n]
+          [~bus 0 0 %.y %.y %.n]
+          [~dev 0 0 %.y %.y %.n]
+      ==
+    ::
+        pots.game  ~
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
+::
+++  test-k-round-below-bb
+  =/  state  ~(initialize-hand guts game-state-1)
+  =/  last-state
+    =+  (need (~(process-player-action guts state) ~bus [%fold *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 1]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~tes [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 8]))
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 4]))
+    =+  ~(increment-current-round guts -)
+    =+  (need (~(process-player-action guts -) ~dev [%bet *@da 990]))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 990]))
+    =+  ~(initialize-hand guts -(deck (shuffle deck.- 1)))
+    =+  (need (~(process-player-action guts -) ~tes [%bet *@da 400]))
+    =+  (need (~(process-player-action guts -) ~bus [%check *@da ~]))
+    =+  (need (~(process-player-action guts -) ~bus [%check *@da ~]))
+    (need (~(process-player-action guts -) ~tes [%bet *@da 200]))
+  =/  new-state
+    (need (~(process-player-action guts last-state) ~bus [%bet *@da 200]))
+  =/  expected-state
+    %=    last-state
+        game-is-over.game  %.y
+        whose-turn.game  ~bus
+        dealer.game  ~tes
+        small-blind.game  ~tes
+        big-blind.game  ~bus
+        last-action.game  `%call
+        last-aggressor.game  `~tes
+        current-bet.game  0
+        last-bet.game  0
+        board.game  ~[[%9 %hearts] [%10 %diamonds] [%jack %diamonds] [%jack %hearts] [%jack %spades]]
+        hands-played.game  2
+        update-message.game
+      '~bus is all-in. ~tes wins pot of 2.000 with hand Full House.  '
+        revealed-hands.game
+      ~[[~tes ~[[%9 %diamonds] [%10 %hearts]]] [~bus ~[[%8 %spades] [%5 %spades]]]]
+    ::
+        players.game
+      :~  [~tes 3.000 0 %.n %.n %.n]
+          [~bus 0 0 %.y %.y %.n]
+          [~dev 0 0 %.y %.y %.n]
+      ==
+    ::
+        pots.game  ~
+    ==
+  %+  expect-eq
+    !>(game.expected-state)
+  !>(game.new-state)
 --

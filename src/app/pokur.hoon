@@ -1,6 +1,6 @@
 /-  *pokur, indexer=zig-indexer, wallet=zig-wallet
 /+  default-agent, dbug, io=agentio, verb,
-    smart=zig-sys-smart, *pokur-game-logic, pokur-json
+    engine=zig-sys-engine, *pokur-game-logic, pokur-json
 |%
 +$  card  card:agent:gall
 +$  state-0
@@ -32,11 +32,7 @@
   ^-  (quip card _this)
   =/  host=@p  fixed-lobby-source
   :_  this(state [%0 ~ ~ host ~ ~ ~ ~ ~ ~ ~])
-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)
-        [host %pokur-host]
-      pokur-player-action+!>(`player-action`[%watch-lobby ~])
-  ==
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::
 ++  on-save  ^-  vase  !>(state)
 ::
@@ -50,11 +46,7 @@
       [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~]
     u.new
   :_  this(state old-state)
-  :~  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]
-      %+  ~(poke pass:io /lobby-updates)
-        [lobby-source.old-state %pokur-host]
-      pokur-player-action+!>(`player-action`[%watch-lobby ~])
-  ==
+  [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -369,8 +361,10 @@
       %leave-game
     ?~  game.state
       ~|("%pokur: error: can't leave game, not in one" !!)
+    ?~  game-host.state
+      `state(game ~, messages ~)
     :_  state(game ~, game-host ~, messages ~)
-    (poke-pass-through (need game-host.state) action)^~
+    (poke-pass-through u.game-host.state action)^~
   ::
       %kick-player
     ?~  our-table.state
@@ -483,17 +477,20 @@
   ::  incoroporate update poke from host into our state
   ?-    -.upd
       %lobby
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(uni by lobby.state) tables.upd)
     [lobby-update-card^~ state]
   ::
       %new-table
     ::  add table to our lobby state
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(put by lobby.state) id.table.upd table.upd)
     [lobby-update-card^~ state]
   ::
       %table-closed
+    ?>  =(src.bowl lobby-source.state)
     =.  lobby.state
       (~(del by lobby.state) table-id.upd)
     ?~  our-table.state
@@ -508,6 +505,7 @@
     ==
   ::
       %game-starting
+    ?>  =(src.bowl lobby-source.state)
     ::  check if it's our game, if so, sub to path and notify FE
     ?~  table=(~(get by lobby.state) game-id.upd)
       `state
@@ -528,6 +526,9 @@
     pokur-update+!>(`update`upd)
   ::
       %game
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  ~&  >  "new game state:"
     ::  ~&  >  game.upd
     =/  my-hand-rank=@t
@@ -544,8 +545,9 @@
     pokur-update+!>(`update`[%game game.upd my-hand-rank last-board.upd])
   ::
       %game-over
-    ::  ~&  >>  "game is over:"
-    ::  ~&  >>  upd
+    ::  ignore updates if we've left
+    ?~  game-host.state  `state
+    ?>  =(src.bowl u.game-host.state)
     ::  player must now %leave-game to clear state and messages
     :_  state(game `game.upd)
     :_  ~
@@ -679,7 +681,7 @@
   ?>  ?=(%token -.+.found)
   :-  contract.found
   ::  generate ID of our token account
-  %:  hash-data:smart
+  %:  hash-data:engine
       contract.found
       our-addr
       town
