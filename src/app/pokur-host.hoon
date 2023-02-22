@@ -1,5 +1,5 @@
 /-  *pokur, wallet=zig-wallet, ui=zig-indexer
-/+  default-agent, dbug, io=agentio,
+/+  default-agent, dbug, io=agentio, verb,
     *pokur-game-logic, *pokur-chain
 |%
 +$  card  card:agent:gall
@@ -18,6 +18,7 @@
   ==
 --
 ^-  agent:gall
+%+  verb  &
 %-  agent:dbug
 =|  state=state-1
 =<
@@ -207,25 +208,24 @@
   ?~  host-game=(~(get by games.state) game-id.action)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: host could not find game"]]]
-  =*  game  game.u.host-game
   ::  validate that move is from right player
   =/  from=ship
-    ?:  ?&  =(src.bowl our.bowl)
-            (gth now.bowl turn-timer.u.host-game)
-        ==
+    ?:  =(src our):bowl
       ::  automatic fold from timeout!
-      whose-turn.game
+      whose-turn.game.u.host-game
     src.bowl
-  =/  whose-turn-pre=@p  whose-turn.game.u.host-game
-  ?.  =(whose-turn.game from)
+  ?.  =(whose-turn.game.u.host-game from)
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: playing out of turn!"]]]
   =+  (~(process-player-action guts u.host-game) from action)
   ?~  -
+    ~&  >>>  "received 'invalid action' from {<src.bowl>}"
+    ~&  >>>  action
+    ~&  >>  game.u.host-game
     :_  state
     ~[[%give %poke-ack `~[leaf+"error: invalid action received!"]]]
   ::
-  (resolve-player-turn u.- whose-turn-pre)
+  (resolve-player-turn u.- from)
 ::
 ++  handle-player-txn
   |=  [act=txn-player-action on-batch=?]
