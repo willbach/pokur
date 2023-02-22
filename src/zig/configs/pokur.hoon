@@ -39,14 +39,14 @@
             :-  %custom-write
             :^  %deploy-contract  ~
               %-  crip
-              "[{<who>} {<`path`get-escrow-jam-path>} {<`(unit @ux)``publish-contract-hash>}]"
+              "[{<who>} {<service-host>} {<`path`get-escrow-jam-path>} %.n {<`(unit @ux)``publish-contract-hash>}]"
             ~
           ~
         :^  %poke  ~
           :-  who
           :^  who  %pokur-host  %pokur-host-action
           %-  crip
-          "[%host-info {<who>} {<(get-address who)>} [{<compute-escrow-contract-hash>} 0x0]]"
+          "[%host-info {<who>} {<(get-address who)>} [(~(got bi:mip configs:test-globals) project:test-globals [{<who>} {<(spat get-escrow-jam-path)>}]) 0x0]]"
         ~
       (make-set-our-address who)
     ~
@@ -103,20 +103,7 @@
   ^-  @ux
   0x1111.1111
 ::
-++  get-full-escrow-jam-path
-  ^-  path
-  %+  weld  /(scot %p our:test-globals)/pokur
-  /(scot %da now:test-globals)/con/compiled/escrow/jam
-::
 ++  get-escrow-jam-path
   ^-  path
   /con/compiled/escrow/jam
-::
-++  get-escrow-contract
-  [- +]:(cue .^(@ %cx get-full-escrow-jam-path))
-::
-++  compute-escrow-contract-hash
-  %-  hash-pact:smart:zig
-  :^  0x0  (get-address service-host)  town-id  ::  substitute publish-contract-hash with 0x0 if mutable=%.y
-  get-escrow-contract
 --
