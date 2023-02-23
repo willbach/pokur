@@ -309,6 +309,23 @@
       ==
     ::  validate spec
     ?>  (valid-game-spec action)
+    ::  if cash game, set player chip stack based on their token
+    ::  buy-in and assert stack is between min and max
+    =?  game-type.table  &(?=(^ tokenized.action) ?=(%cash -.game-type.table))
+      =/  chips-bought=@ud
+        ::  TODO handle tokens with nonstandard decimal amounts
+        %+  div
+          (mul amount.u.tokenized.action chips-per-token.game-type.table)
+        1.000.000.000.000.000.000
+      ?>  ?&  (gte chips-bought min-buy.game-type.table)
+              (lte chips-bought max-buy.game-type.table)
+          ==
+      %=    game-type.table
+          buy-ins
+        (~(put by buy-ins.game-type.table) src.bowl chips-bought)
+          tokens-in-bond
+        (add tokens-in-bond.game-type.table amount.u.tokenized.action)
+      ==
     ::  prune lobby watchers for offline ships
     =.  lobby-watchers.state
       (prune-watchers lobby-watchers.state)
