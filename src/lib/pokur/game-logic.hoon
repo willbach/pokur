@@ -138,7 +138,7 @@
         %+  roll
           %+  murn  players.game.state
           |=  [=ship ^player-info]
-          ?:  |(=(0 stack) =(ship who))
+          ?:  |(=(0 stack) =(ship who) =(folded &) =(left &))
             ~
           `stack
         max
