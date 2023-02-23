@@ -262,9 +262,16 @@
     ::    and that the bond contains the amount specified by table,
     ::    from the poke sender
     ?>  =(custodian.bond address.our-info.state)
-    ?>  %+  gte  ::  gte in case they double-deposit
-          amount.u.tokenized.u.table
-        amount:(~(got py:smart depositors.bond) src.bowl)
+    ?>  ?-    -.game-type.u.table
+            %sng
+          %+  gte  ::  gte in case they double-deposit
+            amount.u.tokenized.u.table
+          amount:(~(got py:smart depositors.bond) src.bowl)
+        ::
+            %cash
+          .=  buy-in.player-action.act
+          amount:(~(got py:smart depositors.bond) src.bowl)
+        ==
     (handle-player-action player-action.act tokenized=%.y)
   ==
 ::

@@ -477,20 +477,20 @@
   ::  incoroporate update poke from host into our state
   ?-    -.upd
       %lobby
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(uni by lobby.state) tables.upd)
     [lobby-update-card^~ state]
   ::
       %new-table
     ::  add table to our lobby state
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(put by lobby.state) id.table.upd table.upd)
     [lobby-update-card^~ state]
   ::
       %table-closed
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(del by lobby.state) table-id.upd)
     ?~  our-table.state
@@ -505,7 +505,7 @@
     ==
   ::
       %game-starting
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     ::  check if it's our game, if so, sub to path and notify FE
     ?~  table=(~(get by lobby.state) game-id.upd)
       `state

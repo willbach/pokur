@@ -1,5 +1,7 @@
 /-  *zig-sequencer
 /+  ethereum, merk, smart=zig-sys-smart
+/=  zigs-mar      /con/mar/zigs
+/=  escrow-mar    /con/mar/escrow
 /*  zigs-contract      %jam  /con/compiled/zigs/jam
 /*  escrow-contract    %jam  /con/compiled/escrow/jam
 :-  %say
@@ -75,7 +77,7 @@
       zigs-contract-id:smart  ::  holder
       town-id                ::  town-id
       [- +]:(cue zigs-contract)
-      ~
+      interface=`pith:smart`[%ux `@ux`(sham zigs-mar)]^~
   ==
 ::  escrow.hoon contract
 =/  escrow-pact
@@ -85,7 +87,7 @@
       0x0          ::  holder
       town-id      ::  town-id
       [- +]:(cue escrow-contract)
-      ~
+      interface=`pith:smart`[%ux `@ux`(sham escrow-mar)]^~
   ==
 ::
 =/  fake-state
