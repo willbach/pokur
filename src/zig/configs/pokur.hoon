@@ -30,31 +30,36 @@
   ++  make-setup-nec
     ^-  test-steps:zig
     =/  who=@p  ~nec
-    :^    :-  %custom-write
-          :^  %send-wallet-transaction  ~
+    :~  :-  %custom-write
+        :^  %send-wallet-transaction  ~
+          %-  crip
+          %-  noah
+          !>  ^-  [@p @p test-write-step:zig]
+          :+  who  service-host
+          :-  %custom-write
+          :^  %deploy-contract  ~
             %-  crip
-            %-  noah
-            !>  ^-  [@p @p test-write-step:zig]
-            :+  who  service-host
-            :-  %custom-write
-            :^  %deploy-contract  ~
-              %-  crip
-              "[{<who>} {<service-host>} {<`path`get-escrow-jam-path>} %.n {<`(unit @ux)``publish-contract-hash>}]"
-            ~
+            "[{<who>} {<service-host>} {<`path`get-escrow-jam-path>} %.n ~]"
           ~
+        ~
+    ::
         :^  %poke  ~
           :-  who
           :^  who  %pokur-host  %pokur-host-action
           %-  crip
           "[%host-info {<who>} {<(get-address who)>} [(~(got bi:mip configs:test-globals) project:test-globals [{<who>} {<(spat get-escrow-jam-path)>}]) 0x0]]"
         ~
-      (make-set-our-address who)
-    ~
+    ::
+        (make-find-host who)
+    ::
+        (make-set-our-address who)
+    ==
   ::
   ++  make-setup-bud
     ^-  test-steps:zig
     =/  who=@p  ~bud
-    :+  (make-set-our-address who)
+    :^    (make-find-host who)
+        (make-set-our-address who)
       :-  %custom-write
       :^  %send-wallet-transaction  ~
         %-  crip
@@ -73,7 +78,7 @@
   ++  make-setup-wes
     ^-  test-steps:zig
     =/  who=@p  ~wes
-    ~[(make-set-our-address who)]
+    ~[(make-find-host who) (make-set-our-address who)]
   ::
   ++  make-set-our-address
     |=  who=@p
@@ -82,6 +87,15 @@
       :-  who
       :^  who  %pokur  %pokur-player-action
       (crip "[%set-our-address {<(get-address who)>}]")
+    ~
+  ++  make-find-host
+    |=  who=@p
+    ^-  test-step:zig
+    :^  %poke  ~
+      :-  who
+      :^  who  %pokur  %pokur-player-action
+      %-  crip
+      "[%find-host {<service-host>}]"
     ~
   --
 ::
@@ -94,14 +108,6 @@
 ++  service-host
   ^-  @p
   ~nec
-::
-++  town-id
-  ^-  @ux
-  0x0
-::
-++  publish-contract-hash
-  ^-  @ux
-  0x1111.1111
 ::
 ++  get-escrow-jam-path
   ^-  path
