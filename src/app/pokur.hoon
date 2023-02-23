@@ -117,7 +117,7 @@
   ::
       [%join-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
-    ?^  p.sign  !!  ::  TODO join table poke failed!
+    ?^  p.sign  ~|(p.sign !!)  ::  TODO join table poke failed!
     ::  join table was successful -- if table is active, we must now
     ::  subscribe to the game updates path
     =/  table-id=@da  (slav %da i.t.wire)
