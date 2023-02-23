@@ -165,6 +165,7 @@
       [%remove-host who=ship]
       [%send-invite to=ship]  ::  from FE to player app
       [%invite =table]  ::  from player app to player app
+      [%spectate-table id=@da public=?]
   ==
 ::
 +$  txn-player-action

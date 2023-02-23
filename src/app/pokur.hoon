@@ -401,6 +401,9 @@
         %poke  %pokur-player-action
         !>(`player-action`[%invite table])
     ==
+  ::
+      %spectate-table
+    !!
   ==
 ::
 ++  handle-message-action  ::  TODO replace with pongo?
