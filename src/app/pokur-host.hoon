@@ -338,7 +338,6 @@
   ::
       %join-table
     ::  add player to existing table
-    ~&  >>  action
     ?~  table=(~(get by tables.state) id.action)  !!
     ?>  |(tokenized ?=(~ tokenized.u.table))
     ::  table must not be full
@@ -362,7 +361,6 @@
           tokens-in-bond
         (add tokens-in-bond.game-type.u.table buy-in.action)
       ==
-    ~&  >  "asdf"
     ::  if table is active, add the player directly to the ongoing game
     ::  otherwise just update table and share with subscribers
     =^  game-update-cards  games.state
@@ -451,8 +449,8 @@
         ?=(^ tokenized.u.table)
       =/  total
         ?-  -.game-type.u.table
-          %sng  (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
-          %cash  !!  ::  TODO handle with tokens-in-bond
+          %sng   (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
+          %cash  tokens-in-bond.game-type.u.table
         ==
       tokenized.u.table(amount.u total)
     =/  =game
