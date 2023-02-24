@@ -136,10 +136,8 @@
     ?>  =(custodian.noun.bond id.caller.context)
     ::  all tokens returned to depositors
     ::  zero out and destroy the bond item
-    =:  amount.escrow-asset.noun.bond  0
-        depositors.noun.bond           ~
-    ==
-    :_  (result ~ ~ [%&^bond ~] ~)
+    =.  amount.escrow-asset.noun.bond  0
+    :_  (result ~ ~ [%&^bond(depositors.noun ~) ~] ~)
     %+  turn  ~(tap py depositors.noun.bond)
     |=  [=ship =address amount=@ud]
     ^-  call
