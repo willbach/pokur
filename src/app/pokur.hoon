@@ -318,6 +318,11 @@
           [our now]:bowl
       ==
     =/  host-ta  (scot %p ship.host-info.table)
+    =/  tokens=@ud
+      ?-  -.game-type.table
+        %sng   amount.u.tokenized.table
+        %cash  buy-in.action
+      ==
     :_  join-host-card
     :*  %pass  /pokur-wallet-poke
         %agent  [our.bowl %uqbar]
@@ -331,13 +336,13 @@
             :-  %noun
             :*  %push
                 to=id.contract.host-info.table
-                amount=amount.u.tokenized.table
+                amount=tokens
                 from-account=our-account-id
                 ^-  action:escrow
                 :*  %deposit
                     bond-id.u.tokenized.table
                     our.bowl
-                    amount.u.tokenized.table
+                    tokens
                     our-account-id
         ==  ==  ==
     ==

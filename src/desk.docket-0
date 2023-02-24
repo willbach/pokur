@@ -1,7 +1,7 @@
 :~  title+'Pokur'
     info+'Play Texas Holdem on Uqbar'
     color+0xab.abab
-    glob-http+['https://poker-app-distro.s3.us-east-2.amazonaws.com/glob-0v2.6nv6u.m34d5.hsa9h.je6le.8s32b.glob' 0v2.6nv6u.m34d5.hsa9h.je6le.8s32b]
+    glob-http+['https://poker-app-distro.s3.us-east-2.amazonaws.com/glob-0vk36lt.cfq5n.i2vt1.v020c.e7rnl.glob' 0vk36lt.cfq5n.i2vt1.v020c.e7rnl]
     image+'https://poker-app-distro.s3.us-east-2.amazonaws.com/pokur-logo-2.png'
     base+'pokur'
     version+[0 2 1]
