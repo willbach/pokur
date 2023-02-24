@@ -303,7 +303,10 @@
     ::  otherwise just join. host will not allow us to enter
     ::  table if tokenized until transaction is received
     ?~  tokenized.table
-      :_  state(our-table `id.action)
+      ::  if table is already active, set game host
+      :_  ?:  is-active.table
+            state(game-host `ship.host-info.table)
+          state(our-table `id.action)
       (poke-pass-through ship.host-info.table action)^join-host-card
     ::  escrow work -- set pending join poke
     :_  state(pending-poke `action)
@@ -615,7 +618,7 @@
       ~|  "%pokur: transaction failed!!"
       ?>  =(%0 errorcode.output.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
-      :_  state(pending-poke ~)
+      :_  state(pending-poke ~, game-host `host)
       :_  ~
       :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
           %agent  [host %pokur-host]

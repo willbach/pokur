@@ -496,11 +496,16 @@
   ::  if the host allows, players can join at any time.
   ::  players enter as acted+folded, and will be set to active at the
   ::  beginning of next hand. new players will be seated behind
-  ::  current dealer.
+  ::  current dealer. if player is already in players-list, assert that
+  ::  they had left, then replace their entry.
   ::
   ++  add-player
     |=  [who=ship starting-stack=@ud]
     ^-  host-game-state
+    =/  found  (find ~[who] (turn players.game.state head))
+    =?    players.game.state
+        ?=(^ found)
+      (oust [u.found 1] players.game.state)
     %=    state
         players.game
       =+  pos=(find ~[dealer.game.state] (turn players.game.state head))
