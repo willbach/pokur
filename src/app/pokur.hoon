@@ -402,8 +402,18 @@
         !>(`player-action`[%invite table])
     ==
   ::
-      %spectate-table
-    !!
+      %spectate-game
+    ?^  game.state
+      ~|("%pokur: error: can't join table, already in game" !!)
+    ::  if we're not already familiar with table host, familiarize ourself
+    =/  join-host-card
+      ?:  (~(has by known-hosts.state) host.action)  ~
+      :_  ~
+      %+  ~(poke pass:io /lobby-updates)
+        [host.action %pokur-host]
+      pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    :_  state(game-host `host.action)
+    (poke-pass-through host.action action)^join-host-card
   ==
 ::
 ++  handle-message-action  ::  TODO replace with pongo?
@@ -635,14 +645,19 @@
   ::
       %'GET'
     =/  url=path  (stab url.request.q.load)
-    ?.  ?=([@ @ @ @ @ ~] url)  !!
-    ::  url should be /apps/pokur/invites/[public or private]/[game-id]
-    =/  public=?  =('public' i.t.t.t.url)
-    =/  table-id=@da  (slav %da i.t.t.t.t.url)
+    ?.  ?=([@ @ @ @ @ @ ~] url)  !!
+    ::  url should be /apps/pokur/invites/[host]/[public or private]/[game-id]
+    =/  host=ship     (slav %p i.t.t.t.url)
+    =/  public=?      =('public' i.t.t.t.t.url)
+    =/  table-id=@da  (slav %da i.t.t.t.t.t.url)
     =/  =response-header:http
       [301 ['Location' '/apps/pokur']~]
     :_  state
-    :~  :^  %give  %fact
+    :~  %+  ~(poke pass:io /lobby-updates)
+          [host %pokur-host]
+        pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    ::
+        :^  %give  %fact
           [/http-response/[p.load]]~
         http-response-header+!>(response-header)
     ::

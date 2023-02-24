@@ -546,8 +546,9 @@
     ::  in proportion to their stack when leaving the table.
     ::  TODO factor into arm
     =/  award-card=(list card)
-      ?~  tokenized.u.host-game  ~
-      ?.  ?=(%cash -.game-type.game.u.host-game)  ~
+      ?~  tokenized.u.host-game                                    ~
+      ?.  ?=(%cash -.game-type.game.u.host-game)                   ~
+      ?~  inf=(get-player-info:~(gang guts u.host-game) src.bowl)  ~
       :_  ~
       :*  %pass  /pokur-wallet-poke
           %agent  [our.bowl %uqbar]
@@ -566,11 +567,8 @@
                   ::  find token amount by multiplying stack by 10^18
                   ::  then dividing stack by chips-per-token.
                   ::  TODO handle nonstandard
-                  =/  their-stack=@ud
-                    =-  ?~(- 0 stack.u.-)
-                    (get-player-info:~(gang guts u.host-game) src.bowl)
                   %+  div
-                    (mul their-stack 1.000.000.000.000.000.000)
+                    (mul stack.u.inf 1.000.000.000.000.000.000)
                   chips-per-token.game-type.game.u.host-game
       ==  ==  ==
     =^  cards  state
@@ -629,6 +627,19 @@
     ?.  public.u.table
       (private-table-cards u.table)
     (new-table-cards u.table)
+  ::
+      %spectate-game
+    ::  add a spectator to an ongoing *game* (not a table!)
+    ?>  =(our.bowl host.action)
+    =/  host-game  (~(got by games.state) id.action)
+    ?>  spectators-allowed.game.host-game
+    =.  spectators.game.host-game
+      (~(put in spectators.game.host-game) src.bowl)
+    :_  state(games (~(put by games.state) id.action host-game))
+    :_  ~
+    %+  ~(poke pass:io /game-updates)
+      [src.bowl %pokur]
+    pokur-host-update+!>(`host-update`[%game game.host-game ~])
   ==
 ::
 ++  handle-wallet-update
