@@ -173,11 +173,14 @@
         =.  last-action.game.state  `%call
         `next-player-turn
       ::  this is a raise attempt
-      ?.  ?&  (gte amount.action last-bet.game.state)
-              %+  gte  bet-plus-committed
+      ::  the raise must either be >= amount of previous bet/raise,
+      ::  OR must put the other remaining player with the most chips all-in.
+      ?.  ?|  %+  gte  bet-plus-committed
               (add last-bet.game.state current-bet.game.state)
-          ==
-        ::  error, raise must be >= amount of previous bet/raise
+              ?&  %+  lth  current-min-bet
+                  big:(get-current-blinds game-type.game.state)
+                  (gte bet-plus-committed current-min-bet)
+          ==  ==
         ~
       ::  process raise
       =:  last-aggressor.game.state  `who
