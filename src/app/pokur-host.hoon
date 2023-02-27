@@ -262,8 +262,11 @@
     ::    and that the bond contains the amount specified by table,
     ::    from the poke sender
     ?>  =(custodian.bond address.our-info.state)
-    ?>  %+  gte  ::  gte in case they double-deposit
-          amount.u.tokenized.u.table
+    ?>  %+  lte  ::  lte in case they double-deposit
+          ?-  -.game-type.u.table
+            %sng   amount.u.tokenized.u.table
+            %cash  buy-in.player-action.act
+          ==
         amount:(~(got py:smart depositors.bond) src.bowl)
     (handle-player-action player-action.act tokenized=%.y)
   ==
@@ -309,6 +312,23 @@
       ==
     ::  validate spec
     ?>  (valid-game-spec action)
+    ::  if cash game, set player chip stack based on their token
+    ::  buy-in and assert stack is between min and max
+    =?  game-type.table  &(?=(^ tokenized.action) ?=(%cash -.game-type.table))
+      =/  chips-bought=@ud
+        ::  TODO handle tokens with nonstandard decimal amounts
+        %+  div
+          (mul amount.u.tokenized.action chips-per-token.game-type.table)
+        1.000.000.000.000.000.000
+      ?>  ?&  (gte chips-bought min-buy.game-type.table)
+              (lte chips-bought max-buy.game-type.table)
+          ==
+      %=    game-type.table
+          buy-ins
+        (~(put by buy-ins.game-type.table) src.bowl chips-bought)
+          tokens-in-bond
+        (add tokens-in-bond.game-type.table amount.u.tokenized.action)
+      ==
     ::  prune lobby watchers for offline ships
     =.  lobby-watchers.state
       (prune-watchers lobby-watchers.state)
@@ -429,8 +449,8 @@
         ?=(^ tokenized.u.table)
       =/  total
         ?-  -.game-type.u.table
-          %sng  (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
-          %cash  !!  ::  TODO handle with tokens-in-bond
+          %sng   (mul ~(wyt in players.u.table) amount.u.tokenized.u.table)
+          %cash  tokens-in-bond.game-type.u.table
         ==
       tokenized.u.table(amount.u total)
     =/  =game
@@ -509,14 +529,14 @@
     ::  player leaves game
     ?~  host-game=(~(get by games.state) id.action)
       `state
-    ?.  ?|  (~(has by hands.u.host-game) src.bowl)
-            (~(has in spectators.game.u.host-game) src.bowl)
-        ==
+    =/  is-player
+      ?=(^ (find ~[src.bowl] (turn players.game.u.host-game head)))
+    ?.  |(is-player (~(has in spectators.game.u.host-game) src.bowl))
       `state
     =/  whose-turn-pre=@p  whose-turn.game.u.host-game
     :: remove sender from their game
     =?    u.host-game
-        (~(has by hands.u.host-game) src.bowl)
+        is-player
       ~&  >>>  "removing player {<src.bowl>} from game."
       (~(remove-player guts u.host-game) src.bowl)
     :: remove spectator if they were one
@@ -525,10 +545,15 @@
     ::  if player is leaving a cash game, award them tokens
     ::  in proportion to their stack when leaving the table.
     ::  TODO factor into arm
-    =/  award-card=(list card)
-      ?~  tokenized.u.host-game  ~
-      ?.  ?=(%cash -.game-type.game.u.host-game)  ~
-      :_  ~
+    =/  cash-cards=(list card)
+      ?.  is-player                                                ~
+      ?~  tokenized.u.host-game                                    ~
+      ?.  ?=(%cash -.game-type.game.u.host-game)                   ~
+      ?~  inf=(get-player-info:~(gang guts u.host-game) src.bowl)  ~
+      %+  snoc
+        ?~  table=(~(get by tables.state) id.action)  ~
+        ?.  public.u.table  (private-table-cards u.table)
+        (new-table-cards u.table)
       :*  %pass  /pokur-wallet-poke
           %agent  [our.bowl %uqbar]
           %poke  %wallet-poke
@@ -546,11 +571,8 @@
                   ::  find token amount by multiplying stack by 10^18
                   ::  then dividing stack by chips-per-token.
                   ::  TODO handle nonstandard
-                  =/  their-stack=@ud
-                    =-  ?~(- 0 stack.u.-)
-                    (get-player-info:~(gang guts u.host-game) src.bowl)
                   %+  div
-                    (mul their-stack 1.000.000.000.000.000.000)
+                    (mul stack.u.inf 1.000.000.000.000.000.000)
                   chips-per-token.game-type.game.u.host-game
       ==  ==  ==
     =^  cards  state
@@ -565,7 +587,16 @@
         state(games (~(put by games.state) id.action u.host-game))
       ::  player left on their turn.
       (resolve-player-turn u.host-game whose-turn-pre)
-    [(weld cards award-card) state]
+    =?    lobby-watchers.state
+        ?=(%cash -.game-type.game.u.host-game)
+      (prune-watchers lobby-watchers.state)
+    =?    tables.state
+        ?=(%cash -.game-type.game.u.host-game)
+      %+  ~(jab by tables.state)
+        id.action
+      |=  =table
+      table(players (~(del in players.table) src.bowl))
+    [(weld cards cash-cards) state]
   ::
       %kick-player
     ?~  table=(~(get by tables.state) id.action)  !!
@@ -609,6 +640,19 @@
     ?.  public.u.table
       (private-table-cards u.table)
     (new-table-cards u.table)
+  ::
+      %spectate-game
+    ::  add a spectator to an ongoing *game* (not a table!)
+    ?>  =(our.bowl host.action)
+    =/  host-game  (~(got by games.state) id.action)
+    ?>  spectators-allowed.game.host-game
+    =.  spectators.game.host-game
+      (~(put in spectators.game.host-game) src.bowl)
+    :_  state(games (~(put by games.state) id.action host-game))
+    :_  ~
+    %+  ~(poke pass:io /game-updates)
+      [src.bowl %pokur]
+    pokur-host-update+!>(`host-update`[%game game.host-game ~])
   ==
 ::
 ++  handle-wallet-update
@@ -713,6 +757,10 @@
 ++  end-game-pay-winners
   |=  host-game=host-game-state
   ^-  (quip card _state)
+  ::  if cash game, remove from lobby
+  =?    tables.state
+      ?=(%cash -.game-type.game.host-game)
+    (~(del by tables.state) id.game.host-game)
   ::  if non-token game, just delete and update
   ?~  tokenized.host-game
     :-  (game-over-updates host-game (turn placements.host-game |=(p=@p [p 0])))

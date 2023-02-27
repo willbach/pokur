@@ -117,7 +117,7 @@
   ::
       [%join-table-poke @ ~]
     ?.  ?=(%poke-ack -.sign)  (on-agent:def wire sign)
-    ?^  p.sign  !!  ::  TODO join table poke failed!
+    ?^  p.sign  ~|(p.sign !!)  ::  TODO join table poke failed!
     ::  join table was successful -- if table is active, we must now
     ::  subscribe to the game updates path
     =/  table-id=@da  (slav %da i.t.wire)
@@ -303,7 +303,10 @@
     ::  otherwise just join. host will not allow us to enter
     ::  table if tokenized until transaction is received
     ?~  tokenized.table
-      :_  state(our-table `id.action)
+      ::  if table is already active, set game host
+      :_  ?:  is-active.table
+            state(game-host `ship.host-info.table)
+          state(our-table `id.action)
       (poke-pass-through ship.host-info.table action)^join-host-card
     ::  escrow work -- set pending join poke
     :_  state(pending-poke `action)
@@ -318,6 +321,11 @@
           [our now]:bowl
       ==
     =/  host-ta  (scot %p ship.host-info.table)
+    =/  tokens=@ud
+      ?-  -.game-type.table
+        %sng   amount.u.tokenized.table
+        %cash  buy-in.action
+      ==
     :_  join-host-card
     :*  %pass  /pokur-wallet-poke
         %agent  [our.bowl %uqbar]
@@ -331,13 +339,13 @@
             :-  %noun
             :*  %push
                 to=id.contract.host-info.table
-                amount=amount.u.tokenized.table
+                amount=tokens
                 from-account=our-account-id
                 ^-  action:escrow
                 :*  %deposit
                     bond-id.u.tokenized.table
                     our.bowl
-                    amount.u.tokenized.table
+                    tokens
                     our-account-id
         ==  ==  ==
     ==
@@ -401,6 +409,19 @@
         %poke  %pokur-player-action
         !>(`player-action`[%invite table])
     ==
+  ::
+      %spectate-game
+    ?^  game.state
+      ~|("%pokur: error: can't join table, already in game" !!)
+    ::  if we're not already familiar with table host, familiarize ourself
+    =/  join-host-card
+      ?:  (~(has by known-hosts.state) host.action)  ~
+      :_  ~
+      %+  ~(poke pass:io /lobby-updates)
+        [host.action %pokur-host]
+      pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    :_  state(game-host `host.action)
+    (poke-pass-through host.action action)^join-host-card
   ==
 ::
 ++  handle-message-action  ::  TODO replace with pongo?
@@ -477,20 +498,20 @@
   ::  incoroporate update poke from host into our state
   ?-    -.upd
       %lobby
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(uni by lobby.state) tables.upd)
     [lobby-update-card^~ state]
   ::
       %new-table
     ::  add table to our lobby state
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(put by lobby.state) id.table.upd table.upd)
     [lobby-update-card^~ state]
   ::
       %table-closed
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     =.  lobby.state
       (~(del by lobby.state) table-id.upd)
     ?~  our-table.state
@@ -505,7 +526,7 @@
     ==
   ::
       %game-starting
-    ?>  =(src.bowl lobby-source.state)
+    ?>  (~(has by known-hosts.state) src.bowl)
     ::  check if it's our game, if so, sub to path and notify FE
     ?~  table=(~(get by lobby.state) game-id.upd)
       `state
@@ -597,7 +618,7 @@
       ~|  "%pokur: transaction failed!!"
       ?>  =(%0 errorcode.output.update)
       =/  host=ship  (slav %p i.t.q.u.origin.update)
-      :_  state(pending-poke ~)
+      :_  state(pending-poke ~, game-host `host)
       :_  ~
       :*  %pass   /join-table-poke/(scot %da id.u.pending-poke.state)
           %agent  [host %pokur-host]
@@ -632,14 +653,19 @@
   ::
       %'GET'
     =/  url=path  (stab url.request.q.load)
-    ?.  ?=([@ @ @ @ @ ~] url)  !!
-    ::  url should be /apps/pokur/invites/[public or private]/[game-id]
-    =/  public=?  =('public' i.t.t.t.url)
-    =/  table-id=@da  (slav %da i.t.t.t.t.url)
+    ?.  ?=([@ @ @ @ @ @ ~] url)  !!
+    ::  url should be /apps/pokur/invites/[host]/[public or private]/[game-id]
+    =/  host=ship     (slav %p i.t.t.t.url)
+    =/  public=?      =('public' i.t.t.t.t.url)
+    =/  table-id=@da  (slav %da i.t.t.t.t.t.url)
     =/  =response-header:http
       [301 ['Location' '/apps/pokur']~]
     :_  state
-    :~  :^  %give  %fact
+    :~  %+  ~(poke pass:io /lobby-updates)
+          [host %pokur-host]
+        pokur-player-action+!>(`player-action`[%watch-lobby ~])
+    ::
+        :^  %give  %fact
           [/http-response/[p.load]]~
         http-response-header+!>(response-header)
     ::

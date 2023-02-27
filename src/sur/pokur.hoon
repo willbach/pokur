@@ -1,7 +1,7 @@
 /-  uqbar=zig-uqbar
 /=  escrow  /con/lib/escrow
 |%
-::  HARDCODED to ~bacrys IRL, ~nec in FAKESHIP TESTING
+::  HARDCODED to ~datwet IRL, ~nec in FAKESHIP TESTING
 ++  fixed-lobby-source  ~nec
 ::
 +$  host-info
@@ -165,6 +165,7 @@
       [%remove-host who=ship]
       [%send-invite to=ship]  ::  from FE to player app
       [%invite =table]  ::  from player app to player app
+      [%spectate-game host=ship id=@da]
   ==
 ::
 +$  txn-player-action

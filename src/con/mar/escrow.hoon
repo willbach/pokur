@@ -13,7 +13,7 @@
         %bond
       =+  ;;(bond:esc n)
       %-  pairs:enjs:format
-      :~  ['custodian' s+(scot %ud balance.-)]
+      :~  ['custodian' s+(scot %ud custodian.-)]
           ['timelock' s+(scot %ud timelock.-)]
           ::
           :-  'escrow-asset'

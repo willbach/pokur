@@ -27,6 +27,7 @@
           [%remove-host (ot ~[[%who (se %p)]])]
           [%send-invite (ot ~[[%to (se %p)]])]
           ::  %invite not used by FE
+          [%spectate-game (ot ~[[%host (se %p)] [%id (se %da)]])]
       ==
     ++  parse-id  (ot ~[[%id (se %da)]])
     ++  parse-table

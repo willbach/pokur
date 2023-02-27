@@ -138,7 +138,7 @@
         %+  roll
           %+  murn  players.game.state
           |=  [=ship ^player-info]
-          ?:  |(=(0 stack) =(ship who))
+          ?:  |(=(0 stack) =(ship who) =(folded &) =(left &))
             ~
           `stack
         max
@@ -173,11 +173,14 @@
         =.  last-action.game.state  `%call
         `next-player-turn
       ::  this is a raise attempt
-      ?.  ?&  (gte amount.action last-bet.game.state)
-              %+  gte  bet-plus-committed
+      ::  the raise must either be >= amount of previous bet/raise,
+      ::  OR must put the other remaining player with the most chips all-in.
+      ?.  ?|  %+  gte  bet-plus-committed
               (add last-bet.game.state current-bet.game.state)
-          ==
-        ::  error, raise must be >= amount of previous bet/raise
+              ?&  %+  lth  current-min-bet
+                  big:(get-current-blinds game-type.game.state)
+                  (gte bet-plus-committed current-min-bet)
+          ==  ==
         ~
       ::  process raise
       =:  last-aggressor.game.state  `who
@@ -493,11 +496,16 @@
   ::  if the host allows, players can join at any time.
   ::  players enter as acted+folded, and will be set to active at the
   ::  beginning of next hand. new players will be seated behind
-  ::  current dealer.
+  ::  current dealer. if player is already in players-list, assert that
+  ::  they had left, then replace their entry.
   ::
   ++  add-player
     |=  [who=ship starting-stack=@ud]
     ^-  host-game-state
+    =/  found  (find ~[who] (turn players.game.state head))
+    =?    players.game.state
+        ?=(^ found)
+      (oust [u.found 1] players.game.state)
     %=    state
         players.game
       =+  pos=(find ~[dealer.game.state] (turn players.game.state head))

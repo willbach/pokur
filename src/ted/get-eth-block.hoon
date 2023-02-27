@@ -6,13 +6,16 @@
 =/  m  (strand ,vase)
 ^-  form:m
 |^
+=/  url
+  "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber"
 ;<  =json  bind:m
-    (fetch-json:strandio "https://api.blockcypher.com/v1/eth/main")
-(pure:m !>(`@ud`(pars json)))
+  (fetch-json:strandio url)
+(pure:m !>(`@ud`(scan `tape`(slag 2 (pars json)) hex)))
 ::
++$  api-key  cord
 ++  pars
   =,  dejs:format
   %-  ot
-  :~  [%height ni]
+  :~  [%result sa]
   ==
 --

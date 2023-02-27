@@ -67,6 +67,7 @@
   ^-  json
   %-  pairs
   :~  ['id' s+(scot %da id.l)]
+      ['is_active' b+is-active.l]
       ['host_info' (enjs-host-info host-info.l)]
       ['tokenized' ?~(tokenized.l ~ (enjs-tokenized u.tokenized.l))]
       ['leader' s+(scot %p leader.l)]
