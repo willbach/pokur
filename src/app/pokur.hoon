@@ -44,7 +44,7 @@
     ::  bunt for a fresh new state.
     ?~  new=((soft state-0) q.old)
       [%0 ~ ~ fixed-lobby-source ~ ~ ~ ~ ~ ~ ~]
-    u.new
+    u.new(lobby-source fixed-lobby-source)
   :_  this(state old-state)
   [%pass /link-handler %arvo %e %connect `/apps/pokur/invites %pokur]^~
 ::

@@ -531,14 +531,14 @@
     ::  player leaves game
     ?~  host-game=(~(get by games.state) id.action)
       `state
-    =/  is-player
-      ?=(^ (find ~[src.bowl] (turn players.game.u.host-game head)))
-    ?.  |(is-player (~(has in spectators.game.u.host-game) src.bowl))
+    =/  player-info
+      (get-player-info:~(gang guts u.host-game) src.bowl)
+    ?.  |(?=(^ player-info) (~(has in spectators.game.u.host-game) src.bowl))
       `state
     =/  whose-turn-pre=@p  whose-turn.game.u.host-game
     :: remove sender from their game
     =?    u.host-game
-        is-player
+        ?=(^ player-info)
       ~&  >>>  "removing player {<src.bowl>} from game."
       (~(remove-player guts u.host-game) src.bowl)
     :: remove spectator if they were one
@@ -548,10 +548,9 @@
     ::  in proportion to their stack when leaving the table.
     ::  TODO factor into arm
     =/  cash-cards=(list card)
-      ?.  is-player                                                ~
-      ?~  tokenized.u.host-game                                    ~
-      ?.  ?=(%cash -.game-type.game.u.host-game)                   ~
-      ?~  inf=(get-player-info:~(gang guts u.host-game) src.bowl)  ~
+      ?~  tokenized.u.host-game                   ~
+      ?.  ?=(%cash -.game-type.game.u.host-game)  ~
+      ?~  player-info                             ~
       %+  snoc
         ?~  table=(~(get by tables.state) id.action)  ~
         ?.  public.u.table  (private-table-cards u.table)
@@ -574,7 +573,7 @@
                   ::  then dividing stack by chips-per-token.
                   ::  TODO handle nonstandard
                   %+  div
-                    (mul stack.u.inf 1.000.000.000.000.000.000)
+                    (mul stack.u.player-info 1.000.000.000.000.000.000)
                   chips-per-token.game-type.game.u.host-game
       ==  ==  ==
     =^  cards  state
@@ -594,11 +593,16 @@
       (prune-watchers lobby-watchers.state)
     =?    tables.state
         ?=(%cash -.game-type.game.u.host-game)
+      ::  if this is last player at table leaving,
+      ::  remove the table from the lobby
+      ?:  game-is-over.game.u.host-game
+        (~(del by tables.state) id.action)
+      ::  otherwise just modify
       %+  ~(jab by tables.state)
         id.action
       |=  =table
       table(players (~(del in players.table) src.bowl))
-    [(weld cards cash-cards) state]
+    [;:(weld cards cash-cards (table-closed-cards id.action)) state]
   ::
       %kick-player
     ?~  table=(~(get by tables.state) id.action)  !!
