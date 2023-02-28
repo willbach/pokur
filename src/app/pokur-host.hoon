@@ -278,12 +278,14 @@
       %watch-lobby
     ~&  >  "new player {<src.bowl>} joined lobby, sending tables available"
     :_  state(lobby-watchers (~(put by lobby-watchers.state) [src `now]:bowl))
-    :-  %+  ~(poke pass:io /lobby-updates)
-          [src.bowl %pokur]
-        :-  %pokur-host-update
-        !>(`host-update`[%lobby (public-tables tables.state)])
-    ?:  =(0x0 address.our-info.state)  ~
-    (share-escrow-poke src.bowl our-info.state)^~
+    =/  cards=(list card)
+      :_  ~
+      %+  ~(poke pass:io /lobby-updates)
+        [src.bowl %pokur]
+      :-  %pokur-host-update
+      !>(`host-update`[%lobby (public-tables tables.state)])
+    ?:  =(0x0 address.our-info.state)  cards
+    [(share-escrow-poke src.bowl our-info.state) cards]
   ::
       %stop-watching-lobby
     `state(lobby-watchers (~(del by lobby-watchers.state) src.bowl))
