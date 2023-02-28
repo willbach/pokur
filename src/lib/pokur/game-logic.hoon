@@ -111,12 +111,11 @@
       =.  players.game.state  (set-player-as-acted:gang who)
       =.  players.game.state  (set-player-as-folded:gang who)
       =.  update-message.game.state  (crip "{<who>} folded. ")
-      ::  remove folding player from current pot
+      ::  remove folding player from ALL pots
       =.  pots.game.state
-        %+  snoc
-          (snip pots.game.state)
-        =+  (rear pots.game.state)
-        [-.- (skip `(list @p)`+.- |=(p=@p =(p who)))]
+        %+  turn  pots.game.state
+        |=  [amount=@ud in=(list ship)]
+        [amount (skip in |=(p=@p =(p who)))]
       ::  if only one player hasn't folded, process win for them
       =/  players-left
         %+  skip  players.game.state
