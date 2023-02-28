@@ -523,6 +523,9 @@
   ++  remove-player
     |=  who=ship
     ^-  host-game-state
+    =.  game-is-over.game.state
+      =-  |(=(2 -) =(1 -))
+      (lent players.game.state)
     =.  players.game.state
       %+  turn  players.game.state
       |=  [p=ship i=player-info]
