@@ -1,0 +1,44 @@
+@use '../../styles/colors.scss' as colors;
+@use '../../styles/border.scss' as border;
+
+.share-table-modal {
+  .select-invites {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 252px;
+
+    .chats-list {
+      max-height: 50vh;
+      overflow-y: scroll;
+      margin-top: 16px;
+    }
+
+    .chat {
+      cursor: pointer;
+      padding: 4px 8px;
+      margin: 4px;
+      background-color: colors.$uq_lightpink;
+      justify-content: flex-start;
+      width: 240px;
+
+      &:hover {
+        opacity: 0.8;
+      }
+
+      &.selected {
+        background-color: colors.$uq_pink;
+      }
+
+      .group-name {
+        margin-left: 8px;
+      }
+
+      input {
+        height: 20px;
+        width: 20px;
+      }
+    }
+  }
+}

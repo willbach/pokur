@@ -9,11 +9,10 @@ import Col from '../components/spacing/Col'
 import Row from '../components/spacing/Row';
 import Text from '../components/text/Text'
 import usePokurStore from '../store/pokurStore'
-import logo from '../assets/img/logo192.png'
-import CreateTableModal from '../components/pokur/CreateTableModal'
-import JoinTableModal from '../components/pokur/JoinTableModal'
-import { REQUESTED_ZIGS_KEY } from '../utils/constants'
+import textLogo from '../assets/img/pokur-logo-text.png'
+import { ONE_SECOND, REQUESTED_ZIGS_KEY } from '../utils/constants'
 import Modal from '../components/popups/Modal'
+import useWindowDimensions from '../utils/useWindowSize'
 
 import './LobbyView.scss'
 
@@ -22,15 +21,15 @@ interface LobbyViewProps {
 }
 
 const LobbyView = ({ redirectPath }: LobbyViewProps) => {
-  const { lobby, joinTableId, game,
-    addHost, subscribeToPath, setOurAddress, setLoading, setTable, zigFaucet, setJoinTableId, setSecondaryLoading } = usePokurStore()
-  const { selectedAccount, assets, setInsetView } = useWalletStore()
+  const { lobby, joinTableId, game, showSpectate, spectateTableInfo,
+    addHost, subscribeToPath, setOurAddress, setTable, zigFaucet, set, getGame } = usePokurStore()
+  const { selectedAccount, setInsetView } = useWalletStore()
   const nav = useNavigate()
+  const { width } = useWindowDimensions()
+  const isMobile = width <= 800
 
   const [newHost, setNewHost] = useState('')
   const [hostError, setHostError] = useState(false)
-  const [showCreateTableModal, setShowCreateTableModal] = useState(false)
-  const [showJoinTableModal, setShowJoinTableModal] = useState(false)
   const [showZigsModal, setShowZigsModal] = useState(false)
   const [requestedZigs, setRequestedZigs] = useState(Boolean(sessionStorage.getItem(REQUESTED_ZIGS_KEY)))
 
@@ -42,19 +41,35 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (joinTableId && lobby[joinTableId]?.players.find(p => p.includes((window as any).ship))) {
-      setTable(lobby[joinTableId])
-      nav('/table')
+    if (joinTableId && joinTableId === spectateTableInfo.table && (!lobby[joinTableId] || lobby[joinTableId].is_active)) {
+      setTimeout(() => {
+        getGame().then((game) => {
+          console.log(2, game)
+          if (game) {
+            nav('/game')
+            set({ secondaryLoadingText: null, showSpectate: false, spectateTableInfo: { table: '', host: '' } })
+          }
+        })
+      }, ONE_SECOND * 2)
+    } else if (joinTableId && lobby[joinTableId]?.players.find(p => p.includes((window as any).ship))) {
+      if (lobby[joinTableId]?.is_active) {
+        getGame().then(() => nav('/game'))
+      } else {
+        setTable(lobby[joinTableId])
+        nav('/table')
+      }
       setInsetView()
-      setSecondaryLoading(null)
+      set({ secondaryLoadingText: null })
     } else if (joinTableId && lobby[joinTableId]?.players?.length === Number(lobby[joinTableId]?.max_players)) {
+      set({ joinTableId: undefined })
+      set({ secondaryLoadingText: null })
+      setInsetView()
       alert('Another player joined before you, please join a different table.')
-      setJoinTableId(undefined)
-      setSecondaryLoading(null)
     } else if (game && game.id === joinTableId) {
       nav('/game')
+      set({ secondaryLoadingText: null })
     }
-  }, [lobby, joinTableId, game, setInsetView, nav, setTable, setJoinTableId, setSecondaryLoading])
+  }, [lobby, joinTableId, game, spectateTableInfo.table, setInsetView, nav, setTable, getGame, set])
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -66,10 +81,10 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
       setInsetView()
       setTable(table)
       nav('/table?new=true')
-      setLoading(null)
-      setSecondaryLoading(null)
+      set({ loadingText: null })
+      set({ secondaryLoadingText: null })
     }
-  }, [lobby, setInsetView, nav, setLoading, setTable, setSecondaryLoading])
+  }, [lobby, setInsetView, nav, setTable, set])
 
   const submitNewHost = useCallback(async (e) => {
     try {
@@ -94,23 +109,18 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
     <Col className='lobby-view'>
       <Row className='header'>
         <Row className='branding'>
-          <img src={logo} alt='uqbar logo' />
-          <Text mono>POKUR</Text>
+          <img style={{ padding: 4 }} src={textLogo} alt='uqbar logo' />
         </Row>
         <Row>
-          {selectedAccount && <Button style={{ marginRight: 16 }} onClick={requestZigs} disabled={requestedZigs}>
+          {selectedAccount && !isMobile && <Button style={{ marginRight: 16 }} onClick={requestZigs} disabled={requestedZigs}>
             Zig Faucet
           </Button>}
-          <Button style={{ marginRight: 16 }} onClick={() => setShowJoinTableModal(true)}>
-            Join Table
-          </Button>
-          {Object.values(assets[selectedAccount?.rawAddress || '0x0'] || {}).length > 0 && (
-            <Button style={{ marginRight: 16 }} onClick={() => setShowCreateTableModal(true)}>
-              Create Table
-            </Button>
-          )}
-          <Col style={{ paddingRight: 16 }}>
+          
+          <Col style={{ paddingRight: 16, paddingTop: isMobile ? 16 : 0 }}>
             <AccountSelector onSelectAccount={(a: HotWallet | HardwareWallet) => setOurAddress(a.rawAddress)} />
+            {selectedAccount && isMobile && <Button style={{ marginTop: 8, marginBottom: 8, alignSelf: 'flex-end'}} onClick={requestZigs} disabled={requestedZigs}>
+              Zig Faucet
+            </Button>}
             {/* {Boolean(host) ? (
               <>
                 <h3 className='host'>Lobby: ~{host} {host === (window as any).ship ? '(you)' : ''}</h3>
@@ -151,8 +161,6 @@ const LobbyView = ({ redirectPath }: LobbyViewProps) => {
           </>
         )}
       </Col>
-      <CreateTableModal show={showCreateTableModal} hide={() => setShowCreateTableModal(false)} />
-      <JoinTableModal show={showJoinTableModal} hide={() => setShowJoinTableModal(false)} />
       <Modal show={showZigsModal} hide={() => setShowZigsModal(false)}>
         <Col style={{ alignItems: 'center' }}>
           <h3 style={{ marginBottom: 0 }}>Zigs Requested!</h3>

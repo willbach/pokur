@@ -9,7 +9,7 @@ import Row from '../spacing/Row';
 import usePokurStore from '../../store/pokurStore'
 import { CreateTableValues } from '../../types/Table';
 import { getGameType } from '../../utils/game';
-import { DEFAULT_HOST_DEV, DEFAULT_HOST_PROD, NUMBER_OF_PLAYERS, REMATCH_PARAMS_KEY, ROUND_TIMES, STACK_SIZES, STARTING_BLINDS, TURN_TIMES } from '../../utils/constants'
+import { NUMBER_OF_PLAYERS, REMATCH_PARAMS_KEY, ROUND_TIMES, STACK_SIZES, STARTING_BLINDS, TURN_TIMES, BUY_INS, CASH_CHIPS_PER_TOKEN } from '../../utils/constants'
 import { ListInput } from '../form/ListInput';
 
 import './CreateTableModal.scss'
@@ -20,16 +20,21 @@ const BLANK_TABLE: CreateTableValues = {
   'custom-host': '',
   'min-players': 2,
   'max-players': 2,
-  'starting-stack': 1500,
   'turn-time-limit': '~s20', // in seconds
-  // tokenized: undefined,
   'tokenized': { metadata: '0x61.7461.6461.7465.6d2d.7367.697a', amount: 1, 'bond-id': DEFAULT_TOWN_TEST, symbol: 'ZIG' },
   'public': true,
   'spectators-allowed': true,
-  'small-blind': 1,
-  'big-blind': 2,
-  'round-duration': '~m3', // in minutes
+  // sng
   'starting-blinds': '10/20',
+  'starting-stack': 1500,
+  'round-duration': '~m3', // in minutes
+  // cash
+  'big-blind': 0.01,
+  'min-buy': 100, // denominated in BBs
+  'max-buy': 200, // denominated in BBs
+  // 'small-blind': 0.02,
+  'chips-per-token': CASH_CHIPS_PER_TOKEN,
+  'buy-ins': null, // always null
 }
 
 const genBlankTable = (hosts: string[]) =>  ({ ...BLANK_TABLE, host: hosts[0] || 'Other' })
@@ -40,7 +45,7 @@ interface CreateTableModalProps {
 }
 
 const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
-  const { hosts, addHost, createTable, invites, setInvites, setSecondaryLoading } = usePokurStore()
+  const { hosts, addHost, createTable, invites, set } = usePokurStore()
   const { assets, metadata, setInsetView, selectedAccount, setMostRecentTransaction } = useWalletStore()
 
   const [tableForm, setTableForm] = useState<CreateTableValues>(genBlankTable(hosts))
@@ -112,7 +117,7 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
         newHosts.push(newHost)
       }
 
-      setSecondaryLoading('Waiting on transaction confirmation to create table...')
+      set({ secondaryLoadingText: 'Waiting on transaction confirmation to create table...' })
       await createTable(formatedValues)
       localStorage.setItem(REMATCH_PARAMS_KEY, JSON.stringify(formatedValues))
       setTableForm(genBlankTable(newHosts))
@@ -120,24 +125,24 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
       setInsetView('confirm-most-recent')
       hide()
     } catch (err) {
-      setSecondaryLoading(null)
+      set({ secondaryLoadingText: null })
     }
-  }, [tableForm, metadata, hosts, hide, createTable, setInsetView, setMostRecentTransaction, addHost, setSecondaryLoading])
+  }, [tableForm, metadata, hosts, hide, createTable, setInsetView, setMostRecentTransaction, addHost, set])
 
   return (
     <Modal show={show} hide={hide} className='create-table-modal'>
-      <Col style={{ minWidth: 400 }}>
+      <Col>
         <h3 style={{ marginTop: 0 }}>Create New Table</h3>
         <form className="create-table" onSubmit={submitNewTable}>
           <Row>
             <label>Game Type</label>
             <Select value={tableForm['game-type']} onChange={(e) => {
               const gameSpecificInfo = e.target.value === 'cash' ?
-                { ...tableForm, 'game-type': 'cash', 'small-blind': 1, 'big-blind': 2, 'round-duration': undefined, 'blinds-schedule': undefined } :
+                { ...tableForm, 'game-type': 'cash', 'big-blind': 0.01, 'round-duration': undefined, 'blinds-schedule': undefined, 'max-players': 4 } :
                 { ...tableForm, 'game-type': 'sng', 'small-blind': undefined, 'big-blind': undefined, 'round-duration': '~m5'  }
               setTableForm(gameSpecificInfo as any)
             }}>
-              {['sng'].map(gt => <option key={gt} value={gt}>{getGameType(gt)}</option>)}
+              {['sng', 'cash'].map(gt => <option key={gt} value={gt}>{getGameType(gt)}</option>)}
             </Select>
           </Row>
           <Row>
@@ -151,18 +156,6 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
               )}
             </Col>
           </Row>
-          {/* {tableForm['game-type'] === 'sng' ? (
-            <Row>
-              <label>Players</label>
-              <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
-                {NUMBER_OF_PLAYERS.map(nop => <option key={nop} value={nop}>{nop}</option>)}
-              </Select>
-            </Row>
-          ) : (
-            <>
-              
-            </>
-          )} */}
           <Row>
               <label>Min Players</label>
               <Select value={tableForm['min-players']} onChange={changeTableForm('min-players', true)}>
@@ -182,14 +175,14 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
             </Select>
           </Row>
           
+          <Row>
+            <label>Buy-in Token</label>
+            <Select value={tableForm.tokenized?.metadata} onChange={changeTableForm('tokenized/metadata')}>
+              {uniqueAssetList.map(ua => <option key={ua.id} value={ua?.data.metadata}>{metadata[ua?.data.metadata]?.data.symbol}</option>)}
+            </Select>
+          </Row>
           {tableForm['game-type'] === 'sng' ? (
             <>
-              <Row>
-                <label>Buy-in Token</label>
-                <Select value={tableForm.tokenized?.metadata} onChange={changeTableForm('tokenized/metadata')}>
-                  {uniqueAssetList.map(ua => <option key={ua.id} value={ua?.data.metadata}>{metadata[ua?.data.metadata]?.data.symbol}</option>)}
-                </Select>
-              </Row>
               <Row>
                 <label>Buy-in Amount</label>
                 <Input value={tableForm.tokenized?.amount} onChange={changeTableForm('tokenized/amount', true)} />
@@ -220,8 +213,18 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
                 <Input value={tableForm['big-blind']} onChange={changeTableForm('big-blind', true)} />
               </Row>
               <Row>
-                <label>Small Blind</label>
-                <Input value={tableForm['small-blind']} onChange={changeTableForm('small-blind', true)} />
+                <label>Min Buy-in (BBs)</label>
+                <Select value={tableForm['min-buy']} onChange={changeTableForm('min-buy', true)}>
+                  {BUY_INS.map(bi => <option key={bi} value={bi}>{bi}</option>)}
+                </Select>
+                {/* <Input value={tableForm['min-buy']} onChange={changeTableForm('min-buy', true)} /> */}
+              </Row>
+              <Row>
+                <label>Max Buy-in (BBs)</label>
+                <Select value={tableForm['max-buy']} onChange={changeTableForm('max-buy', true)}>
+                  {BUY_INS.map(bi => <option key={bi} value={bi}>{bi}</option>)}
+                </Select>
+                {/* <Input value={tableForm['max-buy']} onChange={changeTableForm('max-buy', true)} /> */}
               </Row>
             </>
           )}
@@ -239,20 +242,13 @@ const CreateTableModal = ({ show, hide }: CreateTableModalProps) => {
             </Select>
           </Row>
           {!tableForm.public && (
-            <Row style={{ marginTop: -4 }}>
-              <label>Invites</label>
-              <ListInput values={invites} setValues={setInvites} />
+            <Row style={{ marginTop: -4, width: 280 }}>
+              <label style={{ width: 60 }}>Invites</label>
+              <ListInput values={invites} setValues={(invites: string[]) => set({ invites })} />
             </Row>
           )}
 
           <Button type='submit' variant='dark' style={{ marginBottom: 24 }}>Create</Button>
-          {/* {Object.keys(tableForm).map(key => (
-            tableForm[key as CreateTableKey] === undefined ? null :
-            <Row key={key} style={key === 'blinds-schedule' ? { flexDirection: 'column', alignItems: 'flex-start' } : {}}>
-              <label>{capitalizeSpine(key)}</label>
-              {renderInput(key)}
-            </Row>
-          ))} */}
         </form>
       </Col>
     </Modal>

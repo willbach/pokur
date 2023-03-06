@@ -2,9 +2,9 @@
 @use '../../styles/border.scss' as border;
 
 .create-table-modal {
-  .list-input-container {
-    width: 60%;
+  margin-top: 20px;
 
+  .list-input-container {
     input {
       width: 160px;
     }

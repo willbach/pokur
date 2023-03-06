@@ -25,16 +25,26 @@ export interface CreateTableValues {
   'spectators-allowed': boolean
   'turn-time-limit': string // in seconds
   'starting-stack': number
-  'small-blind'?: number
-  'big-blind'?: number
   'round-duration'?: string // in minutes
   'starting-blinds'?: string
+  'small-blind'?: number
+  'big-blind'?: number
+  'buy-ins': null,
+  'min-buy': number,
+  'max-buy': number,
+  'chips-per-token': number,
   // 'current-round': number
   // 'round-is-over': boolean
 }
 
 export interface Table {
   id: string
+  host_info: {
+    address: string
+    contract_id: string
+    contract_town: string
+    ship: string
+  }
   leader: string
   players: string[]
   min_players: string
@@ -44,5 +54,6 @@ export interface Table {
   bond_id: string | null
   spectators_allowed: boolean
   turn_time_limit: string
+  is_active: boolean
   public: boolean
 }

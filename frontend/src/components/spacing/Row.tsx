@@ -2,7 +2,7 @@ import React from 'react'
 import './Row.scss'
 
 interface RowProps extends React.HTMLAttributes<HTMLDivElement> {
-
+  
 }
 
 const Row: React.FC<RowProps> = (props) => {

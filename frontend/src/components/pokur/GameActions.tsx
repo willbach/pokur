@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import usePokurStore from "../../store/pokurStore"
-import { isSelf } from "../../utils/game"
-import { fromUd } from "../../utils/number"
+import { Denomination } from "../../types/Game"
+import useGameInfo from "../../utils/useGameInfo"
 import Button from "../form/Button"
 import Input from "../form/Input"
 import Col from "../spacing/Col"
@@ -17,29 +17,21 @@ interface GameActionsProps {
     players_in: string[]
   }[]
   secondsLeft: number
+  denomination: Denomination
+  bigBlind: number
 }
 
-const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
+const GameActions = ({ pots, secondsLeft, denomination, bigBlind }: GameActionsProps) => {
   const { game, check, fold, bet } = usePokurStore()
-  const [lock, setLock] = useState(false)
+  const { currentBet, committed, isTurn, canCheck, myTotal, maxBet, minRaise, callAmountDisplay, callAmountChips } =
+    useGameInfo(denomination, bigBlind)
+
   const turnRef = useRef<string | undefined>(game?.turn_start)
-
-  const minBet = fromUd(game?.min_bet) || 20
-  const currentBet = useMemo(() => fromUd(game?.current_bet), [game])
-  const me = useMemo(() => game?.players.find(({ ship }) => ship === (window as any).ship), [game])
-  const committed = useMemo(() => fromUd(me?.committed), [me])
-  const isTurn = useMemo(() => isSelf(game?.current_turn), [game])
-  const canCheck = useMemo(() => me?.committed === game?.current_bet, [game, me])
-  const myStack = useMemo(() => fromUd(me?.stack), [me])
-  const myTotal = useMemo(() => myStack + committed, [myStack, committed])
-  const largestStack = useMemo(() => game?.players.reduce((largest, { ship, stack, committed, folded, left }) =>
-    ship.includes((window as any).ship) || folded || left ? largest : Math.max(largest, fromUd(stack) + fromUd(committed))
-  , 0) || (myTotal), [game, myTotal])
-  const maxBet = Math.min(myTotal, largestStack)
-  const minRaise = Math.min(minBet + currentBet, maxBet)
-  const callAmount = currentBet - committed
-
+  const [lock, setLock] = useState(false)
   const [myBet, setMyBet] = useState(minRaise)
+  const [actionError, setActionError] = useState('')
+
+  const isBBDenomination = denomination === 'BB'
 
   useEffect(() => {
     if (game && (turnRef.current !== game.turn_start)) {
@@ -51,24 +43,30 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
     turnRef.current = game?.turn_start
   }, [game, minRaise])
 
+  const getAmount = useCallback((amount: number) => {
+    return denomination === 'BB' ? Math.round(bigBlind * amount) : amount
+  }, [denomination, bigBlind])
+
   const lockActions = useCallback(async (promise: Promise<void>) => {
     setLock(true)
+    setActionError('')
       try {
         await promise
       } catch (err) {
-        console.warn('Issue taking action')
+        setActionError('Error placing bet, please try again')
+        setLock(false)
       }
   }, [setLock])
   
   const betAction = useCallback(async () => {
     if (game && myBet && myBet > 0) {
-      if ((myBet - committed) < fromUd(game.min_bet) && myBet !== maxBet) {
-        return window.alert(`Your raise must be at least ${fromUd(game.min_bet) + committed}`)
+      if (myBet < minRaise && myBet !== maxBet) {
+        return window.alert(`Your raise must be at least ${Math.min(minRaise, maxBet)}`)
       }
-      await lockActions(bet(game.id, Math.min(maxBet, myBet) - committed))
+      await lockActions(bet(game.id, getAmount(Math.min(maxBet, myBet) - committed)))
       setMyBet(minRaise)
     }
-  }, [game, myBet, maxBet, committed, minRaise, bet, lockActions])
+  }, [game, myBet, maxBet, committed, minRaise, bet, lockActions, getAmount])
 
   const checkAction = useCallback(async () => {
     if (game) {
@@ -78,9 +76,9 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
 
   const callAction = useCallback(async () => {
     if (game) {
-      await lockActions(bet(game.id, callAmount))
+      await lockActions(bet(game.id, callAmountChips))
     }
-  }, [game, callAmount, bet, lockActions])
+  }, [game, callAmountChips, bet, lockActions])
 
   const foldAction = useCallback(async () => {
     if (game) {
@@ -90,13 +88,13 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
 
   const quickBet = useCallback((amount: '1/2' | '3/4' | 'pot') => async () => {
     if (amount === '1/2') {
-      setMyBet(Math.min(callAmount + Math.round(pots[0].amount / 2), maxBet))
+      setMyBet(Math.min(callAmountDisplay + Math.round(pots[0].amount / 2), maxBet))
     } else if (amount === '3/4') {
-      setMyBet(Math.min(callAmount + Math.round(pots[0].amount * 3 / 4), maxBet))
+      setMyBet(Math.min(callAmountDisplay + Math.round(pots[0].amount * 3 / 4), maxBet))
     } else {
-      setMyBet(Math.min(callAmount + pots[0].amount, maxBet))
+      setMyBet(Math.min(callAmountDisplay + pots[0].amount, maxBet))
     }
-  }, [maxBet, callAmount, pots, setMyBet])
+  }, [maxBet, callAmountDisplay, pots, setMyBet])
 
   return (
     <Col className='game-actions'>
@@ -104,7 +102,7 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
         <>
           <Row className='quick-bet'>
             <Row className='bet-buttons'>
-              {Number(game?.pots[0].amount || 0) > 0 && (
+              {Number(game?.pots[0]?.amount || 0) > 0 && (
                 <>
                   <Button disabled={pots[0].amount / 2 < minRaise} onClick={quickBet('1/2')}>
                     1 / 2
@@ -119,21 +117,28 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               )}
             </Row>
             <Row style={{ fontSize: 20, color: 'white', fontWeight: 600, marginBottom: 4, justifyContent: 'flex-end' }}>
-              <Row style={{ width: 140, justifyContent: 'space-between', color: 'white' }}>
-                <Text style={{ fontSize: 18 }}>Time Left:</Text>
-                <CountdownCircleTimer
-                  key={(game?.current_turn ?? 'ship') + (game?.turn_start ?? 'now')}
-                  isPlaying
-                  trailColor='#383838s'
-                  duration={secondsLeft}
-                  colors={['#ffffff', '#ff0000']}
-                  colorsTime={[secondsLeft, 0]}
-                  size={40}
-                  strokeWidth={4}
-                >
-                  {({ remainingTime }) => remainingTime}
-                </CountdownCircleTimer>
-              </Row>
+              <Col style={{ alignItems: 'flex-end' }}>
+                <Row style={{ width: 140, justifyContent: 'space-between', color: 'white' }}>
+                  <Text style={{ fontSize: 18 }}>Time Left:</Text>
+                  <CountdownCircleTimer
+                    key={(game?.current_turn ?? 'ship') + (game?.turn_start ?? 'now')}
+                    isPlaying
+                    trailColor='#383838s'
+                    duration={secondsLeft}
+                    colors={['#ffffff', '#ff0000']}
+                    colorsTime={[secondsLeft, 0]}
+                    size={40}
+                    strokeWidth={4}
+                  >
+                    {({ remainingTime }) => remainingTime}
+                  </CountdownCircleTimer>
+                </Row>
+                <div style={{ height: 24 }}>
+                  {actionError && (
+                    <Text style={{ marginTop: 8, color: 'red' }}>{actionError}</Text>
+                  )}
+                </div>
+              </Col>
             </Row>
           </Row>
           <Row className='bet-amount'>
@@ -141,14 +146,17 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               className="bet-slider"
               type="range"
               value={myBet}
-              onChange={e => setMyBet(Number(e.target.value.replace(/[^0-9]/g, '')))}
+              onChange={e => setMyBet(Number(e.target.value.replace(isBBDenomination ? /[^0-9.]/g : /[^0-9]/g, '')))}
               min={minRaise}
               max={maxBet}
+              step={isBBDenomination ? '0.1' : '1'}
               containerStyle={{ width: 'calc(100% - 100px)', marginRight: 8 }}
             />
             <Input
               className="bet-text"
               placeholder='your bet'
+              type="number"
+              step={isBBDenomination ? '0.1' : '1'}
               value={myBet}
               onChange={e =>
                 setMyBet(
@@ -157,6 +165,7 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               }
               min={minRaise}
               max={maxBet}
+              onFocus={() => setMyBet(0)}
             />
           </Row>
           <Row className='buttons'>
@@ -164,7 +173,7 @@ const GameActions = ({ pots, secondsLeft }: GameActionsProps) => {
               Fold
             </Button>
             <Button onClick={canCheck ? checkAction : callAction}>
-              {canCheck ? 'Check' : `Call ${callAmount}`}
+              {canCheck ? 'Check' : `Call ${callAmountDisplay}`}
             </Button>
             <Button onClick={betAction} disabled={currentBet >= myTotal}>
               {currentBet > 0 ? `Raise to ${myBet}` : `Bet ${myBet}`}

@@ -38,7 +38,7 @@
   }
   
   &.green {
-    color: rgb(0, 200, 0);
+    color: rgb(0, 180, 0);
   }
     
   &.blue {
@@ -80,5 +80,34 @@
     justify-content: flex-start;
     align-items: flex-start;
     transform:rotate(-180deg);
+  }
+
+  @media screen and (max-width: 800px) {
+    &.large {
+      width: calc(20% - 4px);
+      margin: 2px;
+      height: 64px;
+      max-width: 42px;
+    }
+    
+    .card-value.large {
+      font-size: 27px;
+    }
+      
+    .card-suit.large {
+      font-size: 27px;
+    }
+    
+    .card-value.small {
+      font-size: 24px;
+      text-align: left;
+    }
+      
+    .card-suit.small {
+      font-size: 24px;
+      text-align: left;
+      margin-top: -2px;
+      align-self: flex-end;
+    }
   }
 }

@@ -11,7 +11,7 @@ import { renderShip } from '../../utils/player';
 import './Chat.scss'
 
 interface ChatProps {
-  height: number;
+  height: number | string;
   className?: string;
 }
 
@@ -24,9 +24,12 @@ const Chat = ({ height, className = '' }: ChatProps) => {
 
   const submitMsg = useCallback(async (e) => {
     e.preventDefault()
-    await sendMessage(newMsg)
-    setNewMsg('')
-  }, [sendMessage, newMsg, setNewMsg])
+    if (newMsg.trim().length) {
+      await sendMessage(newMsg)
+      setNewMsg('')
+      scrollRef.current?.scrollTo({ top: 0 })
+    }
+  }, [sendMessage, newMsg, setNewMsg, scrollRef])
 
   const onScroll = useCallback((e: any) => {
     setAtBottom((e.target?.scrollTop ?? 0) >= 0)
@@ -59,7 +62,7 @@ const Chat = ({ height, className = '' }: ChatProps) => {
           ))}
         </div>
         <form onSubmit={submitMsg}>
-          <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} />
+          <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder='Message' />
           <Button variant='dark' type='submit'>
             {/* <FaChevronCircleRight size={20} /> */}
             Send

@@ -7,7 +7,7 @@ import { Lobby } from "../types/Lobby";
 import { Message } from "../types/Message";
 import { Table, Tokenized } from "../types/Table";
 import { ONE_SECOND, REMATCH_LEADER_KEY, REMATCH_PARAMS_KEY } from "../utils/constants";
-import { abbreviateCard, getWinnerInfo, isSelf, playSounds, showLastAction } from '../utils/game';
+import { abbreviateCard, denominateUpdateMessage, getWinnerInfo, isSelf, playSounds, showLastAction } from '../utils/game';
 import { tokenAmount } from '../utils/number'
 import { PokurStore } from "./pokurStore";
 
@@ -22,6 +22,7 @@ interface GameUpdate {
 }
 
 const newHandSound = new Audio('https://poker-app-distro.s3.us-east-2.amazonaws.com/new-hand.mov')
+newHandSound.volume = 0.5
 
 export const handleLobbyUpdate = (get: GetState<PokurStore>, set: SetState<PokurStore>, nav?: NavigateFunction) =>
 async (update: Lobby | { id: string } | { from: string; table: Table }) => {
@@ -77,6 +78,7 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
       set({
         game: {
           ...game,
+          players: curGame.players,
           board: last_board.slice(0, len),
           hide_actions: true,
           hand: curGame?.hand || game.hand,
@@ -90,6 +92,7 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
           set({
             game: {
               ...game,
+              players: curGame.players,
               board: last_board.slice(0, len + i),
               hide_actions: true,
               hand: curGame?.hand || game.hand,
@@ -103,6 +106,13 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
     }
   }
 
+  if (curGame?.turn_start === game.turn_start) {
+    if (game.update_message && game.update_message !== curGame?.update_message) {
+      set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
+    }
+    return
+  }
+
   // Sounds
   playSounds(game, curGame)
   // Show the last user action for 3 seconds
@@ -113,6 +123,7 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
 
     setTimeout(() => {
       const gameEndMessage =
+        game.game_type.type === 'cash' ? 'The game has ended.' :
         `Winnings:\n\n ${placements.map(p => `${p.ship} - ${tokenAmount(p.winnings)} ${tokenized?.symbol || 'ZIG'}`).join(', ')}.`
 
       set({
@@ -148,7 +159,8 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
 
   // Messages Start
   if (game.update_message && game.update_message !== curGame?.update_message) {
-    set({ messages: [{ from: 'game-update', msg: game.update_message }].concat(get().messages) })
+    const msg = denominateUpdateMessage(game, get().denomination)
+    set({ messages: [{ from: 'game-update', msg }].concat(get().messages) })
   }
 
   game.players.forEach(({ left, ship }) => {
@@ -167,10 +179,10 @@ export const handleGameUpdate = (get: GetState<PokurStore>, set: SetState<PokurS
     })
   }
 
-  if (curGame?.board.length && !game.board.length) {
-    set({ messages: [{ from: 'game-update', msg: `Board: ${curGame?.board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
-  } else if (last_board?.length) {
+  if (last_board?.length && !game.board.length) {
     set({ messages: [{ from: 'game-update', msg: `Board: ${last_board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
+  } else if (curGame?.board.length && !game.board.length) {
+    set({ messages: [{ from: 'game-update', msg: `Board: ${curGame?.board.map(c => abbreviateCard(c)).join('')}` }].concat(get().messages) })
   }
   // Messages End
 }

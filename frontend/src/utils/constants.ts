@@ -1,3 +1,6 @@
+export const POKUR_ESCROW_CONTRACT = '0x8049.9882.0176.acbf.f6d8.c766.c30a.6900.4e24.757c.17f7.1dd1.3156.93fe.a962.2f76'
+export const CASH_CHIPS_PER_TOKEN = 1000
+
 export const SUIT_DISPLAY = {
   spades: ["♠︎", "black"], 
   hearts: ["♥︎", "red"], 
@@ -27,18 +30,22 @@ export const SNG_BLINDS = [{ small: 15, big: 30 }, { small: 25, big: 50 }, { sma
 export const PLAYER_POSITIONS: { [key: string]: string } = {
   '12': 'pp-3',
   '22': 'pp-8',
+
   '13': 'pp-4',
   '23': 'pp-7',
   '33': 'pp-9',
+
   '14': 'pp-4',
   '24': 'pp-7',
   '34': 'pp-9',
   '44': 'pp-2',
+
   '15': 'pp-5',
   '25': 'pp-7',
   '35': 'pp-9',
   '45': 'pp-1',
   '55': 'pp-3',
+
   '16': 'pp-5',
   '26': 'pp-6',
   '36': 'pp-8',
@@ -85,6 +92,72 @@ export const PLAYER_POSITIONS: { [key: string]: string } = {
   '1010': 'pp-4',
 }
 
+// the key is the player/number of players and the value is where on the table the player will be placed
+export const MOBILE_PLAYER_POSITIONS: { [key: string]: string } = {
+  '12': 'pp-3',
+  '22': 'pp-8',
+
+  '13': 'pp-3',
+  '23': 'pp-7',
+  '33': 'pp-9',
+
+  '14': 'pp-2',
+  '24': 'pp-4',
+  '34': 'pp-7',
+  '44': 'pp-9',
+
+  '15': 'pp-3',
+  '25': 'pp-5',
+  '35': 'pp-7',
+  '45': 'pp-9',
+  '55': 'pp-1',
+  
+  '16': 'pp-3',
+  '26': 'pp-5',
+  '36': 'pp-6',
+  '46': 'pp-8',
+  '56': 'pp-10',
+  '66': 'pp-1',
+
+  '17': 'pp-3',
+  '27': 'pp-5',
+  '37': 'pp-6',
+  '47': 'pp-7',
+  '57': 'pp-9',
+  '67': 'pp-10',
+  '77': 'pp-3',
+
+  '18': 'pp-2',
+  '28': 'pp-4',
+  '38': 'pp-5',
+  '48': 'pp-6',
+  '58': 'pp-7',
+  '68': 'pp-9',
+  '78': 'pp-10',
+  '88': 'pp-1',
+
+  '19': 'pp-3',
+  '29': 'pp-4',
+  '39': 'pp-5',
+  '49': 'pp-6',
+  '59': 'pp-7',
+  '69': 'pp-9',
+  '79': 'pp-10',
+  '89': 'pp-1',
+  '99': 'pp-2',
+
+  '110': 'pp-3',
+  '210': 'pp-4',
+  '310': 'pp-5',
+  '410': 'pp-6',
+  '510': 'pp-7',
+  '610': 'pp-8',
+  '710': 'pp-9',
+  '810': 'pp-10',
+  '910': 'pp-1',
+  '1010': 'pp-2',
+}
+
 export const DEFAULT_HOST_DEV = '~zod'
 export const DEFAULT_HOST_PROD = '~somleg-tirsub-hodzod-walrus'
 export const ONE_SECOND = 1000
@@ -112,10 +185,13 @@ export const ROUND_TIMES = [
   { display: '8 minutes', value: '~m8' },
 ]
 
+export const BUY_INS = [ 50, 75, 100, 125, 150, 175, 200 ]
+
 export const NUMBER_OF_PLAYERS = [2, 3, 4, 5, 6, 7, 8, 9]
 export const STACK_SIZES = [500, 1000, 1500]
 export const STARTING_BLINDS = ['10/20', '15/30']
 export const REMATCH_PARAMS_KEY = 'rematch-params'
 export const REMATCH_LEADER_KEY = 'rematch-leader'
 export const REQUESTED_ZIGS_KEY = 'requested-zigs'
+export const DENOMINATION_KEY = 'denomination'
 export const POKUR_CHAT = '/apps/escape/groups/~datwet/pokur/channels/chat/~datwet/lobby?channel-inset=true'
