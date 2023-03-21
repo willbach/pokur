@@ -81,10 +81,12 @@
 
     .bet-buttons {
       width: 50%;
+      align-self: flex-end;
 
       button {
         font-size: 16px;
         padding: 4px;
+        min-width: 44px;
       }
     }
   }
@@ -101,5 +103,11 @@
     &:hover {
       background-color: #cb3b3b;
     }
+  }
+
+  @media screen and (max-width: 800px) {
+    width: 100%;
+    padding-left: 8px;
+
   }
 }

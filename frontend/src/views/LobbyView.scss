@@ -7,7 +7,7 @@
   position: relative;
 
   .header {
-    height: 80px;
+    min-height: 80px;
     background: linear-gradient(0deg, #868686, #686868);
     justify-content: space-between;
     z-index: 4;
@@ -50,10 +50,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-
-      button {
-        width: 165.5px;
-      }
+      max-width: calc(100vw - 128px);
     }
 
     h2, h3 {
@@ -71,6 +68,21 @@
       }
       input {
         width: 120px;
+      }
+    }
+  }
+
+  @media screen and (max-width: 800px) {
+    .modal {
+      margin-top: 40px;
+    }
+
+    .header {
+      .branding {
+        img {
+          height: 40px;
+          margin: auto 16px;
+        }
       }
     }
   }

@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import cn from 'classnames'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { useNavigate } from 'react-router-dom'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { AccountSelector, HardwareWallet, HotWallet, useWalletStore } from '@uqbar/wallet-ui'
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 import api from '../api'
 import Button from '../components/form/Button'
@@ -15,25 +16,33 @@ import Chat from '../components/pokur/Chat';
 import CardDisplay from '../components/pokur/Card';
 import Player from '../components/pokur/Player'
 import GameActions from '../components/pokur/GameActions'
-import { PLAYER_POSITIONS, REMATCH_PARAMS_KEY, REMATCH_LEADER_KEY } from '../utils/constants'
+import { PLAYER_POSITIONS, REMATCH_PARAMS_KEY, REMATCH_LEADER_KEY, MOBILE_PLAYER_POSITIONS } from '../utils/constants'
 import logo from '../assets/img/logo192.png'
+import chipStack from '../assets/img/red-chips.png'
 import { renderSigil } from '../utils/player'
 import { fromUd } from '../utils/number'
 import { getSecondsFromNow } from '../utils/time'
 import TableBackground from '../components/pokur/TableBackground'
-import { isSelf, isShip } from '../utils/game'
+import { denominateAmount, getBB, isSelf, isShip } from '../utils/game'
+import { Denomination } from '../types/Game'
+import { Select } from '../components/form/Select'
+import useWindowDimensions from '../utils/useWindowSize'
 
 import './GameView.scss'
+import { deSig } from '../utils/pongo'
 
 interface GameViewProps {
   redirectPath: string
 }
 
 const GameView = ({ redirectPath }: GameViewProps) => {
-  const { lobby, game, gameEndMessage, lastAction,
-    leaveGame, subscribeToPath, createTable, joinTable, setOurAddress, setInvites, setJoinTableId } = usePokurStore()
+  const { lobby, game, gameEndMessage, lastAction, denomination,
+    leaveGame, subscribeToPath, createTable, joinTable, set, setOurAddress } = usePokurStore()
   const { setInsetView, setMostRecentTransaction } = useWalletStore()
   const nav = useNavigate()
+  const { width } = useWindowDimensions()
+  const isMobile = width <= 800
+  const [showChat, setShowChat] = useState(!isMobile)
 
   useEffect(() => {
     const gameSub = subscribeToPath('/game-updates')
@@ -45,6 +54,8 @@ const GameView = ({ redirectPath }: GameViewProps) => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => redirectPath ? nav(redirectPath) : undefined, [redirectPath]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const chooseDenomination = useCallback((denomination: Denomination) => set({ denomination }), [set])
 
   const leave = useCallback((skipConfirmation = false) => async () => {
     if (skipConfirmation || window.confirm('Are you sure you want to leave the game?')) {
@@ -64,42 +75,44 @@ const GameView = ({ redirectPath }: GameViewProps) => {
     return newOrder
   }, [game])
 
-  // console.log('GAME:', game)
-
+  const bigBlind = getBB(game?.game_type)
+  const dnmAmnt = useCallback((amount: number | string) => denominateAmount(amount, bigBlind, denomination), [bigBlind, denomination])
+  
   const computedPots = useMemo(() =>
-    (game?.pots || []).map(
-      (p, i, a) => i !== a.length - 1 ? { ...p, amount: fromUd(p?.amount) } :
-        { ...p, amount: fromUd(p?.amount) + (game?.players || []).reduce((acc, pl) => acc + fromUd(pl.committed), 0) }
+  (game?.pots || []).map(
+    (p, i, a) => i !== a.length - 1 ? { ...p, amount: fromUd(p?.amount) } :
+    { ...p, amount: fromUd(p?.amount) + (game?.players || []).reduce((acc, pl) => acc + fromUd(pl.committed), 0) }
     )
-  , [game])
-
+    , [game])
+    
+  const isSpectator = !Boolean(game?.players.find(({ ship }) => deSig(ship) === deSig((window as any).ship)))
   const secondsLeft = getSecondsFromNow(game?.turn_start, game?.turn_time_limit)
   const rematchParams = localStorage.getItem(REMATCH_PARAMS_KEY)
   const rematchLeader = localStorage.getItem(REMATCH_LEADER_KEY)
   const rematchId = Object.values(lobby).find(
     t => rematchLeader === t.leader && !t.public && JSON.stringify(game?.game_type) === JSON.stringify(t.game_type)
   )?.id
+  
   const canRematch = Boolean(rematchParams || rematchId)
-
   const rematch = useCallback(async () => {
     if (game && rematchParams) {
       await leaveGame(game.id)
       nav('/')
       setMostRecentTransaction(undefined)
       setInsetView('confirm-most-recent')
-      setInvites(game.players.map(({ ship }) => ship).filter(s => !isSelf(s)))
+      set({ invites: game.players.map(({ ship }) => ship).filter(s => !isSelf(s)) })
       createTable({ ...JSON.parse(rematchParams), public: false })
     } else if (game && rematchId) {
       await leaveGame(game.id)
       nav('/')
       setMostRecentTransaction(undefined)
       setInsetView('confirm-most-recent')
-      setJoinTableId(rematchId)
-      joinTable(rematchId, false)
+      set({ joinTableId: rematchId })
+      joinTable(rematchId, '0', false)
     }
   }, [
     rematchParams, rematchId, game,
-    nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, setInvites, setJoinTableId
+    nav, leaveGame, createTable, joinTable, setInsetView, setMostRecentTransaction, set
   ])
 
   const playersRemaining = game?.players.filter(({ left, committed, stack }) => !left && (fromUd(committed) + fromUd(stack) > 0)).length ?? 2
@@ -137,9 +150,9 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                 <p>Payouts will be made from the escrow contract soon.</p>
               </>}
               <Row style={{ marginTop: 16 }}>
-                <Button variant='dark' disabled={!canRematch} style={{ width: 150, marginRight: 16 }} onClick={rematch}>
+                {/* <Button variant='dark' disabled={!canRematch} style={{ width: 150, marginRight: 16 }} onClick={rematch}>
                   Rematch
-                </Button>
+                </Button> */}
                 <Button variant='dark' style={{ width: 150 }} onClick={leave(true)}>
                   Return to Lobby
                 </Button>
@@ -151,17 +164,17 @@ const GameView = ({ redirectPath }: GameViewProps) => {
             <Col className="center-table">
               <Row className='branding'>
                 <img src={logo} alt='uqbar logo' />
-                <Text mono>POKUR</Text>
+                <Text mono className='logo-text'>POKUR</Text>
               </Row>
               <Col className='pots'>
                 {Boolean(computedPots[0]?.amount) && String(computedPots[0]?.amount) !== '0' && (
-                  <Text className='pot'>{game.pots.length > 1 ? 'Main ' : ''}Pot: {computedPots[0]?.amount || '0'}</Text>
+                  <Text className='pot'>{game.pots.length > 1 ? 'Main ' : ''}Pot: {denomination === '$' ? '$' : ''}{dnmAmnt(computedPots[0]?.amount || '0')} {denomination === 'BB' ? 'BB' : ''}</Text>
                 )}
 
                 {computedPots.length > 1 && (
                   computedPots.map((p, i) => (
                     i === 0 ? null :
-                    <Text className='pot' key={String(p?.amount) + i}>Side Pot #{i}: {p.amount}</Text>
+                    <Text className='pot' key={String(p?.amount) + i}>Side Pot #{i}: {dnmAmnt(p.amount)}</Text>
                   ))
                 )}
               </Col>
@@ -188,7 +201,7 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                 game?.dealer.includes(p.ship) ? 'D' : ''
 
               return (
-                <Col className={`player-display ${PLAYER_POSITIONS[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
+                <Col className={`player-display ${(isMobile ? MOBILE_PLAYER_POSITIONS : PLAYER_POSITIONS)[`${ind + 1}${playerOrder.length}`]}`} key={p.ship}>
                   <Row className='cards'>
                     {isSelf(p.ship) && !folded ? (
                       <>
@@ -200,11 +213,11 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                       </>
                     ) : (
                       <>
-                        {!folded && <Row style={{ position: 'absolute', top: -12, zIndex: 0 }}>
+                        {!folded && <Row style={{ position: 'absolute', top: isMobile ? -6 : -12, zIndex: 0 }}>
                           {[1, 2].map(a => <div key={a} className='blank-card' />)}
                         </Row>}
                         <div className='sigil-container avatar' style={{ zIndex: 1 }}>
-                          {renderSigil({ ship: p.ship, className: 'avatar-sigil', colors: [folded ? 'grey' : 'black', 'white'] })}
+                          {renderSigil({ ship: p.ship, className: 'avatar-sigil', colors: [folded ? 'grey' : 'black', 'white'], size: isMobile ? 36 : 60 })}
                         </div>
                       </>
                     )}
@@ -217,11 +230,17 @@ const GameView = ({ redirectPath }: GameViewProps) => {
                     folded && 'folded'
                   )}>
                     <Player hideSigil ship={p.ship} altDisplay={lastAction[p.ship] || winner} />
-                    <Text className='stack' bold>{p.left ? 'Left' : `$${p.stack}`}</Text>
+                    <Text className='stack' bold>{p.left ? 'Left' : `${denomination === '$' ? '$' : ''}${dnmAmnt(p.stack)} ${denomination === 'BB' ? 'BB' : ''}`}</Text>
                   </div>
                   <Row className='bet'>
-                    {Boolean(buttonIndicator) && <div className='button-indicator'>{buttonIndicator}</div>}
-                    {Number(p.committed) > 0 && <div>Bet: {p.committed}</div>}
+                    {Boolean(buttonIndicator) ? (
+                      <div className={cn('button-indicator', buttonIndicator === 'D' && 'dealer')}>
+                        {buttonIndicator}
+                      </div>
+                    ) : Number(p.committed) > 0 ? (
+                      <img src={chipStack} className='chip-stack' alt='chips' />
+                    ) : null}
+                    {Number(p.committed) > 0 && <div className='amount'>Bet: {dnmAmnt(p.committed)}</div>}
                   </Row>
                   {curTurn && !isSelf && !hand && (
                     <div className='turn-timer'>
@@ -248,20 +267,48 @@ const GameView = ({ redirectPath }: GameViewProps) => {
             })}
           </div>
           <div className='table' />
-          <Chat className='fixed' height={160} />
-          {!Object.keys(game?.revealed_hands || {}).length && !gameEndMessage && (
-            <GameActions pots={computedPots} secondsLeft={secondsLeft} />
+          {showChat && (
+            <Chat className={`${isMobile ? 'mobile' : 'fixed'} in-game`} height={isMobile ? '40vh' : 160} />
+          )}
+          {!Object.keys(game?.revealed_hands || {}).length && !gameEndMessage && !isSpectator && (
+            <GameActions pots={computedPots} secondsLeft={secondsLeft} denomination={denomination} bigBlind={bigBlind} />
           )}
         </Col>
       )}
       {Boolean(game) && (
         <Row className='top-nav'>
-          <Row className='game-id'>
-            Game: {game?.id}
-          </Row>
-          <Button onClick={leave()}>
-            Leave Game
-          </Button>
+          <Col>
+            <Text oneLine className='game-id'>
+              Game: {game?.id}
+            </Text>
+            {isMobile && (
+              <Button variant='unstyled' style={{
+                marginLeft: 8,
+                height: 32,
+                width: 32,
+                borderRadius: 16,
+                backgroundColor: 'white',
+                paddingTop: showChat ? 2 : 6,
+              }} onClick={() => setShowChat(!showChat)}>
+                {showChat ? (
+                  <FaChevronUp />
+                ) : (
+                  <FaChevronDown />
+                )}
+              </Button>
+            )}
+          </Col>
+          <Col style={{ alignItems: 'flex-end' }}>
+            <Button onClick={leave()}>
+              Leave
+            </Button>
+            <Row style={{ marginTop: 4 }}>
+              {/* <Text bold style={{ color: 'white', marginRight: 4 }}>Denomination:</Text> */}
+              <Select value={denomination} onChange={e => chooseDenomination(e.target.value as Denomination)}>
+                {(['$', 'BB'] as Denomination[]).map(d => <option key={d} value={d}>{d}</option>)}
+              </Select>
+            </Row>
+          </Col>
         </Row>
       )}
     </Col>

@@ -7,6 +7,12 @@ button.button {
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  box-shadow: 0 2px #ccc;
+
+  &:active {
+    box-shadow: 0 1px #bbb;
+    transform: translateY(1px);
+  }
 
   &:hover {
     background: lightgray;
@@ -15,14 +21,21 @@ button.button {
   &.dark {
     color: white;
     background: black;
+    box-shadow: 0 2px #444;
 
     &:hover {
       background: gray;
+    }
+
+    &:active {
+      box-shadow: 0 1px #555;
+      transform: translateY(1px);
     }
   }
 
   &:disabled {
     background: gray;
     color: lightgray;
+    box-shadow: none;
   }
 }

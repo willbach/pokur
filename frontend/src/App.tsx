@@ -11,7 +11,7 @@ import GameView from './views/GameView';
 import './App.scss'
 
 function App() {
-  const { init, setOurAddress, getHosts, loadingText, secondaryLoadingText, setSecondaryLoading } = useExplorerStore()
+  const { init, setOurAddress, getHosts, loadingText, secondaryLoadingText, set } = useExplorerStore()
   const { initWallet, selectedAccount } = useWalletStore()
   const [redirectPath, setRedirectPath] = useState('')
 
@@ -31,7 +31,6 @@ function App() {
 
   return (
     <BrowserRouter basename={'/apps/pokur'}>
-      {/* <Navbar /> */}
       <Routes>
         <Route path="/" element={<LobbyView redirectPath={redirectPath} />} />
         <Route path="/table" element={<TableView redirectPath={redirectPath} />} />
@@ -46,7 +45,7 @@ function App() {
         />
       </Routes>
       <LoadingOverlay loading={Boolean(loadingText)} text={loadingText || ''} />
-      <LoadingOverlay loading={Boolean(secondaryLoadingText)} text={secondaryLoadingText || ''} dismiss={() => setSecondaryLoading(null)} />
+      <LoadingOverlay loading={Boolean(secondaryLoadingText)} text={secondaryLoadingText || ''} dismiss={() => set({ secondaryLoadingText: null })} />
     </BrowserRouter>
   );
 }

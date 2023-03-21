@@ -44,9 +44,23 @@
         margin-bottom: -2px;
       }
     }
+  }
+
+  @media screen and (max-width: 800px) {
+    .content {
+      max-width: 96vw;
+      min-width: unset;
+      font-size: 14px;
+    }
 
     .players {
-      
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      .player {
+        margin-right: 16px;
+      }
     }
   }
 }

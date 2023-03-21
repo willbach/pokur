@@ -63,12 +63,14 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
     width: 100%;
     z-index: 1;
     justify-content: space-between;
+    align-items: flex-start;
 
     .game-id {
       color: white;
       border-radius: 4px;
       padding: 8px;
       font-weight: bold;
+      max-width: 200px;
     }
   }
 
@@ -214,107 +216,120 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
             margin-right: 4px;
             width: 26px;
             text-align: center;
+
+            &.dealer {
+              background: white;
+              border-color: black;
+              color: black;
+            }
+          }
+
+          .chip-stack {
+            width: 26px;
+            margin-right: 4px;
           }
         }
 
-        &.pp-1 {
-          top: -50px;
-          right: calc(24% - 32px);
-          flex-direction: row-reverse;
-          .player-info {
-            box-shadow: -1px 3px 5px rgb(15, 15, 15);
-          }
+        @media screen and (min-width: 801px) {
+          &.pp-1 {
+            top: -50px;
+            right: calc(24% - 32px);
+            flex-direction: row-reverse;
+            .player-info {
+              box-shadow: -1px 3px 5px rgb(15, 15, 15);
+            }
 
-          .bet {
-            bottom: -40px;
-            left: 6px;
+            .bet {
+              bottom: -40px;
+              left: 6px;
+            }
           }
-        }
-        &.pp-2 {
-          top: calc(18% - 55px);
-          right: calc(7% - 44px);
+          &.pp-2 {
+            top: calc(18% - 55px);
+            right: calc(7% - 44px);
 
-          .bet {
-            bottom: -28px;
-            left: -80px;
+            .bet {
+              bottom: -28px;
+              left: -80px;
+            }
           }
-        }
-        &.pp-3 {
-          right: -50px;
-          top: calc(50% - 30px);
+          &.pp-3 {
+            right: -50px;
+            top: calc(50% - 30px);
 
-          .bet {
-            bottom: 50px;
-            left: -120px;
+            .bet {
+              bottom: 50px;
+              left: -120px;
+            }
           }
-        }
-        &.pp-4 {
-          top: calc(88% - 32px);
-          right: calc(7% - 44px);
+          &.pp-4 {
+            top: calc(88% - 32px);
+            right: calc(7% - 44px);
 
-          .bet {
-            bottom: 118px;
-            left: -60px;
+            .bet {
+              bottom: 118px;
+              left: -60px;
+            }
           }
-        }
-        &.pp-5 {
-          top: calc(100% - 16px);
-          right: calc(24% - 32px);
-          flex-direction: row-reverse;
+          &.pp-5 {
+            top: calc(100% - 16px);
+            right: calc(24% - 32px);
+            flex-direction: row-reverse;
 
-          .player-info {
-            box-shadow: -1px 3px 5px rgb(15, 15, 15);
+            .player-info {
+              box-shadow: -1px 3px 5px rgb(15, 15, 15);
+            }
+
+            .bet {
+              bottom: 80px;
+              left: 6px;
+            }
           }
+          &.pp-6 {
+            top: calc(100% - 16px);
+            left: calc(24% - 32px);
+            flex-direction: row;
 
-          .bet {
-            bottom: 80px;
-            left: 6px;
+            .bet {
+              bottom: 80px;
+            }
           }
-        }
-        &.pp-6 {
-          top: calc(100% - 16px);
-          left: calc(24% - 32px);
-          flex-direction: row;
+          &.pp-7 {
+            top: calc(88% - 32px);
+            left: calc(7% - 44px);
 
-          .bet {
-            bottom: 80px;
+            .bet {
+              bottom: 118px;
+              right: -54px;
+            }
           }
-        }
-        &.pp-7 {
-          top: calc(88% - 32px);
-          left: calc(7% - 44px);
+          &.pp-8 {
+            left: -48px;
+            top: calc(50% - 30px);
 
-          .bet {
-            bottom: 118px;
-            right: -54px;
+            .bet {
+              bottom: 50px;
+              right: -120px;
+            }
           }
-        }
-        &.pp-8 {
-          left: -48px;
-          top: calc(50% - 30px);
+          &.pp-9 {
+            top: calc(18% - 55px);
+            left: calc(7% - 44px);
 
-          .bet {
-            bottom: 50px;
-            right: -120px;
+            .bet {
+              bottom: -28px;
+              right: -54px;
+            }
           }
-        }
-        &.pp-9 {
-          top: calc(18% - 55px);
-          left: calc(7% - 44px);
+          &.pp-10 {
+            top: -50px;
+            left: calc(24% - 32px);
+            flex-direction: row;
 
-          .bet {
-            bottom: -28px;
-            right: -54px;
-          }
-        }
-        &.pp-10 {
-          top: -50px;
-          left: calc(24% - 32px);
-          flex-direction: row;
-
-          .bet {
-            bottom: -40px;
-            left: 6px;
+            .bet {
+              bottom: -40px;
+              left: 6px;
+            }
           }
         }
 
@@ -367,6 +382,7 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           .stack {
             text-align: center;
             width: 100%;
+            white-space: nowrap;
           }
         }
 
@@ -405,6 +421,163 @@ $players-circle-radius: calc(min(37vw, 37vh) - 30px);
           position: absolute;
           bottom: -24px;
           width: 200px;
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 800px) {
+    .content, .game-end-popup {
+      width: 90vw;
+    }
+  
+    .game {
+      padding-top: 70px;
+  
+      .center-table {
+        top: 14%;
+  
+        .branding {
+          img {
+            margin-right: 0;
+          }
+          span {
+            display: none;
+          }
+        }
+  
+        .pots {
+          min-height: 60px;
+        }
+  
+        .cards {
+          width: 50vw;
+          justify-content: center;
+        }
+      }
+  
+      .players {
+        height: calc(100% - 200px);
+        max-width: calc(100vw - 32px);
+        max-height: calc(100% - 200px);
+        aspect-ratio: 1/2;
+        position: relative;
+        
+        .player-display {
+          &.pp-1 {
+            top: calc(65% - 20px);
+            right: -70px;
+            .bet {
+              bottom: 40px;
+              right: 72px;
+            }
+          }
+          &.pp-2 {
+            top: calc(88% - 10px);
+            right: calc(20% - 100px);
+            .bet {
+              bottom: 88px;
+              right: 64px;
+            }
+          }
+          &.pp-3 {
+            right: calc(50% - 30px);
+            bottom: -70px;
+            .bet {
+              top: -30px;
+              left: -10px;
+            }
+          }
+          &.pp-4 {
+            top: calc(88% - 10px);
+            left: calc(20% - 100px);
+            .bet {
+              bottom: 88px;
+              left: 64px;
+            }
+          }
+          &.pp-5 {
+            top: calc(65% - 20px);
+            left: -70px;
+            .bet {
+              bottom: 40px;
+              left: 72px;
+            }
+          }
+          &.pp-6 {
+            top: calc(30% - 20px);
+            left: -70px;
+            .bet {
+              bottom: 40px;
+              left: 72px;
+            }
+          }
+          &.pp-7 {
+            top: calc(10% - 30px);
+            left: calc(20% - 100px);
+            .bet {
+              bottom: 20px;
+              left: 76px;
+            }
+          }
+          &.pp-8 {
+            right: calc(50% - 50px);
+            top: -30px;
+            flex-direction: row-reverse;
+  
+            .bet {
+              bottom: -24px;
+              right: calc(40%);
+            }
+          }
+          &.pp-9 {
+            top: calc(10% - 30px);
+            right: calc(20% - 100px);
+  
+            .bet {
+              bottom: 20px;
+              right: 76px;
+            }
+          }
+          &.pp-10 {
+            top: calc(30% - 20px);
+            right: -70px;
+  
+            .bet {
+              bottom: 40px;
+              right: 72px;
+            }
+          }
+
+          .bet {
+            height: 24px;
+            align-items: center;
+            vertical-align: middle;
+
+            .amount {
+              font-size: 14px;
+            }
+          }
+  
+          .avatar-sigil {
+            height: 40px !important;
+            width: 40px !important;
+            border-width: 2px;
+          }
+
+          .player-info {
+            .player {
+              .ship {
+                font-size: 8px;
+              }
+            }
+          }
+  
+          .blank-card {
+            height: 24px;
+            width: 18px;
+            margin-bottom: -4px;
+          }
         }
       }
     }
